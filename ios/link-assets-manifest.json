@@ -1,0 +1,13 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/BebasNeue.ttf",
+      "sha1": "8b3aaeb978f3cb5f575860774b50c332338563c1"
+    },
+    {
+      "path": "assets/fonts/UbuntuSans.ttf",
+      "sha1": "47b8264acccef2a4c5f3c7afe7ec3425b8c854d8"
+    }
+  ]
+}
