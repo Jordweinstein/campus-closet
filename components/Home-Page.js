@@ -40,7 +40,7 @@ const HomeMain = ({ navigation }) => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
-                <Text style={styles.title}>Campus Closet</Text>
+                <Text style={styles.title}>Campus Closets</Text>
                 
                 <View style={styles.textContainer}>
                     <Text style={styles.h2}> Stop buying. Start renting! </Text>
