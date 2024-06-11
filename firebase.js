@@ -3,12 +3,12 @@ import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/aut
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDqFWJ2Jed34nivpv3ZOil3ZSuHBm_SoFg",
-    authDomain: "rent-the-campus.firebaseapp.com",
-    projectId: "rent-the-campus",
-    storageBucket: "rent-the-campus.appspot.com",
-    messagingSenderId: "52589543033",
-    appId: "1:52589543033:web:cf7272d9e3625e6f905ea8"
+  apiKey: "AIzaSyCJ-kB644gPcFjibsb_jGYx8trkmKss6ig",
+  authDomain: "campus-closet-d43c9.firebaseapp.com",
+  projectId: "campus-closet-d43c9",
+  storageBucket: "campus-closet-d43c9.appspot.com",
+  messagingSenderId: "289095299303",
+  appId: "1:289095299303:web:62568c60b343cb68f73242"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];

@@ -3,7 +3,8 @@ import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert } from 'reac
 import { getAuth, 
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
-        onAuthStateChanged, 
+        onAuthStateChanged,
+        sendEmailVerification 
     } from "firebase/auth";
 import '../firebase';
 import { useNavigation } from "@react-navigation/native";
@@ -13,6 +14,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const auth = getAuth();
     const navigation = useNavigation();
+    
     const validateParameters = () => {
         if (email === null || !email.includes('@') || !email.includes('.')) {
             Alert.alert(
@@ -42,36 +44,47 @@ const Login = () => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(getAuth(), user => {
-            if (user) {
+            if (user && user.emailVerified) {
                 navigation.navigate('Home')
                 setEmail('');
                 setPassword('');
+            } else if (user && !user.emailVerified) {
+                Alert.alert("Email Verification Required", "Please verify your email before logging in.");
             }
         });
         return () => unsubscribe();
     }, []);
 
-    const handleSignUp = () => {
+    const handleSignUp = async () => {
 
-        createUserWithEmailAndPassword(aiuth, email, password)
-        .then((userCredential) => {
-            navigation.navigate("Home");
+        await createUserWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
             const user = userCredential.user;
+            await sendEmailVerification(user);
+            setEmail('');
+            setPassword('');
         })
         .catch((error) => {
+            console.log(error.message);
             validateParameters();
         });
     }
 
-    const handleLogIn = () => {
-        signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-        })
-        .catch((error) => {
+    const handleLogIn = async () => {
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            if (userCredential.user.emailVerified) {
+                navigation.navigate('Home');
+                setEmail('');
+                setPassword('');
+            } else {
+                Alert.alert("Email Not Verified", "Please verify your email before logging in.");
+            }
+        } catch (error) {
+            console.error(error);
             validateParameters();
-        });
-    }
+        }
+    };
 
     return (
         <>
