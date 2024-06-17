@@ -5,8 +5,6 @@ import { getAuth,
         signInWithEmailAndPassword, 
         onAuthStateChanged,
         sendEmailVerification, 
-        onAuthStateChanged,
-        sendEmailVerification,
         sendPasswordResetEmail 
     } from "firebase/auth";
 import { addDoc, collection } from "firebase/firestore"; 
