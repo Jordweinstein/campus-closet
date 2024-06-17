@@ -63,9 +63,27 @@ const Login = () => {
             await createUserWithEmailAndPassword(auth, email, password)
             .then(async (userCredential) => {
                 const user = userCredential.user;
+                try {
                 await sendEmailVerification(user);
-                setEmail('');
-                setPassword('');
+                    try {
+                    const docRef = await addDoc(collection(db, "users"), {
+                        email: email,
+                        displayName: "",
+                        bio: "",
+                        isVerified: false,
+                        graduationYear: "",
+                        listings: [""],
+                        profilePicUrl: ""
+                    })
+                    console.log("Document written with ID: ", docRef.id);
+                } catch (error) {
+                    console.log("Error adding document: " + error.message);
+                }
+            } catch (error) {
+                console.log(error.message);
+            }
+            setEmail('');
+            setPassword('');
             })
             .catch((error) => {
                 console.log(error.message);
@@ -86,12 +104,15 @@ const Login = () => {
                 navigation.navigate('Home');
                 setEmail('');
                 setPassword('');
+                // change that user is verified in db
             } else {
                 Alert.alert("Email Not Verified", "Please verify your email before logging in.");
             }
         } catch (error) {
             console.error(error);
             validateParameters();
+        } finally {
+            console.log("DB INSTANCE: " + db);
             if (error.code === 'auth/invalid-credential') {
                 Alert.alert( 
                     "Error",

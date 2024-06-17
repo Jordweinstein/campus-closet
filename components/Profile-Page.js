@@ -12,6 +12,13 @@ import "react-native-gesture-handler";
 import { createStackNavigator } from '@react-navigation/stack';
 import ProfilePic from '../assets/images/WebPic.png';
 import { Ionicons } from '@expo/vector-icons';
+import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
+import { createStackNavigator } from '@react-navigation/stack';
+import auth from '../auth'; 
+import '../firebase-config';
+import { useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
+import ProfileSetup from './Profile-Setup-Screen';
 
 const Stack = createStackNavigator();
 
@@ -23,8 +30,13 @@ export default function Profile() {
                 component={ProfileMain}
                 options={{ headerShown: false, headerTitle: "Back"}}
             />
+            <Stack.Screen 
+                name = "ProfileSetup" 
+                component = { ProfileSetup }
+                options = {{ headerShown: false }}
+            />
         </Stack.Navigator>
-    );
+    )
 }
 
 const ProfileMain = ({ navigation }) => {
@@ -45,6 +57,7 @@ const ProfileMain = ({ navigation }) => {
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
                 <Text style={styles.title}>Megan Adams</Text>
+                <Text> email: { auth.currentUser?.email} </Text>
 
                 <View style={styles.profileContainer}>
                     <Image 
@@ -64,6 +77,19 @@ const ProfileMain = ({ navigation }) => {
                         </TouchableOpacity>
                     </View>
                 </View>
+
+                <TouchableOpacity 
+                style = { styles.button }
+                onPress={ handleSignOut }
+            >
+                <Text>Sign out</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                style = { styles.button }
+                onPress={() => navigation.navigate('ProfileSetup')}>
+                <Text>Setup Profile</Text>
+            </TouchableOpacity>
+            
 
                 <View style={styles.textContainer}>
                     <Text style={styles.h2}>My Sizes</Text>
