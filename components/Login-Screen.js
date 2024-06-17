@@ -4,9 +4,14 @@ import { getAuth,
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
         onAuthStateChanged,
-        sendEmailVerification 
+        sendEmailVerification, 
+        onAuthStateChanged,
+        sendEmailVerification,
+        sendPasswordResetEmail 
     } from "firebase/auth";
-import '../firebase';
+import { addDoc, collection } from "firebase/firestore"; 
+import '../firebase-config';
+import db from '../db';
 import { useNavigation } from "@react-navigation/native";
 
 const Login = () => {
@@ -56,18 +61,24 @@ const Login = () => {
     }, []);
 
     const handleSignUp = async () => {
-
-        await createUserWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-            const user = userCredential.user;
-            await sendEmailVerification(user);
-            setEmail('');
-            setPassword('');
-        })
-        .catch((error) => {
-            console.log(error.message);
-            validateParameters();
-        });
+        if (email.endsWith('.edu')) {
+            await createUserWithEmailAndPassword(auth, email, password)
+            .then(async (userCredential) => {
+                const user = userCredential.user;
+                await sendEmailVerification(user);
+                setEmail('');
+                setPassword('');
+            })
+            .catch((error) => {
+                console.log(error.message);
+                validateParameters();
+            });
+        } else {
+            Alert.alert(
+                "Error",
+                "Please register with an email ending in .edu"
+            )
+        }
     }
 
     const handleLogIn = async () => {
@@ -83,8 +94,25 @@ const Login = () => {
         } catch (error) {
             console.error(error);
             validateParameters();
+            if (error.code === 'auth/invalid-credential') {
+                Alert.alert( 
+                    "Error",
+                    "Incorrect login credentials. Please try again."
+                );
+            }
         }
     };
+
+    const handleResetPassword = () => {
+        sendPasswordResetEmail(auth, email)
+            .then(() => {
+                Alert.alert("Email sent", "Please check your email and proceed to reset your password.")
+            }) 
+            .catch((error) => {
+                console.log(error.message);
+            });
+     
+    }
 
     return (
         <>
@@ -112,6 +140,10 @@ const Login = () => {
                 />
                     
             </View>
+
+            <TouchableOpacity onPress={handleResetPassword}>
+                <Text style={{padding: 10}}>Forgot password?</Text>
+            </TouchableOpacity>
 
             <View style = {styles.buttonContainer}>
                 <TouchableOpacity 
@@ -177,6 +209,7 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: "BebasNeue",
         fontSize: 64,
+        paddingBottom: 10
     }
     
 })
