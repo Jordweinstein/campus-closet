@@ -6,7 +6,9 @@ import { getAuth,
         onAuthStateChanged,
         sendEmailVerification 
     } from "firebase/auth";
-import '../firebase';
+import { addDoc, collection } from "firebase/firestore"; 
+import '../firebase-config';
+import db from '../db';
 import { useNavigation } from "@react-navigation/native";
 
 const Login = () => {
@@ -60,7 +62,25 @@ const Login = () => {
         await createUserWithEmailAndPassword(auth, email, password)
         .then(async (userCredential) => {
             const user = userCredential.user;
-            await sendEmailVerification(user);
+            try {
+                await sendEmailVerification(user);
+                try {
+                    const docRef = await addDoc(collection(db, "users"), {
+                        email: email,
+                        displayName: "",
+                        bio: "",
+                        isVerified: false,
+                        graduationYear: "",
+                        listings: [""],
+                        profilePicUrl: ""
+                    })
+                    console.log("Document written with ID: ", docRef.id);
+                } catch (error) {
+                    console.log("Error adding document: " + error.message);
+                }
+            } catch (error) {
+                console.log(error.message);
+            }
             setEmail('');
             setPassword('');
         })
@@ -77,12 +97,15 @@ const Login = () => {
                 navigation.navigate('Home');
                 setEmail('');
                 setPassword('');
+                // change that user is verified in db
             } else {
                 Alert.alert("Email Not Verified", "Please verify your email before logging in.");
             }
         } catch (error) {
             console.error(error);
             validateParameters();
+        } finally {
+            console.log("DB INSTANCE: " + db);
         }
     };
 
