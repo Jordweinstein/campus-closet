@@ -12,7 +12,6 @@ import "react-native-gesture-handler";
 import { createStackNavigator } from '@react-navigation/stack';
 import ListingScreen from './Listing-Screen'; 
 import GameDay from '../assets/images/gameday.jpeg';
-import Formal from '../assets/images/formal.png';
 
 const Stack = createStackNavigator();
 
@@ -41,20 +40,9 @@ const HomeMain = ({ navigation }) => {
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
                 <Text style={styles.title}>Campus Closets</Text>
-                
-                <View style={styles.textContainer}>
-                    <Text style={styles.h2}> Stop buying. Start renting! </Text>
-                </View>
+
                 <Image 
                     source = { GameDay }
-                    style = { styles.image }
-                />
-
-                <View style={styles.textContainer}>
-                    <Text style={styles.h2}> Make some extra money while maximizing outfits </Text>
-                </View>
-                <Image 
-                    source = { Formal }
                     style = { styles.image }
                 />
 
@@ -78,7 +66,7 @@ const HomeMain = ({ navigation }) => {
                 </ScrollView>
 
                 <View style={styles.textContainer}>
-                    <Text style={styles.h2}>Based on your likes</Text>
+                    <Text style={styles.h2}>Just In</Text>
                 </View>
                 <ScrollView 
                     horizontal={true}
@@ -139,9 +127,9 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     image: {
-        width: '90%', 
-        height: 200, 
-        borderRadius: 30,
+        width: '100%', 
+        height: 220, 
+        marginVertical: 15
     }
 })
 

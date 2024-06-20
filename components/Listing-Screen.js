@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 
 export default function Listing( { route }) {
     const { item } = route.params;
+    const [likeCount, setLikeCount] = useState(0);
+    const [isLiked, setIsLiked] = useState(true);
+
+    const handleLike = () => {
+        if (!isLiked) {
+            setLikeCount(likeCount - 1);
+            setIsLiked(true);
+            // add item to users liked listings
+        } else {
+            setLikeCount(likeCount + 1);
+            setIsLiked(false); 
+            // remove item from users liked listings 
+        }
+    }
+
     return (
         <SafeAreaView style={ styles.container }>
             <Image 
@@ -10,17 +26,31 @@ export default function Listing( { route }) {
                 style={styles.image}
             />
             <View style= {styles.contentContainer}>
-                <View style={{ flexDirection: 'row' }}>
-                    {item.purchaseMode && Object.entries(item.purchaseMode).map(([mode, price], index) => (
-                        <TouchableOpacity 
-                            key={index} 
-                            style={styles.purchaseButton}
-                            onPress={() => console.log(`${mode} Button Pressed!`)}
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <View style={{ flexDirection: 'row'}}>
+                        {item.purchaseMode && Object.entries(item.purchaseMode).map(([mode, price], index) => (
+                            <TouchableOpacity 
+                                key={index} 
+                                style={styles.purchaseButton}
+                                onPress={() => console.log(`${mode} Button Pressed!`)}
+                            >
+                                <Text style={styles.buttonText}>{mode} ${price}</Text>
+                            </TouchableOpacity>         
+                        ))}   
+                    </View>
+                    <View style={{flexDirection: 'row', alignItems: 'center', paddingBottom: 7}}>
+                        <TouchableOpacity
+                            onPress={handleLike}
                         >
-                            <Text style={styles.buttonText}>{mode} ${price}</Text>
-                        </TouchableOpacity>         
-                    ))}
+                            <AntDesign name= {(isLiked) ? "hearto" : "heart"} size={24} color="black" />
+                        </TouchableOpacity>
+                        <Text style={{margin: 10}}>
+                            {(likeCount === 0) ? '' : likeCount}
+                        </Text>
+                    </View>
+                     
                 </View>
+
                 <View style={styles.hContainer}>
                     <Text style={{paddingRight: 15, fontSize: 20, fontWeight: 'bold'}}>
                         {( item.brand || "No Brand" )+ "   ‣"}
