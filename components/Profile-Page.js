@@ -1,4 +1,3 @@
-
 import { 
     SafeAreaView, 
     ScrollView,
@@ -9,6 +8,7 @@ import {
     TouchableOpacity,
     Alert,
 } from 'react-native';
+import { useState, useEffect } from 'react';
 import { useNavigation, NavigationContainer } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
