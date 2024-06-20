@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+
 import { 
     SafeAreaView, 
     ScrollView,
@@ -161,8 +161,9 @@ const ProfileMain = () => {
             </View>
             
         </SafeAreaView>
-    )
+    );
 }
+
 
 const styles = StyleSheet.create({
     container: {
@@ -314,4 +315,3 @@ const items = [
         size: "One Size"
     }
 ];
-
