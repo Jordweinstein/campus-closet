@@ -18,50 +18,50 @@ export default function Tabs() {
             headerShown: false, 
             tabBarShowLabel: false
         }}>
-        <Tab.Screen name="HomeTab" component={Home} 
-            options={{
-            tabBarIcon: ({ focused }) => (
-                <AntDesign 
-                name="home" 
-                size={24} 
-                color={focused ? "black" : "grey"} 
-                />
-            )
-            }}
-        />
-        <Tab.Screen name="Shop" component={Shop} 
-            options={{
-            tabBarIcon: ({ focused }) => (
-                <Feather 
-                name="shopping-bag" 
-                size={24} 
-                color={focused ? "black" : "grey"}  
-                />
-            )
-            }}
-        />
-        <Tab.Screen name="Chat" component={Chat} 
-            options={{
-            tabBarIcon: ({ focused }) => (
-                <Feather 
-                name="message-circle" 
-                size={24} 
-                color={focused ? "black" : "grey"} 
-                />
-            )
-            }}
-        />
-        <Tab.Screen name="Profile" component={Profile} 
-            options={{
-            tabBarIcon: ({ focused }) => (
-                <MaterialIcons 
-                name="person-outline" 
-                size={24} 
-                color={focused ? "black" : "grey"} 
-                />
-            )
-            }}
-        />
+            <Tab.Screen name="HomeTab" component={Home} 
+                options={{
+                tabBarIcon: ({ focused }) => (
+                    <AntDesign 
+                    name="home" 
+                    size={24} 
+                    color={focused ? "black" : "grey"} 
+                    />
+                )
+                }}
+            />
+            <Tab.Screen name="Shop" component={Shop} 
+                options={{
+                tabBarIcon: ({ focused }) => (
+                    <Feather 
+                    name="shopping-bag" 
+                    size={24} 
+                    color={focused ? "black" : "grey"}  
+                    />
+                )
+                }}
+            />
+            {/* <Tab.Screen name="Chat" component={Chat} 
+                options={{
+                tabBarIcon: ({ focused }) => (
+                    <Feather 
+                    name="message-circle" 
+                    size={24} 
+                    color={focused ? "black" : "grey"} 
+                    />
+                )
+                }}
+            /> */}
+            <Tab.Screen name="Profile" component={Profile} 
+                options={{
+                tabBarIcon: ({ focused }) => (
+                    <MaterialIcons 
+                    name="person-outline" 
+                    size={24} 
+                    color={focused ? "black" : "grey"} 
+                    />
+                )
+                }}
+            />
         </Tab.Navigator>
       );
 }
