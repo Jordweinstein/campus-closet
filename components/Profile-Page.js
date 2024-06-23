@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
     SafeAreaView, 
     ScrollView,
@@ -5,83 +6,37 @@ import {
     Text, 
     View, 
     StyleSheet,
-    TouchableOpacity,
-    Alert,
+    TouchableOpacity 
 } from 'react-native';
-import { useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
-import { Ionicons } from '@expo/vector-icons';
-import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
-import auth from '../auth'; 
 import { createStackNavigator } from '@react-navigation/stack';
-import '../firebase-config';
-import CreateListing from './Create-Listing-Screen';
-import db from '../db'
-import EditProfile from './Edit-Profile-Screen';
-import { doc, getDoc, docSnap } from 'firebase/firestore';
+import ProfilePic from '../assets/images/WebPic.png';
+import { Ionicons } from '@expo/vector-icons';
+
+const Stack = createStackNavigator();
 
 export default function Profile() {
-    const Stack = createStackNavigator();
-
     return (
         <Stack.Navigator>
             <Stack.Screen 
                 name="ProfileMain" 
-                component={ ProfileMain }
+                component={ProfileMain}
                 options={{ headerShown: false, headerTitle: "Back"}}
             />
-            <Stack.Screen 
-                name="CreateListing" 
-                component={ CreateListing }
-                options={{ headerShown: true, headerTitle: ""}}
-            />
-            <Stack.Screen
-                name="EditProfile"
-                component={ EditProfile }
-                options={{ headerShown: true, headerTitle: ""}}
-            />
         </Stack.Navigator>
-    )
+    );
 }
 
-const ProfileMain = () => {
-    const [userData, setUserData] = useState(null);
-    const navigation = useNavigation();
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            const user = getAuth().currentUser;
-            
-            const docRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(docRef)
-            if (docSnap.exists()) {
-                setUserData(docSnap.data());
-            } else {
-                console.log("No such document!");
-            } 
-    
-        };
-
-        const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
-            if (user) {
-                fetchUserData(); 
-            } else {
-                navigation.navigate('Login');
-            }
-        });
-
-        return unsubscribe; 
-    }, [navigation]);
-
-    const handleSignOut = () => {
-        signOut(auth).then(() => {
-            Alert.alert("Error", "Sign out successful.");
-        }).catch((error) => {
-            Alert.alert("Error", "Sign out unsuccessful.");
-        });
-    }
-    
+const ProfileMain = ({ navigation }) => {
+    const handleUpload = () => {
+        console.log('Upload button pressed');
+    };
+    const handleEditBio = () => {
+        console.log('Edit bio button pressed');
+    };
+    const handleAddFriend = () => {
+        console.log('Add friend button pressed');
+    };
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
@@ -89,23 +44,47 @@ const ProfileMain = () => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
-                {userData ? (   
-                    <><Text style={styles.title}>{userData.displayName}</Text><Text> email: {auth.currentUser?.email} </Text><View style={styles.profileContainer}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <Image
-                                source={{ uri: userData.profilePic }}
-                                style={styles.profileImage} />
-                            <View style={styles.bioContainer}>
-                                <Text style={styles.bioText}>{userData.bio}</Text>
-                            </View>
-                        </View>
+                <Text style={styles.title}>Megan Adams</Text>
 
-                    </View></>
-                ) : <Text>No user data</Text>}
-                
-                <View style={[styles.textContainer]}>
-                    <Text style={styles.h2}>My Listings</Text>
-                    <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('CreateListing')}>
+                <View style={styles.profileContainer}>
+                    <Image 
+                        source={ ProfilePic }
+                        style={styles.profileImage}
+                    />
+                <View style={styles.friendsContainer}>
+                            <Text style={styles.friendsCount}>Friends: 150</Text>
+                            <TouchableOpacity style={styles.addFriendButton} onPress={handleAddFriend}>
+                                <Ionicons name="add-circle-outline" size={24} color="black" />
+                            </TouchableOpacity>
+                </View>
+                    <View style = {styles.bioContainer}>
+                        <Text style={styles.bioText}>Hi! Looking for gameday outfits, cocktail dresses, and formal dresses. Located near Franklin St. DM me for more info!</Text>
+                        <TouchableOpacity style={styles.editButton} onPress={handleEditBio}>
+                                <Ionicons name="create-outline" size={24} color="black" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <View style={styles.textContainer}>
+                    <Text style={styles.h2}>My Sizes</Text>
+                    <View style={styles.sizesContainer}>
+                        <View style={styles.sizeColumn}>
+                            <Text style={styles.profileDetail}>Top: Medium</Text>
+                            <Text style={styles.profileDetail}>Bottom: Small</Text>
+                            <Text style={styles.profileDetail}>Shoes: 8</Text>
+                        </View>
+                        <View style={styles.sizeColumn}>
+                            <Text style={[styles.profileDetail, styles.rightAligned]}>Dresses: 8</Text>
+                            <Text style={[styles.profileDetail, styles.rightAligned]}>Jeans: 10</Text>
+                            <Text style={[styles.profileDetail, styles.rightAligned]}>Skirts: 8</Text>
+                        </View>
+                    </View>
+                </View>
+                <View style={[styles.textContainer, styles.alignedContainer]}>
+                    <View style={styles.myListingsTextContainer}>
+                        <Text style={styles.h2}>My Listings</Text>
+                    </View>
+                    <TouchableOpacity style={styles.addListingButton} onPress={handleUpload}>
                         <Ionicons name="add-circle-outline" size={24} color="black" />
                     </TouchableOpacity>
                 </View>
@@ -143,25 +122,7 @@ const ProfileMain = () => {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-                
-                <View style={styles.buttonContainer}>
-                <TouchableOpacity 
-                    style = { styles.button }
-                    onPress={ handleSignOut }
-                >
-                    <Text>Sign out</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style= { styles.button }
-                    onPress={() => navigation.navigate('EditProfile')}
-                >
-                    <Text>Edit Profile</Text>
-                </TouchableOpacity>
-            </View>
             </ScrollView>
-
-            
-            
         </SafeAreaView>
     );
 }
@@ -182,17 +143,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginVertical: 20,
     },
-    
-    buttonContainer: {
+    friendsContainer: {
         flexDirection: 'row',
-        justifyContent: 'center',
         alignItems: 'center',
+        marginVertical: 10,
+    },
+    friendsCount: {
+        fontSize: 16,
+        marginRight: 10,
+    },
+    addFriendButton: {
+        padding: 5,
     },
     profileImage: {
         width: 100,
         height: 100,
         borderRadius: 50,
-        margin: 10,
+        marginBottom: 10,
     },
     bioText: {
         textAlign: 'center',
@@ -204,11 +171,10 @@ const styles = StyleSheet.create({
     bioContainer: {
         backgroundColor: '#f0f0f0',
         borderRadius: 10,
-        padding: 20,
+        padding: 30,
+        marginTop: 10,
         alignItems: 'center',
-        justifyContent: 'center',
-        width: '50%',
-        margin: 10
+        width: '90%',
     },
     h2: {
         fontSize: 18,
@@ -219,20 +185,40 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         paddingHorizontal: 20,
-        width: '100%',
-        marginBottom: 7,
+        marginBottom: 20,
+        alignItems: 'flex-start',
+    },
+    sizesContainer: {
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        padding: 30,
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
+        width: '80%',
+        alignSelf: 'center',
+    },
+    sizeColumn: {
+        flex: 1,
     },
     myListingsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
+    myListingsTextContainer: {
+        flex: 1,
+        alignItems: 'left',
+    },
     addListingButton: {
-        paddingTop: 12,
+        padding: 5,
         marginLeft: 10
+    },
+    profileDetail: {
+        fontSize: 16,
+        marginBottom: 5,
+    },
+    rightAligned: {
+        textAlign: 'right',
     },
     profileDetail: {
         fontSize: 16,
@@ -244,6 +230,11 @@ const styles = StyleSheet.create({
         right: 0,
         padding: 10,
     },
+
+    uploadButton: {
+        padding: 5
+    },
+
     scrollViewStyle: { 
         flex: 1,
         width: '100%',  
@@ -264,16 +255,11 @@ const styles = StyleSheet.create({
         margin: 5, 
         borderRadius: 10,
     },
-    button: {
-        padding: 10,
-        backgroundColor: '#e0edff',
-        color: "white",
-        marginTop: 20,
-        margin: 7,
-        borderRadius: 10,
-        width: 125,
-        alignItems: 'center'
-    }
+    alignedContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
 });
 
 const items = [
