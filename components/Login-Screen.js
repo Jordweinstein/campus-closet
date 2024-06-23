@@ -4,12 +4,9 @@ import { getAuth,
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
         onAuthStateChanged,
-        sendEmailVerification, 
-        sendPasswordResetEmail 
+        sendEmailVerification 
     } from "firebase/auth";
-import { doc, updateDoc, setDoc } from "firebase/firestore"; 
-import '../firebase-config';
-import db from '../db';
+import '../firebase';
 import { useNavigation } from "@react-navigation/native";
 
 const Login = () => {
@@ -48,20 +45,9 @@ const Login = () => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(getAuth(), user => {
             if (user && user.emailVerified) {
-                navigation.navigate('ProfileSetup');
+                navigation.navigate('Home')
                 setEmail('');
                 setPassword('');
-                const userRef = doc(db, "users", auth.currentUser.uid);
-                try {
-                    async () => {
-                        await updateDoc(userRef, {
-                            isVerified: true,  
-                        });
-                    }
-                    console.log("isVerified updated successfully.");
-                } catch (error) {
-                    console.error("Failed to update isVerified:", error);
-                }
             } else if (user && !user.emailVerified) {
                 Alert.alert("Email Verification Required", "Please verify your email before logging in.");
             }
@@ -70,50 +56,25 @@ const Login = () => {
     }, []);
 
     const handleSignUp = async () => {
-        if (email.endsWith('.edu')) {
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-    
-                await sendEmailVerification(user);
-    
-                const userRef = doc(db, "users", user.uid);
-                await setDoc(userRef, {
-                    email: email,
-                    displayName: "",
-                    bio: "",
-                    graduationYear: "",
-                    listings: [],
-                    profilePicUrl: "",
-                    isProfileComplete: false
-                });
-    
-                console.log("Document written with ID: ", user.uid);
-                setEmail('');
-                setPassword('');
-            } catch (error) {
-                console.log("Error during sign up or document creation: " + error.message);
-                if (error.code === 'auth/email-already-in-use') {
-                    Alert.alert("Error", "The email address is already in use by another account.");
-                } else {
-                    validateParameters(); 
-                }
-            }
+
+        await createUserWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
+            await sendEmailVerification(user);
             setEmail('');
             setPassword('');
-        } else {
-            Alert.alert(
-                "Error",
-                "Please register with an email ending in .edu"
-            );
-        }
+        })
+        .catch((error) => {
+            console.log(error.message);
+            validateParameters();
+        });
     }
 
     const handleLogIn = async () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            if (auth.currentUser.emailVerified) {
-                navigation.navigate((userCredential.isProfileComplete) ? 'Home' : 'ProfileSetup');
+            if (userCredential.user.emailVerified) {
+                navigation.navigate('Home');
                 setEmail('');
                 setPassword('');
             } else {
@@ -122,32 +83,8 @@ const Login = () => {
         } catch (error) {
             console.error(error);
             validateParameters();
-            if (error.code === 'auth/invalid-credential') {
-                Alert.alert( 
-                    "Error",
-                    "Incorrect login credentials. Please try again."
-                );
-            } else if (error.code === 'auth/weak-password') {
-                Alert.alert(
-                    "Error",
-                    "Password must be at least 6 characters"
-                )
-            }
-        } finally {
-            console.log("DB INSTANCE: " + db);
         }
     };
-
-    const handleResetPassword = () => {
-        sendPasswordResetEmail(auth, email)
-            .then(() => {
-                Alert.alert("Email sent", "Please check your email and proceed to reset your password.")
-            }) 
-            .catch((error) => {
-                console.log(error.message);
-            });
-     
-    }
 
     return (
         <>
@@ -175,10 +112,6 @@ const Login = () => {
                 />
                     
             </View>
-
-            <TouchableOpacity onPress={handleResetPassword}>
-                <Text style={{padding: 10}}>Forgot password?</Text>
-            </TouchableOpacity>
 
             <View style = {styles.buttonContainer}>
                 <TouchableOpacity 
@@ -244,7 +177,6 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: "BebasNeue",
         fontSize: 64,
-        paddingBottom: 10
     }
     
 })
