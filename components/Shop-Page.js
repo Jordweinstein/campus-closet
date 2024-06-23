@@ -1,12 +1,4 @@
-import { SafeAreaView, Text } from 'react-native'
-
-export default function Shop() {
-    return (
-        <SafeAreaView>
-            <Text>Shop Page</Text>
-        </SafeAreaView>
-    )
-}import React, {useState} from 'react';
+import React, {useState} from 'react';
 import { 
     SafeAreaView, 
     ScrollView,
@@ -22,9 +14,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { createStackNavigator } from '@react-navigation/stack';
 import ListingScreen from './Listing-Screen'; 
 
-const Stack = createStackNavigator();
-
 export default function Shop() {
+
+    const Stack = createStackNavigator();
 
     return (
         <Stack.Navigator>

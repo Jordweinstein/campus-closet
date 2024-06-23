@@ -7,13 +7,33 @@ import Login from './components/Login-Screen';
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import db from './db'
+import { enGB, registerTranslation } from 'react-native-paper-dates';
+import db from './db';
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState('Login');
   const Stack = createStackNavigator();
   const [user, setUser] = useState(null);
   const navigationRef = useRef();
+
+  registerTranslation('en', {
+    save: 'Save',
+    selectSingle: 'Select date',
+    selectMultiple: 'Select dates',
+    selectRange: 'Select period',
+    notAccordingToDateFormat: (inputFormat) =>
+      `Date format must be ${inputFormat}`,
+    mustBeHigherThan: (date) => `Must be later then ${date}`,
+    mustBeLowerThan: (date) => `Must be earlier then ${date}`,
+    mustBeBetween: (startDate, endDate) =>
+      `Must be between ${startDate} - ${endDate}`,
+    dateIsDisabled: 'Day is not allowed',
+    previous: 'Previous',
+    next: 'Next',
+    typeInDate: 'Type in date',
+    pickDateFromCalendar: 'Pick date from calendar',
+    close: 'Close',
+  })
 
   useEffect(() => {
     const auth = getAuth();
@@ -65,6 +85,11 @@ export default function App() {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator initialRouteName={initialRoute}>
+        <Stack.Screen
+          name="Home"
+          component={Tabs}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen 
           name="Login" 
           component={Login}
@@ -73,11 +98,6 @@ export default function App() {
         <Stack.Screen 
           name="ProfileSetup" 
           component={ProfileSetup}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Home"
-          component={Tabs}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

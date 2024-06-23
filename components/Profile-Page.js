@@ -9,7 +9,7 @@ import {
     Alert,
 } from 'react-native';
 import { useState, useEffect } from 'react';
-import { useNavigation, NavigationContainer } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
@@ -18,6 +18,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import '../firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import db from '../db'
+import EditProfile from './Edit-Profile-Screen';
 import { doc, getDoc, docSnap } from 'firebase/firestore';
 
 export default function Profile() {
@@ -35,6 +36,11 @@ export default function Profile() {
                 component={ CreateListing }
                 options={{ headerShown: true, headerTitle: ""}}
             />
+            <Stack.Screen
+                name="EditProfile"
+                component={ EditProfile }
+                options={{ headerShown: true, headerTitle: ""}}
+            />
         </Stack.Navigator>
     )
 }
@@ -46,18 +52,15 @@ const ProfileMain = () => {
     useEffect(() => {
         const fetchUserData = async () => {
             const user = getAuth().currentUser;
-            if (user) {
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setUserData(docSnap.data());
-                } else {
-                    console.log("No such document!");
-                }
+            
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef)
+            if (docSnap.exists()) {
+                setUserData(docSnap.data());
             } else {
-                console.log("No user data available");
-                navigation.navigate('Login'); 
-            }
+                console.log("No such document!");
+            } 
+    
         };
 
         const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
@@ -70,10 +73,6 @@ const ProfileMain = () => {
 
         return unsubscribe; 
     }, [navigation]);
-
-    if (!userData) {
-        return <Text style={{alignItems: 'center', justifyContent: 'center'}}>Loading...</Text>;
-    }
 
     const handleSignOut = () => {
         signOut(auth).then(() => {
@@ -90,24 +89,19 @@ const ProfileMain = () => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
-                <Text style={styles.title}>{ userData.displayName }</Text>
-                <Text> email: { auth.currentUser?.email} </Text>
-
-                <View style={styles.profileContainer}>
-                    <View style= {{flexDirection: 'row'}}>  
-                        <Image 
-                            source={{ uri: userData.profilePic }}
-                            style={styles.profileImage}
-                        />
-                        <View style = {styles.bioContainer}>
-                            <Text style={styles.bioText}>{ userData.bio }</Text>
-                            <TouchableOpacity style={styles.editButton} onPress={console.log("bio button pressed")}>
-                                    <Ionicons name="create-outline" size={24} color="black" />
-                            </TouchableOpacity>
+                {userData ? (   
+                    <><Text style={styles.title}>{userData.displayName}</Text><Text> email: {auth.currentUser?.email} </Text><View style={styles.profileContainer}>
+                        <View style={{ flexDirection: 'row' }}>
+                            <Image
+                                source={{ uri: userData.profilePic }}
+                                style={styles.profileImage} />
+                            <View style={styles.bioContainer}>
+                                <Text style={styles.bioText}>{userData.bio}</Text>
+                            </View>
                         </View>
-                    </View>
-                    
-                </View>
+
+                    </View></>
+                ) : <Text>No user data</Text>}
                 
                 <View style={[styles.textContainer]}>
                     <Text style={styles.h2}>My Listings</Text>
@@ -149,16 +143,24 @@ const ProfileMain = () => {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-            </ScrollView>
-
-            <View style={styles.buttonContainer}>
+                
+                <View style={styles.buttonContainer}>
                 <TouchableOpacity 
                     style = { styles.button }
                     onPress={ handleSignOut }
                 >
                     <Text>Sign out</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    style= { styles.button }
+                    onPress={() => navigation.navigate('EditProfile')}
+                >
+                    <Text>Edit Profile</Text>
+                </TouchableOpacity>
             </View>
+            </ScrollView>
+
+            
             
         </SafeAreaView>
     );
@@ -182,8 +184,9 @@ const styles = StyleSheet.create({
     },
     
     buttonContainer: {
-        flexDirection: "row",
+        flexDirection: 'row',
         justifyContent: 'center',
+        alignItems: 'center',
     },
     profileImage: {
         width: 100,

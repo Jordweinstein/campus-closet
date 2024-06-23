@@ -6,6 +6,7 @@ import auth from '../auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import PhoneInput from 'react-native-phone-input'
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export default function ProfileSetup() {
@@ -14,6 +15,7 @@ export default function ProfileSetup() {
     const [graduationYear, setGraduationYear] = useState('');
     const defaultProfPic = require('../assets/images/emptyProfile.png');
     const [profilePic, setProfilePic] = useState(defaultProfPic);
+    const [phoneNumber, setPhoneNumber] = useState(0);
     const navigation = useNavigation();
 
     const [isProfileComplete, setIsProfileComplete] = useState(false);
@@ -95,7 +97,6 @@ export default function ProfileSetup() {
             profilePicUrl = await uploadImageAsync(profilePic);
         }
 
-        console.log(auth);
         const userRef = doc(db, "users", auth.currentUser?.uid);
 
         await updateDoc(userRef, {
@@ -125,12 +126,16 @@ export default function ProfileSetup() {
                     />
                 </View>
                 <View style={styles.singleInputContainer}>
-                    <Text>Bio: </Text>
-                    <TextInput
-                        placeholder = "Tell us about yourself"
-                        style = {styles.input}
-                        value = { bio }
-                        onChangeText = { text => setBio(text) }
+                    <Text>Phone Number: </Text>
+                    <PhoneInput
+                        defaultValue={phoneNumber}
+                        placeholder='(123)123-1234'
+                        defaultCode="US"
+                        textInputProps={{ keyboardType: 'phone-pad' }}                        
+                        containerStyle={{flex: 1}}
+                        autoFormat={true}
+                        flagButtonStyle={{display: 'none'}}
+                        onChangeFormattedText={text => setPhoneNumber(text)}
                     />
                 </View>
                 <View style={styles.singleInputContainer}>
@@ -140,6 +145,15 @@ export default function ProfileSetup() {
                         style = {styles.input}
                         value = { graduationYear }
                         onChangeText = { text => setGraduationYear(text) }
+                    />
+                </View>
+                <View style={styles.singleInputContainer}>
+                    <Text>Bio: </Text>
+                    <TextInput
+                        placeholder = "Tell us about yourself"
+                        style = {styles.input}
+                        value = { bio }
+                        onChangeText = { text => setBio(text) }
                     />
                 </View>
                 
@@ -178,7 +192,8 @@ const styles = StyleSheet.create({
     input: {
         fontSize: 18,
         padding: 5,
-        margin: 3
+        margin: 3,
+        flex: 1
     },
     setupContainer: {
         flexDirection: 'column',
