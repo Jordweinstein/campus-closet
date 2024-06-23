@@ -19,7 +19,7 @@ import '../firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import db from '../db'
 import EditProfile from './Edit-Profile-Screen';
-import { doc, getDoc, docSnap } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -50,20 +50,24 @@ const ProfileMain = () => {
     const navigation = useNavigation();
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUserData = () => {
             const user = getAuth().currentUser;
-            
-            const docRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(docRef)
-            if (docSnap.exists()) {
-                setUserData(docSnap.data());
-            } else {
-                console.log("No such document!");
-            } 
-    
+            if (user) {
+                const docRef = doc(db, "users", user.uid);
+
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        setUserData(docSnap.data());
+                    } else {
+                        console.log("No such document!");
+                    }
+                });
+
+                return () => unsubscribe();  // Clean up the listener on unmount
+            }
         };
 
-        const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
+        const unsubscribeAuth = onAuthStateChanged(getAuth(), (user) => {
             if (user) {
                 fetchUserData(); 
             } else {
@@ -71,16 +75,17 @@ const ProfileMain = () => {
             }
         });
 
-        return unsubscribe; 
+        return unsubscribeAuth; 
     }, [navigation]);
 
     const handleSignOut = () => {
         signOut(auth).then(() => {
-            Alert.alert("Error", "Sign out successful.");
+            Alert.alert("Sign out successful.");
         }).catch((error) => {
             Alert.alert("Error", "Sign out unsuccessful.");
         });
     }
+    
     
     return (
         <SafeAreaView style={styles.container}>
