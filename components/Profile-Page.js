@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import "react-native-gesture-handler";
 import { createStackNavigator } from '@react-navigation/stack';
-import ProfilePic from '../assets/images/WebPic.png';
-import { Ionicons } from '@expo/vector-icons';
-
-const Stack = createStackNavigator();
+import '../firebase-config';
+import CreateListing from './Create-Listing-Screen';
+import db from '../db'
+import EditProfile from './Edit-Profile-Screen';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function Profile() {
     return (
@@ -27,16 +28,48 @@ export default function Profile() {
     );
 }
 
-const ProfileMain = ({ navigation }) => {
-    const handleUpload = () => {
-        console.log('Upload button pressed');
-    };
-    const handleEditBio = () => {
-        console.log('Edit bio button pressed');
-    };
-    const handleAddFriend = () => {
-        console.log('Add friend button pressed');
-    };
+const ProfileMain = () => {
+    const [userData, setUserData] = useState(null);
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        const fetchUserData = () => {
+            const user = getAuth().currentUser;
+            if (user) {
+                const docRef = doc(db, "users", user.uid);
+
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        setUserData(docSnap.data());
+                    } else {
+                        console.log("No such document!");
+                    }
+                });
+
+                return () => unsubscribe();  // Clean up the listener on unmount
+            }
+        };
+
+        const unsubscribeAuth = onAuthStateChanged(getAuth(), (user) => {
+            if (user) {
+                fetchUserData(); 
+            } else {
+                navigation.navigate('Login');
+            }
+        });
+
+        return unsubscribeAuth; 
+    }, [navigation]);
+
+    const handleSignOut = () => {
+        signOut(auth).then(() => {
+            Alert.alert("Sign out successful.");
+        }).catch((error) => {
+            Alert.alert("Error", "Sign out unsuccessful.");
+        });
+    }
+    
+    
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
