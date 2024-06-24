@@ -17,7 +17,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { useState, useCallback } from "react";
 import { DatePickerModal } from 'react-native-paper-dates';
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import categories from './Categories';
 import db from '../db';
 import { getAuth } from "firebase/auth";
@@ -139,7 +139,6 @@ export default function CreateListing() {
         console.log("result:" + result.uri);
     
         if (!result.canceled && result.assets && result.assets.length > 0) {
-            console.log('Image chosen from gallery:', result.assets[0].uri);
             const newImages = [...images];
             newImages[index] = result.assets[0].uri;
             setImages(newImages);
@@ -214,12 +213,31 @@ export default function CreateListing() {
             alert("You must choose to enable rent, buy, or both");
             return false;
         }
-        if (isRentFocused && (!range.startDate || !range.endDate )) {
+        if (isRentFocused && (!range.startDate || !range.endDate || range.startDate < new Date())) {
             alert("Please enter valid dates during which your item is available for rent");
+            return false;
+        }
+        if ((isRentFocused && rentPrice === 0.00) || (isBuyFocused && buyPrice === 0.00)) {
+            alert("Please enter a price amount greater than zero dollars.");
             return false;
         }
         return true;
     }
+
+    const addListingReferenceToUser = async (listingId) => {
+        try {
+            const user = getAuth().currentUser;
+            const userRef = doc(db, "users", user.uid);
+    
+            await updateDoc(userRef, {
+                listings: arrayUnion(listingId)
+            });
+    
+            console.log("Successfully added listing reference to user document");
+        } catch (error) {
+            console.error("Error updating user document: ", error);
+        }
+    };
 
     const handleUpload = async () => {
         if (verifyPresentInput()) {
@@ -230,20 +248,24 @@ export default function CreateListing() {
     
             let purchaseMethods = [];
             let prices = [];
+            let datesAvailable = [];
             if (isRentFocused) { 
                 purchaseMethods.push("Rent");
                 prices.push(rentPrice);
+                datesAvailable = [range.startDate, range.endDate];
             }
             if (isBuyFocused) { 
                 purchaseMethods.push("Buy");
                 prices.push(buyPrice);
             }
-    
+            
+
+            var listingRef;
             try {
-                const listingRef = await addDoc(collection(db, "listings"), {
+                listingRef = await addDoc(collection(db, "listings"), {
                     brand: brand,
                     category: selectedCategory,
-                    datesAvailable: [range.startDate, range.endDate],
+                    datesAvailable: datesAvailable,
                     description: description,
                     itemName: itemName,
                     likes: 0,
@@ -253,26 +275,30 @@ export default function CreateListing() {
                     price: prices,
                     size: size,
                     tags: selectedTheme
-                });
+                });                
+
                 console.log("Successfully uploaded listings");
             } catch (error) {
                 console.error("Error creating listing: ", error);
             }
+
+            await addListingReferenceToUser(listingRef.id);
+
+            setItemName('');
+            setBrand('');
+            setSelectedCategory('');
+            setDescription('');
+            setSize('');
+            setSelectedTheme('');
+            setRentPrice(0.00);
+            setBuyPrice(0.00);
+            setImages([]);
+            setRange({undefined, undefined});
+            setIsRentFocused(false);
+            setIsBuyFocused(false);
+            navigator.navigate('Profile');
         }
 
-        setItemName('');
-        setBrand('');
-        setSelectedCategory('');
-        setDescription('');
-        setSize('');
-        setSelectedTheme('');
-        setRentPrice(0.00);
-        setBuyPrice(0.00);
-        setImages([]);
-        setRange({undefined, undefined});
-        setIsRentFocused(false);
-        setIsBuyFocused(false);
-        navigator.navigate('Profile');
     };
 
     return (

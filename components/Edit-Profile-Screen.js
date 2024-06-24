@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         marginTop: '25%',
-        backgroundColor: 'navy',
+        backgroundColor: '#0e165c',
         padding: 15,
         borderRadius: 10,
     }

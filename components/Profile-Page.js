@@ -19,7 +19,7 @@ import '../firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import db from '../db'
 import EditProfile from './Edit-Profile-Screen';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -39,7 +39,7 @@ export default function Profile() {
             <Stack.Screen
                 name="EditProfile"
                 component={ EditProfile }
-                options={{ headerShown: true, headerTitle: ""}}
+                options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c'}}
             />
         </Stack.Navigator>
     )
@@ -47,23 +47,45 @@ export default function Profile() {
 
 const ProfileMain = () => {
     const [userData, setUserData] = useState(null);
+    const [listings, setListings] = useState([]);
+    const [likedListings, setLikedListings] = useState([]);
     const navigation = useNavigation();
 
     useEffect(() => {
-        const fetchUserData = () => {
+        const fetchUserData = async () => {
             const user = getAuth().currentUser;
             if (user) {
                 const docRef = doc(db, "users", user.uid);
 
-                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                const unsubscribe = onSnapshot(docRef, async (docSnap) => {
                     if (docSnap.exists()) {
-                        setUserData(docSnap.data());
+                        const data = docSnap.data();
+                        setUserData(data);
+
+                        if (data.listings && data.listings.length > 0) {
+                            const listingsData = await Promise.all(
+                                data.listings.map(async (listingId) => {
+                                    const listingDoc = await getDoc(doc(db, "listings", listingId));
+                                    return { id: listingId, ...listingDoc.data() };
+                                })
+                            );
+                            setListings(listingsData);
+                        }
+                        if (data.likedListings && data.likedListings.length > 0) {
+                            const likedListingsData = await Promise.all(
+                                data.listings.map(async (listingId) => {
+                                    const listingDoc = await getDoc(doc(db, "listings", listingId));
+                                    return { id: listingId, ...listingDoc.data() };
+                                })
+                            );
+                            setLikedListings(likedListingsData)
+                        }
                     } else {
                         console.log("No such document!");
                     }
                 });
 
-                return () => unsubscribe();  // Clean up the listener on unmount
+                return () => unsubscribe();  
             }
         };
 
@@ -85,7 +107,6 @@ const ProfileMain = () => {
             Alert.alert("Error", "Sign out unsuccessful.");
         });
     }
-    
     
     return (
         <SafeAreaView style={styles.container}>
@@ -120,14 +141,19 @@ const ProfileMain = () => {
                     style={styles.scrollViewStyle} 
                     contentContainerStyle={styles.scrollContainer} 
                 >
-                    {items.map((item) => (
-                        <TouchableOpacity key={item.id} onPress={() => navigation.navigate('ListingScreen', { item })}>
-                            <Image 
-                                source={{ uri: 'https://picsum.photos/200/300' }}
-                                style={styles.listingImage}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    {listings.length === 0 ? 
+                        <TouchableOpacity style={styles.listingImage}></TouchableOpacity>
+                    :
+                        listings.map((listing) => (
+                            <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
+                                <Image 
+                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                    style={styles.listingImage}
+                                />
+                            </TouchableOpacity>
+                        ))
+                    }
+                    
                 </ScrollView>
 
                 <View style={styles.textContainer}>
@@ -139,14 +165,18 @@ const ProfileMain = () => {
                     style={styles.scrollViewStyle} 
                     contentContainerStyle={styles.scrollContainer} 
                 >
-                    {items.map((item) => (
-                        <TouchableOpacity key={item.id} onPress={() => navigation.navigate('ListingScreen', { item })}>
-                            <Image 
-                                source={{ uri: 'https://picsum.photos/200/300' }}
-                                style={styles.listingImage}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    {likedListings.length === 0 ? 
+                        <TouchableOpacity style={styles.listingImage}></TouchableOpacity>
+                    :
+                        likedListings.map((listing) => (
+                            <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
+                                <Image 
+                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                    style={styles.listingImage}
+                                />
+                            </TouchableOpacity>
+                        ))
+                    }
                 </ScrollView>
                 
                 <View style={styles.buttonContainer}>
@@ -268,6 +298,7 @@ const styles = StyleSheet.create({
         height: 125, 
         margin: 5, 
         borderRadius: 10,
+        backgroundColor: '#f0f0f0',
     },
     button: {
         padding: 10,
