@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SafeAreaView, TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-
+#
 export default function Listing( { route }) {
     const { item } = route.params;
     const [likeCount, setLikeCount] = useState(0);
