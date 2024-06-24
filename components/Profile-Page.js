@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import "react-native-gesture-handler";
 import { createStackNavigator } from '@react-navigation/stack';
-import ProfilePic from '../assets/images/WebPic.png';
-import { Ionicons } from '@expo/vector-icons';
-
-const Stack = createStackNavigator();
+import '../firebase-config';
+import CreateListing from './Create-Listing-Screen';
+import db from '../db'
+import EditProfile from './Edit-Profile-Screen';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 
 export default function Profile() {
     return (
@@ -23,20 +24,83 @@ export default function Profile() {
                 component={ProfileMain}
                 options={{ headerShown: false, headerTitle: "Back"}}
             />
+            <Stack.Screen 
+                name="CreateListing" 
+                component={ CreateListing }
+                options={{ headerShown: true, headerTitle: ""}}
+            />
+            <Stack.Screen
+                name="EditProfile"
+                component={ EditProfile }
+                options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c'}}
+            />
         </Stack.Navigator>
     );
 }
 
-const ProfileMain = ({ navigation }) => {
-    const handleUpload = () => {
-        console.log('Upload button pressed');
-    };
-    const handleEditBio = () => {
-        console.log('Edit bio button pressed');
-    };
-    const handleAddFriend = () => {
-        console.log('Add friend button pressed');
-    };
+const ProfileMain = () => {
+    const [userData, setUserData] = useState(null);
+    const [listings, setListings] = useState([]);
+    const [likedListings, setLikedListings] = useState([]);
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const user = getAuth().currentUser;
+            if (user) {
+                const docRef = doc(db, "users", user.uid);
+
+                const unsubscribe = onSnapshot(docRef, async (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        setUserData(data);
+
+                        if (data.listings && data.listings.length > 0) {
+                            const listingsData = await Promise.all(
+                                data.listings.map(async (listingId) => {
+                                    const listingDoc = await getDoc(doc(db, "listings", listingId));
+                                    return { id: listingId, ...listingDoc.data() };
+                                })
+                            );
+                            setListings(listingsData);
+                        }
+                        if (data.likedListings && data.likedListings.length > 0) {
+                            const likedListingsData = await Promise.all(
+                                data.listings.map(async (listingId) => {
+                                    const listingDoc = await getDoc(doc(db, "listings", listingId));
+                                    return { id: listingId, ...listingDoc.data() };
+                                })
+                            );
+                            setLikedListings(likedListingsData)
+                        }
+                    } else {
+                        console.log("No such document!");
+                    }
+                });
+
+                return () => unsubscribe();  
+            }
+        };
+
+        const unsubscribeAuth = onAuthStateChanged(getAuth(), (user) => {
+            if (user) {
+                fetchUserData(); 
+            } else {
+                navigation.navigate('Login');
+            }
+        });
+
+        return unsubscribeAuth; 
+    }, [navigation]);
+
+    const handleSignOut = () => {
+        signOut(auth).then(() => {
+            Alert.alert("Sign out successful.");
+        }).catch((error) => {
+            Alert.alert("Error", "Sign out unsuccessful.");
+        });
+    }
+    
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
@@ -94,14 +158,19 @@ const ProfileMain = ({ navigation }) => {
                     style={styles.scrollViewStyle} 
                     contentContainerStyle={styles.scrollContainer} 
                 >
-                    {items.map((item) => (
-                        <TouchableOpacity key={item.id} onPress={() => navigation.navigate('ListingScreen', { item })}>
-                            <Image 
-                                source={{ uri: 'https://picsum.photos/200/300' }}
-                                style={styles.listingImage}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    {listings.length === 0 ? 
+                        <TouchableOpacity style={styles.listingImage}></TouchableOpacity>
+                    :
+                        listings.map((listing) => (
+                            <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
+                                <Image 
+                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                    style={styles.listingImage}
+                                />
+                            </TouchableOpacity>
+                        ))
+                    }
+                    
                 </ScrollView>
 
                 <View style={styles.textContainer}>
@@ -113,14 +182,18 @@ const ProfileMain = ({ navigation }) => {
                     style={styles.scrollViewStyle} 
                     contentContainerStyle={styles.scrollContainer} 
                 >
-                    {items.map((item) => (
-                        <TouchableOpacity key={item.id} onPress={() => navigation.navigate('ListingScreen', { item })}>
-                            <Image 
-                                source={{ uri: 'https://picsum.photos/200/300' }}
-                                style={styles.listingImage}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    {likedListings.length === 0 ? 
+                        <TouchableOpacity style={styles.listingImage}></TouchableOpacity>
+                    :
+                        likedListings.map((listing) => (
+                            <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
+                                <Image 
+                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                    style={styles.listingImage}
+                                />
+                            </TouchableOpacity>
+                        ))
+                    }
                 </ScrollView>
             </ScrollView>
         </SafeAreaView>
@@ -254,12 +327,18 @@ const styles = StyleSheet.create({
         height: 125, 
         margin: 5, 
         borderRadius: 10,
+        backgroundColor: '#f0f0f0',
     },
-    alignedContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
+    button: {
+        padding: 10,
+        backgroundColor: '#e0edff',
+        color: "white",
+        marginTop: 20,
+        margin: 7,
+        borderRadius: 10,
+        width: 125,
+        alignItems: 'center'
+    }
 });
 
 const items = [
