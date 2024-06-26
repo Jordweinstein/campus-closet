@@ -7,7 +7,7 @@ import Login from './components/Login-Screen';
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { enGB, registerTranslation } from 'react-native-paper-dates';
+import { UserContext } from './contexts/userContext';
 import db from './db';
 
 export default function App() {
@@ -15,6 +15,7 @@ export default function App() {
   const Stack = createStackNavigator();
   const [user, setUser] = useState(null);
   const navigationRef = useRef();
+  const users = useContext(UserContext);
 
   registerTranslation('en', {
     save: 'Save',
