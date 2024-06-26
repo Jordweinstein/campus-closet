@@ -1,19 +1,34 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { db } from '../firebase-config'; // Adjust according to your project structure
+import { collection, getDocs } from 'firebase/firestore';
+import db from '../db';
 
-export const ListingContext = createContext();
+export const ListingsContext = createContext();
 
-export const ListingProvider = ({ children }) => {
+export const ListingsProvider = ({ children }) => {
     const [listings, setListings] = useState([]);
 
     useEffect(() => {
-        const unsubscribe = db.collection('listings').onSnapshot(snapshot => {
-            const listingData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setListings(listingData);
-        });
+        const fetchListings = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, "listings"));
+                const listingsData = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setListings(listingsData); 
+            } catch (error) {
+                console.error("Error fetching listings data:", error);
+            }
+        };
 
+        fetchListings(); 
+        
         return () => unsubscribe();
     }, []);
 
-    return <ListingContext.Provider value={listings}>{children}</ListingContext.Provider>;
+    return (
+        <ListingsContext.Provider value={{ listings }}>
+            {children}
+        </ListingsContext.Provider>
+    );
 };

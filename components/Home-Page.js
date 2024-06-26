@@ -12,7 +12,6 @@ import "react-native-gesture-handler";
 import { createStackNavigator } from '@react-navigation/stack';
 import ListingScreen from './Listing-Screen'; 
 import GameDay from '../assets/images/gameday.jpeg';
-import { useFirestoreData } from '../firestoreContext';
 
 
 const Stack = createStackNavigator();
