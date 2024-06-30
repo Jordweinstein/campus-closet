@@ -20,48 +20,17 @@ const Login = () => {
     
     const validateParameters = () => {
         if (email === null || !email.includes('@') || !email.includes('.')) {
-            Alert.alert(
-                "Error",
-                "Please enter a valid email.", 
-                [
-                  {
-                    text: "OK", 
-                    onPress: () => console.log('OK Pressed') 
-                  }
-                ],
-                { cancelable: false } 
-              );
+            Alert.alert("Error", "Please enter a valid email.");
         } if (password === "") {
-            Alert.alert(
-                "Error",
-                "Please enter a password", 
-                [
-                  {
-                    text: "OK", 
-                  }
-                ],
-                { cancelable: false } 
-              );
+            Alert.alert("Error", "Please enter a password");
         }
     }
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(getAuth(), user => {
             if (user && user.emailVerified) {
-                navigation.navigate('ProfileSetup');
                 setEmail('');
                 setPassword('');
-                const userRef = doc(db, "users", auth.currentUser.uid);
-                try {
-                    async () => {
-                        await updateDoc(userRef, {
-                            isVerified: true,  
-                        });
-                    }
-                    console.log("isVerified updated successfully.");
-                } catch (error) {
-                    console.error("Failed to update isVerified:", error);
-                }
             } else if (user && !user.emailVerified) {
                 Alert.alert("Email Verification Required", "Please verify your email before logging in.");
             }
@@ -84,6 +53,7 @@ const Login = () => {
                     bio: "",
                     graduationYear: "",
                     listings: [],
+                    likedListings: [],
                     profilePicUrl: "",
                     isProfileComplete: false
                 });
@@ -113,7 +83,6 @@ const Login = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             if (auth.currentUser.emailVerified) {
-                navigation.navigate((userCredential.isProfileComplete) ? 'Home' : 'ProfileSetup');
                 setEmail('');
                 setPassword('');
             } else {

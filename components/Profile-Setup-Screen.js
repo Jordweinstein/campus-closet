@@ -107,7 +107,6 @@ export default function ProfileSetup() {
             isProfileComplete: true
         });
         console.log("information uploaded successfully.");
-        navigation.navigate('Home');
     };
 
     return (
@@ -127,15 +126,11 @@ export default function ProfileSetup() {
                 </View>
                 <View style={styles.singleInputContainer}>
                     <Text>Phone Number: </Text>
-                    <PhoneInput
-                        defaultValue={phoneNumber}
-                        placeholder='(123)123-1234'
-                        defaultCode="US"
-                        textInputProps={{ keyboardType: 'phone-pad' }}                        
-                        containerStyle={{flex: 1}}
-                        autoFormat={true}
-                        flagButtonStyle={{display: 'none'}}
-                        onChangeFormattedText={text => setPhoneNumber(text)}
+                    <TextInput
+                        placeholder='(000) 000 - 0000'
+                        style = {styles.input}
+                        value = {phoneNumber}
+                        onChangeText = { text => setPhoneNumber(text)}
                     />
                 </View>
                 <View style={styles.singleInputContainer}>

@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     Alert,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
@@ -17,90 +17,43 @@ import auth from '../auth';
 import { createStackNavigator } from '@react-navigation/stack';
 import '../firebase-config';
 import CreateListing from './Create-Listing-Screen';
-import db from '../db'
+import useListingDoc from '../hooks/useListingDoc';
 import EditProfile from './Edit-Profile-Screen';
-import { doc, onSnapshot, getDoc } from 'firebase/firestore';
+import { AuthContext } from '../contexts/authContext';
+import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 
 export default function Profile() {
     const Stack = createStackNavigator();
 
     return (
-        <Stack.Navigator>
-            <Stack.Screen 
-                name="ProfileMain" 
-                component={ ProfileMain }
-                options={{ headerShown: false, headerTitle: "Back"}}
-            />
-            <Stack.Screen 
-                name="CreateListing" 
-                component={ CreateListing }
-                options={{ headerShown: true, headerTitle: ""}}
-            />
-            <Stack.Screen
-                name="EditProfile"
-                component={ EditProfile }
-                options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c'}}
-            />
-        </Stack.Navigator>
+        <ListingsProvider>
+            <Stack.Navigator>
+                <Stack.Screen 
+                    name="ProfileMain" 
+                    component={ ProfileMain }
+                    options={{ headerShown: false, headerTitle: "Back"}}
+                />
+                <Stack.Screen 
+                    name="CreateListing" 
+                    component={ CreateListing }
+                    options={{ headerShown: true, headerTitle: ""}}
+                />
+                <Stack.Screen
+                    name="EditProfile"
+                    component={ EditProfile }
+                    options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c'}}
+                />
+            </Stack.Navigator>
+        </ListingsProvider> 
     )
 }
 
 const ProfileMain = () => {
-    const [userData, setUserData] = useState(null);
-    const [listings, setListings] = useState([]);
-    const [likedListings, setLikedListings] = useState([]);
     const navigation = useNavigation();
+    const { userData, likedListingsData } = useContext(AuthContext);
+    const { userListings } = useContext(ListingsContext);
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            const user = getAuth().currentUser;
-            if (user) {
-                const docRef = doc(db, "users", user.uid);
-
-                const unsubscribe = onSnapshot(docRef, async (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        setUserData(data);
-
-                        if (data.listings && data.listings.length > 0) {
-                            const listingsData = await Promise.all(
-                                data.listings.map(async (listingId) => {
-                                    const listingDoc = await getDoc(doc(db, "listings", listingId));
-                                    return { id: listingId, ...listingDoc.data() };
-                                })
-                            );
-                            setListings(listingsData);
-                        }
-                        if (data.likedListings && data.likedListings.length > 0) {
-                            const likedListingsData = await Promise.all(
-                                data.listings.map(async (listingId) => {
-                                    const listingDoc = await getDoc(doc(db, "listings", listingId));
-                                    return { id: listingId, ...listingDoc.data() };
-                                })
-                            );
-                            setLikedListings(likedListingsData)
-                        }
-                    } else {
-                        console.log("No such document!");
-                    }
-                });
-
-                return () => unsubscribe();  
-            }
-        };
-
-        const unsubscribeAuth = onAuthStateChanged(getAuth(), (user) => {
-            if (user) {
-                fetchUserData(); 
-            } else {
-                navigation.navigate('Login');
-            }
-        });
-
-        return unsubscribeAuth; 
-    }, [navigation]);
-
-    const handleSignOut = () => {
+const handleSignOut = () => {
         signOut(auth).then(() => {
             Alert.alert("Sign out successful.");
         }).catch((error) => {
@@ -115,19 +68,19 @@ const ProfileMain = () => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
-                {userData ? (   
-                    <><Text style={styles.title}>{userData.displayName}</Text><Text> email: {auth.currentUser?.email} </Text><View style={styles.profileContainer}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <Image
-                                source={{ uri: userData.profilePic }}
-                                style={styles.profileImage} />
-                            <View style={styles.bioContainer}>
-                                <Text style={styles.bioText}>{userData.bio}</Text>
-                            </View>
+                <Text style={styles.title}>{userData.displayName}</Text> 
+                <Text> email: {userData.email} </Text>
+                <View style={styles.profileContainer}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <Image
+                            source={{ uri: userData.profilePic }}
+                            style={styles.profileImage} />
+                        <View style={styles.bioContainer}>
+                            <Text style={styles.bioText}>{userData.bio}</Text>
                         </View>
-
-                    </View></>
-                ) : <Text>No user data</Text>}
+                    </View>
+                </View>
+                
                 
                 <View style={[styles.textContainer]}>
                     <Text style={styles.h2}>My Listings</Text>
@@ -141,10 +94,10 @@ const ProfileMain = () => {
                     style={styles.scrollViewStyle} 
                     contentContainerStyle={styles.scrollContainer} 
                 >
-                    {listings.length === 0 ? 
+                    {userListings.length === 0 ? 
                         <TouchableOpacity style={styles.listingImage}></TouchableOpacity>
-                    :
-                        listings.map((listing) => (
+                    : 
+                        userListings.map((listing) => (
                             <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
                                 <Image 
                                     source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
@@ -165,13 +118,13 @@ const ProfileMain = () => {
                     style={styles.scrollViewStyle} 
                     contentContainerStyle={styles.scrollContainer} 
                 >
-                    {likedListings.length === 0 ? 
-                        <TouchableOpacity style={styles.listingImage}></TouchableOpacity>
+                    {likedListingsData.length === 0 ? 
+                        <TouchableOpacity style={styles.listingImage}/>
                     :
-                        likedListings.map((listing) => (
+                        likedListingsData.map((listing) => (
                             <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
                                 <Image 
-                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                    source={{ uri: listing.images?.[0] || 'https://picsum.photos/200/300' }}
                                     style={styles.listingImage}
                                 />
                             </TouchableOpacity>
@@ -311,46 +264,3 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     }
 });
-
-const items = [
-    {
-        id: 1,
-        category: "Skirts",
-        description: "Princess Polly black mini skirt",
-        brand: "Princess Polly",
-        price: 10.0,
-        purchaseMode: {"buy" : 23.0},
-        tags: ["Game Day"], 
-        size: "Medium"
-    },
-    {
-        id: 2,
-        category: "Dresses",
-        description: "Floral maxi dress",
-        brand: "Revolve",
-        price: 21.0,
-        purchaseMode: {"rent": 12.0},
-        tags: ["Formal"],
-        size: "Small"
-    },
-    {
-        id: 3,
-        category: "Tops",
-        description: "black crop top",
-        brand: "Edikted",
-        price: [19.0, 41.0],
-        purchaseMode: {"rent": 10.0, "buy": 15.0},
-        tags: ["Going Out", "Date Night"],
-        size: "M"
-    },
-    {
-        id: 4,
-        category: "Accessories",
-        description: "White UNC Trucker Hat",
-        brand: "Shrunken Head",
-        price: [15.0, 30.0],
-        purchaseMode: {"rent" : 9.0, "buy": 15.0},
-        tags: ["Game Day"],
-        size: "One Size"
-    }
-];

@@ -1,34 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { SafeAreaView, TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { SwiperFlatList } from 'react-native-swiper-flatlist';
+import { AuthContext } from '../contexts/authContext';
 
-export default function Listing( { route }) {
-    const { item } = route.params;
-    const [likeCount, setLikeCount] = useState(0);
-    const [isLiked, setIsLiked] = useState(true);
+export default function Listing({ route }) {
+    const { listing } = route.params;
+    const { addLikedListing, removeLikedListing, likedListings } = useContext(AuthContext);
+    const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
+    const [likeCount, setLikeCount] = useState(listing.likes);
 
-    const handleLike = () => {
-        if (!isLiked) {
+    useEffect(() => {
+        setIsLiked(likedListings.includes(listing.id));
+    }, [likedListings, listing.id]);
+
+    const handleLike = async () => {
+        if (isLiked) {
+            setIsLiked(false);
             setLikeCount(likeCount - 1);
-            setIsLiked(true);
-            // add item to users liked listings
+            await removeLikedListing(listing.id);
         } else {
+            setIsLiked(true);
             setLikeCount(likeCount + 1);
-            setIsLiked(false); 
-            // remove item from users liked listings 
+            await addLikedListing(listing.id);
         }
-    }
+    };
 
     return (
         <SafeAreaView style={ styles.container }>
-            <Image 
-                source={{ uri: 'https://picsum.photos/200/300'}}
-                style={styles.image}
-            />
+            <View style={styles.imageContainer}>
+                <SwiperFlatList
+                    index={0}
+                    showPagination
+                >
+                {listing.images.map((image, index) => (
+                    <View key={index}>
+                        <Image source={{ uri: image }} style={styles.image} />
+                    </View>
+                ))}
+                </SwiperFlatList>
+            </View>
             <View style= {styles.contentContainer}>
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                     <View style={{ flexDirection: 'row'}}>
-                        {item.purchaseMode && Object.entries(item.purchaseMode).map(([mode, price], index) => (
+                        {listing.purchaseMethod && Object.entries(listing.purchaseMethod).map(([mode, price], index) => (
                             <TouchableOpacity 
                                 key={index} 
                                 style={styles.purchaseButton}
@@ -42,36 +57,30 @@ export default function Listing( { route }) {
                         <TouchableOpacity
                             onPress={handleLike}
                         >
-                            <AntDesign name= {(isLiked) ? "hearto" : "heart"} size={24} color="black" />
+                            <AntDesign name={isLiked ? "heart" : "hearto"} size={24} color="black" />
                         </TouchableOpacity>
                         <Text style={{margin: 10}}>
-                            {(likeCount === 0) ? '' : likeCount}
+                            {likeCount === 0 ? '' : likeCount}
                         </Text>
                     </View>
-                     
                 </View>
 
                 <View style={styles.hContainer}>
                     <Text style={{paddingRight: 15, fontSize: 20, fontWeight: 'bold'}}>
-                        {( item.brand || "No Brand" )+ "   ‣"}
+                        {( listing.brand || "No Brand" )+ "   ‣"}
                     </Text>
-                    <Text style={{fontSize: 20}}>{ item.category || "No Category"}</Text>
+                    <Text style={{fontSize: 20}}>{ listing.category || "No Category"}</Text>
                 </View>
-                <View style={styles.hContainer}><Text>{item.description}</Text></View>
+                <View style={styles.hContainer}><Text>{listing.description}</Text></View>
                 <View style={styles.hContainer}>
                     <Text style={{fontWeight: 'bold'}}>Size: </Text>
-                    <Text>{item.size}</Text>
+                    <Text>{listing.size}</Text>
                 </View>
 
-                <View style= {styles.hContainer}>
-                    {item.tags && item.tags.map((tag, index) => (
-                        <View key={index} style={styles.categoryTag}>
-                            <Text style={styles.customText}>{tag}</Text>
-                        </View>
-                    ))}
+                <View style={styles.categoryTag}>
+                    <Text style={styles.customText}>{listing.tags}</Text>
                 </View>
             </View>
-        
         </SafeAreaView>
     )
 }
@@ -101,12 +110,17 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
     image: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+        aspectRatio: 1,
+        borderRadius: 10,
+    },
+    imageContainer: {
         width: '80%',
-        height: '50%',
-        margin: 20,
-        borderRadius: 20,
-        borderColor: 'black',
-        borderWidth: 1
+        aspectRatio: 1,
+        alignSelf: 'center',
+        backgroundColor: 'white',
     },
     customText: {
         padding: 5
@@ -136,4 +150,4 @@ const styles = StyleSheet.create({
         color: 'navy',
         fontSize: 16
     }
-})
+});

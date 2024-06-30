@@ -13,7 +13,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import ListingScreen from './Listing-Screen'; 
 import GameDay from '../assets/images/gameday.jpeg';
 
-
 const Stack = createStackNavigator();
 
 export default function Home() {
@@ -33,18 +32,6 @@ export default function Home() {
     )
 }
 const HomeMain = ({ navigation }) => {
-    // const { data, error } = useFirestoreData();
-    // const items = data.listings || []; // Ensure items is always an array
-
-    // if (error) {
-    //     return <Text>Error loading data</Text>; // Show error message if there's an error
-    // }
-
-    // if (!items.length) {
-    //     return <Text>Loading listings...</Text>; // Show loading message or spinner
-    // }
-
-
     return (
         <SafeAreaView>
             <ScrollView
@@ -190,4 +177,3 @@ const items = [
         size: "One Size"
     }
 ]
-

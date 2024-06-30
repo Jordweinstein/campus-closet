@@ -147,6 +147,45 @@ export default function CreateListing() {
         }
     };
 
+    const verifyPresentInput = () => {
+        if (!(images[0] && images[1])) {
+            alert("You must upload at least two images.");
+            return false;
+        } 
+        if (!itemName || !selectedCategory || !description || !size) {
+            alert("Please enter all required fields.");
+            return false;
+        }
+        if (!(isRentFocused || isBuyFocused)) {
+            alert("You must choose to enable rent, buy, or both");
+            return false;
+        }
+        if (isRentFocused && (!range.startDate || !range.endDate || range.startDate < new Date())) {
+            alert("Please enter valid dates during which your item is available for rent");
+            return false;
+        }
+        if ((isRentFocused && rentPrice === 0.00) || (isBuyFocused && buyPrice === 0.00)) {
+            alert("Please enter a price amount greater than zero dollars.");
+            return false;
+        }
+        return true;
+    }
+
+    const addListingReferenceToUser = async (listingId) => {
+        try {
+            const user = getAuth().currentUser;
+            const userRef = doc(db, "users", user.uid);
+    
+            await updateDoc(userRef, {
+                listings: arrayUnion(listingId)
+            });
+    
+            console.log("Successfully added listing reference to user document");
+        } catch (error) {
+            console.error("Error updating user document: ", error);
+        }
+    };
+
     const uploadImages = async () => {
         const urls = [];
         let response, blob, fileRef, uploadTask;
@@ -199,46 +238,7 @@ export default function CreateListing() {
         
         return urls;  
     };
-
-    const verifyPresentInput = () => {
-        if (!(images[0] && images[1])) {
-            alert("You must upload at least two images.");
-            return false;
-        } 
-        if (!itemName || !selectedCategory || !description || !size) {
-            alert("Please enter all required fields.");
-            return false;
-        }
-        if (!(isRentFocused || isBuyFocused)) {
-            alert("You must choose to enable rent, buy, or both");
-            return false;
-        }
-        if (isRentFocused && (!range.startDate || !range.endDate || range.startDate < new Date())) {
-            alert("Please enter valid dates during which your item is available for rent");
-            return false;
-        }
-        if ((isRentFocused && rentPrice === 0.00) || (isBuyFocused && buyPrice === 0.00)) {
-            alert("Please enter a price amount greater than zero dollars.");
-            return false;
-        }
-        return true;
-    }
-
-    const addListingReferenceToUser = async (listingId) => {
-        try {
-            const user = getAuth().currentUser;
-            const userRef = doc(db, "users", user.uid);
     
-            await updateDoc(userRef, {
-                listings: arrayUnion(listingId)
-            });
-    
-            console.log("Successfully added listing reference to user document");
-        } catch (error) {
-            console.error("Error updating user document: ", error);
-        }
-    };
-
     const handleUpload = async () => {
         if (verifyPresentInput()) {
             const uploadedImageUrls = await uploadImages(); 
@@ -296,7 +296,7 @@ export default function CreateListing() {
             setRange({undefined, undefined});
             setIsRentFocused(false);
             setIsBuyFocused(false);
-            navigator.navigate('Profile');
+            navigator.navigate('ProfileMain');
         }
 
     };
