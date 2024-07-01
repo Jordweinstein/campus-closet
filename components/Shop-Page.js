@@ -92,12 +92,6 @@ const ShopMain = ({navigation}) => {
         
         <SafeAreaView>
             <Text style={styles.title}>Shop</Text>
-            <TextInput
-                style={styles.searchBar}
-                placeholder="Search..."
-                value={searchQuery}
-                onChangeText={console.log("try to search")}
-            />
 
             <View style={styles.container}>
                 <View style={styles.textContainer}>

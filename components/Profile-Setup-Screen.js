@@ -6,8 +6,8 @@ import auth from '../auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import PhoneInput from 'react-native-phone-input'
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { uploadImageAsync, pickImage } from '../imageHandlingUtil';
 
 export default function ProfileSetup() {
     const [displayName, setDisplayName] = useState('');
@@ -29,59 +29,59 @@ export default function ProfileSetup() {
         checkProfileCompletion();
     }, []);
 
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.All,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 1,
-        });
-        console.log(result);
+    // const pickImage = async () => {
+    //     let result = await ImagePicker.launchImageLibraryAsync({
+    //       mediaTypes: ImagePicker.MediaTypeOptions.All,
+    //       allowsEditing: true,
+    //       aspect: [1, 1],
+    //       quality: 1,
+    //     });
+    //     console.log(result);
 
-        if (!result.canceled) {
-            setProfilePic(result.assets[0].uri);
-            console.log("New profile pic URI:", result.assets[0].uri);
-        }
-    }
+    //     if (!result.canceled) {
+    //         setProfilePic(result.assets[0].uri);
+    //         console.log("New profile pic URI:", result.assets[0].uri);
+    //     }
+    // }
 
-    const uploadImageAsync = async (uri) => {
-        if (!uri) {
-            console.error("No image URI available for upload.");
-            return null;
-        }
+    // const uploadImageAsync = async (uri) => {
+    //     if (!uri) {
+    //         console.error("No image URI available for upload.");
+    //         return null;
+    //     }
 
-        const blob = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.onload = () => {
-                resolve(xhr.response);
-            };
-            xhr.onerror = function(e) {
-                console.log(e);
-                reject(e);
-            };
-            xhr.responseType = 'blob';
-            xhr.open('GET', uri, true);
-            xhr.send(null);
-        });
+    //     const blob = await new Promise((resolve, reject) => {
+    //         const xhr = new XMLHttpRequest();
+    //         xhr.onload = () => {
+    //             resolve(xhr.response);
+    //         };
+    //         xhr.onerror = function(e) {
+    //             console.log(e);
+    //             reject(e);
+    //         };
+    //         xhr.responseType = 'blob';
+    //         xhr.open('GET', uri, true);
+    //         xhr.send(null);
+    //     });
     
-        const storage = getStorage();
-        const storageRef = ref(storage, 'profilePictures/' + auth.currentUser.uid);
-        const uploadTask = uploadBytesResumable(storageRef, blob);
+    //     const storage = getStorage();
+    //     const storageRef = ref(storage, 'profilePictures/' + auth.currentUser.uid);
+    //     const uploadTask = uploadBytesResumable(storageRef, blob);
     
-        try {
-            await uploadTask;
-            console.log("Image successfully uploaded.");
-            const downloadURL = await getDownloadURL(storageRef);
-            return downloadURL;
-        } catch (error) {
-            console.error("Upload failed or URL retrieval failed:", error);
-            return null;
-        } finally {
-            if (blob.close) {
-                blob.close(); 
-            }
-        }
-    };
+    //     try {
+    //         await uploadTask;
+    //         console.log("Image successfully uploaded.");
+    //         const downloadURL = await getDownloadURL(storageRef);
+    //         return downloadURL;
+    //     } catch (error) {
+    //         console.error("Upload failed or URL retrieval failed:", error);
+    //         return null;
+    //     } finally {
+    //         if (blob.close) {
+    //             blob.close(); 
+    //         }
+    //     }
+    // };
 
     const handleSubmit = async () => {
         if (!auth.currentUser || !auth.currentUser.uid) {
@@ -94,7 +94,7 @@ export default function ProfileSetup() {
         }
         let profilePicUrl;
         if (profilePic) {
-            profilePicUrl = await uploadImageAsync(profilePic);
+            profilePicUrl = await uploadImageAsync([profilePic], 'profilePictures');
         }
 
         const userRef = doc(db, "users", auth.currentUser?.uid);
@@ -142,13 +142,15 @@ export default function ProfileSetup() {
                         onChangeText = { text => setGraduationYear(text) }
                     />
                 </View>
-                <View style={styles.singleInputContainer}>
-                    <Text>Bio: </Text>
+                <View style={styles.inputView}>
+                    <Text style={{marginTop: 5}}>Bio: </Text>
                     <TextInput
-                        placeholder = "Tell us about yourself"
-                        style = {styles.input}
-                        value = { bio }
-                        onChangeText = { text => setBio(text) }
+                        placeholder="A fun fact about me is..."
+                        value={bio}
+                        onChangeText={setBio}
+                        multiline={true}
+                        style={styles.textInput}
+                        maxLength={100}
                     />
                 </View>
                 
@@ -160,7 +162,7 @@ export default function ProfileSetup() {
                         { uri: profilePic } : 
                         profilePic} 
                     style={styles.profilePic} />
-                <TouchableOpacity style={styles.button} onPress={pickImage}>
+                <TouchableOpacity style={styles.button} onPress={() => pickImage(0, [], setProfilePic)}>
                     <Text style={styles.buttonText}>Upload Profile Picture</Text>
                 </TouchableOpacity>
             </View>

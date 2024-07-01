@@ -8,16 +8,15 @@ import {
     TouchableOpacity,
     Alert,
 } from 'react-native';
-import { useState, useEffect, useContext } from 'react';
+import { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
-import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import auth from '../auth'; 
 import { createStackNavigator } from '@react-navigation/stack';
 import '../firebase-config';
 import CreateListing from './Create-Listing-Screen';
-import useListingDoc from '../hooks/useListingDoc';
 import EditProfile from './Edit-Profile-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
@@ -68,19 +67,27 @@ const handleSignOut = () => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
-                <Text style={styles.title}>{userData.displayName}</Text> 
-                <Text> email: {userData.email} </Text>
-                <View style={styles.profileContainer}>
-                    <View style={{ flexDirection: 'row' }}>
-                        <Image
-                            source={{ uri: userData.profilePic }}
-                            style={styles.profileImage} />
-                        <View style={styles.bioContainer}>
-                            <Text style={styles.bioText}>{userData.bio}</Text>
+                {userData ? (
+                    <>
+                        <Text style={styles.title}>{userData.displayName}</Text> 
+                        <Text> email: {userData.email} </Text>
+                        <View style={styles.profileContainer}>
+                            <View style={{ flexDirection: 'row' }}>
+                                <Image
+                                    source={{ uri: userData.profilePic || "https://picsum.photos/200" }}
+                                    style={styles.profileImage} />
+                                <View style={styles.bioContainer}>
+                                    <Text style={styles.bioText}>{userData.bio || ''}</Text>
+                                </View>
+                            </View>
                         </View>
-                    </View>
-                </View>
-                
+                    </>
+                ) : (
+                    <>
+                        <Text style={styles.title}>User</Text> 
+                        <Text> email: </Text>
+                    </>
+                )}
                 
                 <View style={[styles.textContainer]}>
                     <Text style={styles.h2}>My Listings</Text>

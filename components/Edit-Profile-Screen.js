@@ -5,7 +5,7 @@ import db from '../db';
 import { useNavigation } from "@react-navigation/core";
 import auth from '../auth';
 import { updateDoc, doc } from "firebase/firestore"; 
-import * as ImagePicker from 'expo-image-picker';
+import { pickImage, uploadImageAsync } from "../imageHandlingUtil";
 
 export default function EditProfile() {
     const [name, setName] = useState(null);
@@ -15,116 +15,12 @@ export default function EditProfile() {
     const [image, setImage] = useState(null);
     const navigation = useNavigation();
 
-    const pickImage = async () => {
-        const options = ['Take Photo', 'Choose from Gallery', 'Cancel'];
-        const cancelButtonIndex = 2;
-    
-        Alert.alert(
-            'Select Photo',
-            'Choose an option:',
-            [{
-                text: 'Take Photo',
-                onPress: () => takePhoto()
-            },
-            {
-                text: 'Choose from Gallery',
-                onPress: () => chooseFromGallery()
-            },
-            {
-                text: 'Cancel',
-                style: 'cancel'
-            }],
-        );
-    }
-    
-    const takePhoto = async () => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Sorry, we need camera permissions to make this work!');
-            return;
-        }
-    
-        let result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-    
-        if (!result.cancelled) {
-            const newImage = result.uri;
-            setImage(newImage);
-        }
-    };
-    
-    const chooseFromGallery = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Sorry, we need camera roll permissions to make this work!');
-            return;
-        }
-    
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-        console.log("result:" + result.uri);
-    
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            console.log('Image chosen from gallery:', result.assets[0].uri);
-            const newImage = result.assets[0].uri;
-            setImages(newImage);
-        } else {
-            console.log('Image selection was canceled or failed');
-        }
-    };
-
-    const uploadImageAsync = async (uri) => {
-        if (!uri) {
-            console.error("No image URI available for upload.");
-            return null;
-        }
-
-        const blob = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.onload = () => {
-                resolve(xhr.response);
-            };
-            xhr.onerror = function(e) {
-                console.log(e);
-                reject(e);
-            };
-            xhr.responseType = 'blob';
-            xhr.open('GET', uri, true);
-            xhr.send(null);
-        });
-    
-        const storage = getStorage();
-        const storageRef = ref(storage, 'profilePictures/' + auth.currentUser.uid);
-        const uploadTask = uploadBytesResumable(storageRef, blob);
-    
-        try {
-            await uploadTask;
-            console.log("Image successfully uploaded.");
-            const downloadURL = await getDownloadURL(storageRef);
-            return downloadURL;
-        } catch (error) {
-            console.error("Upload failed or URL retrieval failed:", error);
-            return null;
-        } finally {
-            if (blob.close) {
-                blob.close(); 
-            }
-        }
-    };
-
     const handleSubmit = async () => {
         const updates = {};
         let profilePicUrl = image;
     
         if (image) {
-            profilePicUrl = await uploadImageAsync(image);
+            profilePicUrl = await uploadImageAsync(image, 'profilePictures');
             updates.profilePic = profilePicUrl;
         }
     
@@ -163,11 +59,14 @@ export default function EditProfile() {
             </View>
 
             <View style={styles.inputView}>
-                <Text>Bio:  </Text>
+                <Text style={{marginTop: 5}}>Bio: </Text>
                 <TextInput
                     placeholder="A fun fact about me is..."
                     value={bio}
                     onChangeText={setBio}
+                    multiline={true}
+                    style={styles.textInput}
+                    maxLength={100}
                 />
             </View>
 
@@ -185,6 +84,7 @@ export default function EditProfile() {
                 <TextInput
                     placeholder="123 456 7890"
                     keyboardType="phone-pad"
+                    textContentType="telephoneNumber"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
                     maxLength={10}
@@ -194,7 +94,7 @@ export default function EditProfile() {
                 <Text>Profile Picture:  </Text>
                 <TouchableOpacity 
                     style={ styles.uploadImageButton }
-                    onPress={ pickImage }
+                    onPress={() => pickImage(0, [], setImage) }
                 >
                     <Text>Upload Image</Text>
                 </TouchableOpacity>
@@ -224,6 +124,12 @@ const styles = StyleSheet.create({
         width: '95%',
         margin: 5,
         borderRadius: 10,
+    },
+    textInput: {
+        flex: 1,
+        height: 45,
+        color: '#000',
+        textAlignVertical: 'top',
     },
     pictureInputView: {
         flexDirection: 'row',

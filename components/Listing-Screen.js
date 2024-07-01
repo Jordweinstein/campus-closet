@@ -43,13 +43,13 @@ export default function Listing({ route }) {
             <View style= {styles.contentContainer}>
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                     <View style={{ flexDirection: 'row'}}>
-                        {listing.purchaseMethod && Object.entries(listing.purchaseMethod).map(([mode, price], index) => (
+                        {listing.purchaseMethod.map((mode, index) => (
                             <TouchableOpacity 
                                 key={index} 
                                 style={styles.purchaseButton}
                                 onPress={() => console.log(`${mode} Button Pressed!`)}
                             >
-                                <Text style={styles.buttonText}>{mode} ${price}</Text>
+                                <Text style={styles.buttonText}>{mode} ${listing.price[index]}</Text>
                             </TouchableOpacity>         
                         ))}   
                     </View>

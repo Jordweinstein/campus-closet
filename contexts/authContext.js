@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc, arrayRemove, arrayUnion, increment } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot, arrayRemove, arrayUnion, increment } from 'firebase/firestore';
 import db from '../db';
 
 export const AuthContext = createContext();
@@ -14,23 +14,28 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, async (authenticatedUser) => {
+        const unsubscribe = onAuthStateChanged(auth, (authenticatedUser) => {
             if (authenticatedUser) {
                 const userDocRef = doc(db, "users", authenticatedUser.uid);
-                const userDoc = await getDoc(userDocRef);
 
-                if (userDoc.exists()) {
-                    const userDetails = userDoc.data();
-                    console.log(userDetails);
-                    setIsProfileComplete(userDetails.isProfileComplete || false);
-                    setUserData(userDetails);
-                    setLikedListings(userDetails.likedListings || []);
-                } else {
-                    console.log("No user document found");
+                const unsubscribeUserDoc = onSnapshot(userDocRef, (userDoc) => {
+                    if (userDoc.exists()) {
+                        const userDetails = userDoc.data();
+                        setIsProfileComplete(userDetails.isProfileComplete || false);
+                        setUserData(userDetails);
+                        setLikedListings(userDetails.likedListings || []);
+                    } else {
+                        setUserData(null);
+                        setLikedListings([]);
+                    }
+                }, (error) => {
                     setUserData(null);
                     setLikedListings([]);
-                }
-                setUser(authenticatedUser); 
+                });
+
+                setUser(authenticatedUser);
+
+                return () => unsubscribeUserDoc(); 
             } else {
                 setUser(null);
                 setUserData(null);
@@ -38,7 +43,7 @@ export const AuthProvider = ({ children }) => {
             }
         });
 
-        return () => unsubscribe();
+        return () => unsubscribe(); 
     }, []);
 
     useEffect(() => {

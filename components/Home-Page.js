@@ -39,7 +39,7 @@ const HomeMain = ({ navigation }) => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.scrollVerticalContainer} 
             >
-                <Text style={styles.title}>Campus Closets</Text>
+                <Text style={styles.title}>Campus Closet</Text>
 
                 <Image 
                     source = { GameDay }

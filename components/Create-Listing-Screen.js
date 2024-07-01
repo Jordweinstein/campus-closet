@@ -2,17 +2,17 @@ import {
     View, 
     Text, 
     TouchableOpacity, 
-    Alert, 
+    KeyboardAvoidingView, 
     FlatList, 
     SafeAreaView, 
     Image, 
     ScrollView, 
     StyleSheet, 
     TextInput, 
-    Modal } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
+    Modal,
+    Dimensions 
+} from "react-native";
 import themes from './Themes'
-import { ref, uploadBytesResumable, getDownloadURL, getStorage } from "firebase/storage";
 import { AntDesign } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { useState, useCallback } from "react";
@@ -22,7 +22,7 @@ import categories from './Categories';
 import db from '../db';
 import { getAuth } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
-
+import { uploadImageAsync, pickImage } from '../imageHandlingUtil';
 export default function CreateListing() {
     const [brand, setBrand] = useState('');
     const [size, setSize] = useState('');
@@ -81,72 +81,6 @@ export default function CreateListing() {
         </TouchableOpacity>
     );
 
-    const pickImage = async (index) => {
-        const options = ['Take Photo', 'Choose from Gallery', 'Cancel'];
-        const cancelButtonIndex = 2;
-    
-        Alert.alert(
-            'Select Photo',
-            'Choose an option:',
-            [{
-                text: 'Take Photo',
-                onPress: () => takePhoto(index)
-            },
-            {
-                text: 'Choose from Gallery',
-                onPress: () => chooseFromGallery(index)
-            },
-            {
-                text: 'Cancel',
-                style: 'cancel'
-            }],
-        );
-    };
-    
-    const takePhoto = async (index) => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Sorry, we need camera permissions to make this work!');
-            return;
-        }
-    
-        let result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-    
-        if (!result.cancelled) {
-            const newImages = [...images];
-            newImages[index] = result.uri;
-            setImages(newImages);
-        }
-    };
-    
-    const chooseFromGallery = async (index) => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Sorry, we need camera roll permissions to make this work!');
-            return;
-        }
-    
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-        console.log("result:" + result.uri);
-    
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            const newImages = [...images];
-            newImages[index] = result.assets[0].uri;
-            setImages(newImages);
-        } else {
-            console.log('Image selection was canceled or failed');
-        }
-    };
-
     const verifyPresentInput = () => {
         if (!(images[0] && images[1])) {
             alert("You must upload at least two images.");
@@ -164,7 +98,8 @@ export default function CreateListing() {
             alert("Please enter valid dates during which your item is available for rent");
             return false;
         }
-        if ((isRentFocused && rentPrice === 0.00) || (isBuyFocused && buyPrice === 0.00)) {
+        if ((isRentFocused && (rentPrice === 0.00 || rentPrice === null)) 
+                || (isBuyFocused && (buyPrice === 0.00 || buyPrice === null))) {
             alert("Please enter a price amount greater than zero dollars.");
             return false;
         }
@@ -185,63 +120,10 @@ export default function CreateListing() {
             console.error("Error updating user document: ", error);
         }
     };
-
-    const uploadImages = async () => {
-        const urls = [];
-        let response, blob, fileRef, uploadTask;
-    
-        for (const image of images) {
-            console.log("Uploading image with URI:", image);
-    
-            try {
-                response = await fetch(image);
-                blob = await response.blob();
-                console.log("Fetched and blobbed image");
-            } catch (error) {
-                console.error("Fetching or blob conversion failed:", error);
-                continue;  
-            }
-    
-            try {
-                fileRef = ref(getStorage(), `listingImages/${Date.now()}`);
-                console.log("Created fileRef");
-            } catch (error) {
-                console.error("Firebase storage ref creation failed:", error);
-                continue;
-            }
-    
-            try {
-                uploadTask = uploadBytesResumable(fileRef, blob);
-                console.log("Created upload task");
-    
-                await new Promise((resolve, reject) => {
-                    uploadTask.on('state_changed', 
-                        (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            console.log('Upload is ' + progress + '% done');
-                        }, 
-                        (error) => {
-                            console.error("Upload failed: ", error);
-                            reject(error);
-                        }, 
-                        async () => {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            urls.push(downloadURL);
-                            resolve();
-                        }
-                    );
-                });
-            } catch (error) {
-                console.error("Upload task failed:", error);
-            }
-        }
-        
-        return urls;  
-    };
     
     const handleUpload = async () => {
         if (verifyPresentInput()) {
-            const uploadedImageUrls = await uploadImages(); 
+            const uploadedImageUrls = await uploadImageAsync(images, 'listingImages'); 
             setImageUrls(uploadedImageUrls); 
     
             console.log("Image urls:", uploadedImageUrls);  
@@ -301,22 +183,27 @@ export default function CreateListing() {
 
     };
 
+    const { width, height } = Dimensions.get('window');
+
     return (
-        <SafeAreaView style={styles.createListingView}>
-            <ScrollView
-                horizontal={false}
-                contentContainerStyle={{ height: '100%', justifyContent: 'flex-start' }}
+        <SafeAreaView 
+            style={styles.createListingView}
+        >
+            <KeyboardAvoidingView
+                style={{ flex: 1}}
+                behavior="padding"
+                keyboardVerticalOffset={100}
             >
-                 <ScrollView
+                <ScrollView
                     horizontal={true}
                     showsHorizontalScrollIndicator={false} 
                     style={styles.scrollViewStyle}
                     contentContainerStyle={styles.imageUploadView}
                 >
                     {[0, 1, 2, 3].map((index) => (
-                        <TouchableOpacity key={index} style={styles.uploadButtonView} onPress={() => pickImage(index)}>
+                        <TouchableOpacity key={index} style={styles.uploadButtonView} onPress={() => pickImage(index, images, setImages)}>
                             {images[index] ? (
-                                <Image source={{ uri: images[index] }} style={{ width: 100, height: 100, borderRadius: 10 }} />
+                                <Image source={{ uri: images[index] }} style={{ width: width * 0.3, height: width * 0.3, borderRadius: 10 }} />
                             ) : (
                                 <AntDesign name="pluscircleo" size={24} color="black" />
                             )}
@@ -331,6 +218,15 @@ export default function CreateListing() {
                         value= { itemName }
                         onChangeText={text => setItemName(text)}
                         autoCapitalize="words"
+                    />
+                    <TextInput
+                        placeholder = "Item description"
+                        style = {styles.descriptionView}
+                        value= { description }
+                        onChangeText={text => setDescription(text)}
+                        autoCapitalize="sentences"
+                        maxLength={200}
+                        multiline={true}
                     />
                 </View>
                 <View style={styles.inputView}>
@@ -356,16 +252,6 @@ export default function CreateListing() {
                         </TouchableOpacity>
                     </View>
                     
-                    <View style={styles.textInputView}>
-                        <Text>Description:    </Text>
-                        <TextInput
-                            placeholder = "Describe your item"
-                            style = {styles.input}
-                            value= { description }
-                            onChangeText={text => setDescription(text)}
-                            autoCapitalize="sentences"
-                        />
-                    </View>
                     <View style={styles.textInputView}>
                         <Text>Size:    </Text>
                         <TextInput
@@ -433,8 +319,7 @@ export default function CreateListing() {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    </Modal>
-                    
+                    </Modal>   
                 </View>
 
                 <View style={styles.priceView}>
@@ -481,26 +366,27 @@ export default function CreateListing() {
                             value={buyPrice}
                             placeholder="0.00"
                             placeholderTextColor='white'
-
                             onChangeText={text => setBuyPrice(text)}
                             style={{ flex: 1, color: 'white' }}
                             keyboardType="decimal-pad"
                             
                         />
                         )}
-                </TouchableOpacity>
+                    </TouchableOpacity>
                 </View>
-            </ScrollView>
+            </KeyboardAvoidingView>
+
             <TouchableOpacity onPress={ handleUpload } style={styles.uploadButton}>
                 <Text style={{color: 'white', fontSize: 16}}>Upload Listing</Text>
             </TouchableOpacity>
+            
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     scrollViewStyle: {
-        height: 100, 
+        height: 100,
     },
     uploadButton: {
         width: '100%',
@@ -511,24 +397,30 @@ const styles = StyleSheet.create({
     },
     imageUploadView: {
         flexDirection: 'row',
-        alignItems: 'center', 
+        alignItems: 'center',
         padding: 5,
         justifyContent: 'flex-start',
     },
     createListingView: {
-        flex: 1,  
-        alignItems: 'center',  
-        justifyContent: 'flex-start', 
         width: '100%',
+        flex: 1,
+    },
+    contentWrapper: {
+        flex: 1,
+        justifyContent: 'flex-start',
     },
     uploadButtonView: {
-        width: 100, 
-        height: 100,
+        width: 125,
+        height: 125,
         backgroundColor: 'white',
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: 10, 
+        marginHorizontal: '3%',
+    },
+    input: {
+        flex: 1,
+        textAlign: 'left',
     },
     textInputView: {
         flexDirection: 'row',
@@ -542,7 +434,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'white',
         marginHorizontal: 10,
-        marginTop: 15,
+        marginTop: 10,
         paddingVertical: 7,
         paddingHorizontal: 7,
         borderRadius: 15,
@@ -555,6 +447,74 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
     },
+    descriptionView: {
+        height: 95,
+        textAlignVertical: 'top',
+        padding: 15,
+        borderRadius: 10,
+        backgroundColor: 'white',
+        width: '90%',
+        marginTop: 10,
+        lineHeight: 20,
+    },
+    priceView: {
+        flexDirection: 'row',
+        padding: 10,
+        paddingHorizontal: 20,
+        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '90%',
+        marginBottom: '5%',
+    },
+    rentPriceView: {
+        flexDirection: 'row',
+        backgroundColor: 'white',
+        padding: 10,
+        marginRight: 10,
+        borderRadius: 10,
+        flex: 1
+    },
+    buyPriceView: {
+        flexDirection: 'row',
+        padding: 10,
+        backgroundColor: 'white',
+        marginLeft: 10,
+        borderRadius: 10,
+        flex: 1,
+    },
+    disabledButton: {
+        padding: 15,
+        borderRadius: 8,
+        backgroundColor: '#d3d3d3',
+        alignItems: 'center',
+        marginTop: 20,
+        flexDirection: 'row',
+        width: 120,
+    },
+    activeButton: {
+        padding: 15,
+        borderRadius: 8,
+        backgroundColor: '#050742',
+        alignItems: 'center',
+        marginTop: 20,
+        flexDirection: 'row',
+        width: 120,
+    },
+    disabledButtonText: {
+        color: '#888888',
+        fontSize: 16,
+    },
+    activeButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+        justifyContent: 'flex-start',
+    },
+
+    // Modal styling
     button: {
         padding: 5,
         borderWidth: 1,
@@ -602,59 +562,5 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
     },
-    priceView: {
-        flexDirection: 'row',
-        margin: 15,
-        padding: 10,
-        paddingHorizontal: 20,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '90%',
-        marginBottom: 50,
-    },
-    rentPriceView: {
-        flexDirection: 'row',
-        backgroundColor: 'white',
-        padding: 10,
-        marginRight: 10,
-        borderRadius: 10,
-        flex: 1
-    },
-    buyPriceView: {
-        flexDirection: 'row',
-        padding: 10,
-        backgroundColor: 'white',
-        marginLeft: 10,
-        borderRadius: 10,
-        flex: 1,
-    },
-    disabledButton: {
-        padding: 15,
-        borderRadius: 8,
-        backgroundColor: '#d3d3d3', 
-        alignItems: 'center',
-        marginTop: 20,
-        flexDirection: 'row',
-        width: 120,
-
-    },
-    activeButton: {
-        padding: 15,
-        borderRadius: 8,
-        backgroundColor: '#050742',  
-        alignItems: 'center',
-        marginTop: 20,
-        flexDirection: 'row',
-        width: 120,
-
-    },
-    disabledButtonText: {
-        color: '#888888',  
-        fontSize: 16,
-    },
-    activeButtonText: {
-        color: '#FFFFFF',  
-        fontSize: 16,
-    },
+    
 });
-
