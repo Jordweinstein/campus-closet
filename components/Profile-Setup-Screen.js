@@ -1,13 +1,11 @@
-import { View, StyleSheet, Text, TouchableOpacity, TextInput,SafeAreaView, Image, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, TextInput, SafeAreaView, KeyboardAvoidingView, Image, Alert } from 'react-native';
 import { updateDoc, doc } from "firebase/firestore"; 
-import { useState, useEffect } from 'react';
-import db from '../db';
-import auth from '../auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
+import { useState, useEffect, useCallback, useContext } from 'react';
+import db from '../firebase/db';
+import auth from '../firebase/auth';
 import { useNavigation } from '@react-navigation/native';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { uploadImageAsync, pickImage } from '../imageHandlingUtil';
+import { uploadImageAsync, pickImage } from '../util/imageHandling';
+import { AuthContext } from '../contexts/authContext';
 
 export default function ProfileSetup() {
     const [displayName, setDisplayName] = useState('');
@@ -15,73 +13,9 @@ export default function ProfileSetup() {
     const [graduationYear, setGraduationYear] = useState('');
     const defaultProfPic = require('../assets/images/emptyProfile.png');
     const [profilePic, setProfilePic] = useState(defaultProfPic);
-    const [phoneNumber, setPhoneNumber] = useState(0);
+    const [phoneNumber, setPhoneNumber] = useState('');
     const navigation = useNavigation();
-
-    const [isProfileComplete, setIsProfileComplete] = useState(false);
-
-    useEffect(() => {
-        const checkProfileCompletion = async () => {
-            const profileComplete = await AsyncStorage.getItem('profileComplete');
-            setIsProfileComplete(profileComplete === 'true');
-        };
-
-        checkProfileCompletion();
-    }, []);
-
-    // const pickImage = async () => {
-    //     let result = await ImagePicker.launchImageLibraryAsync({
-    //       mediaTypes: ImagePicker.MediaTypeOptions.All,
-    //       allowsEditing: true,
-    //       aspect: [1, 1],
-    //       quality: 1,
-    //     });
-    //     console.log(result);
-
-    //     if (!result.canceled) {
-    //         setProfilePic(result.assets[0].uri);
-    //         console.log("New profile pic URI:", result.assets[0].uri);
-    //     }
-    // }
-
-    // const uploadImageAsync = async (uri) => {
-    //     if (!uri) {
-    //         console.error("No image URI available for upload.");
-    //         return null;
-    //     }
-
-    //     const blob = await new Promise((resolve, reject) => {
-    //         const xhr = new XMLHttpRequest();
-    //         xhr.onload = () => {
-    //             resolve(xhr.response);
-    //         };
-    //         xhr.onerror = function(e) {
-    //             console.log(e);
-    //             reject(e);
-    //         };
-    //         xhr.responseType = 'blob';
-    //         xhr.open('GET', uri, true);
-    //         xhr.send(null);
-    //     });
-    
-    //     const storage = getStorage();
-    //     const storageRef = ref(storage, 'profilePictures/' + auth.currentUser.uid);
-    //     const uploadTask = uploadBytesResumable(storageRef, blob);
-    
-    //     try {
-    //         await uploadTask;
-    //         console.log("Image successfully uploaded.");
-    //         const downloadURL = await getDownloadURL(storageRef);
-    //         return downloadURL;
-    //     } catch (error) {
-    //         console.error("Upload failed or URL retrieval failed:", error);
-    //         return null;
-    //     } finally {
-    //         if (blob.close) {
-    //             blob.close(); 
-    //         }
-    //     }
-    // };
+    const { user, setIsProfileComplete} = useContext(AuthContext);
 
     const handleSubmit = async () => {
         if (!auth.currentUser || !auth.currentUser.uid) {
@@ -92,92 +26,123 @@ export default function ProfileSetup() {
             Alert.alert("Error", "Please fill in all fields.");
             return;
         }
-        let profilePicUrl;
-        if (profilePic) {
-            profilePicUrl = await uploadImageAsync([profilePic], 'profilePictures');
+        if (phoneNumber.length !== 10) {
+            Alert.alert("Error", "Please enter a valid 10-digit phone number");
+            return;
         }
 
-        const userRef = doc(db, "users", auth.currentUser?.uid);
+        let profilePicUrl;
 
-        await updateDoc(userRef, {
-            displayName: displayName,
-            bio: bio,
-            graduationYear: graduationYear,
-            profilePic: profilePicUrl,
-            isProfileComplete: true
-        });
-        console.log("information uploaded successfully.");
+        if (profilePic && profilePic !== defaultProfPic) {
+            try {
+                profilePicUrl = await uploadImageAsync(profilePic, 'profilePictures');
+            } catch (error) {
+                console.log(error);
+                return; // Stop further execution if upload fails
+            }
+            console.log("sets prof");
+        }
+
+        try {
+            const userRef = doc(db, "users", user.uid);
+
+            await updateDoc(userRef, {
+                displayName: displayName,
+                bio: bio,
+                graduationYear: graduationYear,
+                profilePic: profilePicUrl,
+                phoneNumber: phoneNumber,
+                isProfileComplete: true
+            });
+            Alert.alert("Success", "Profile updated successfully.");
+            setIsProfileComplete(true);
+            navigation.navigate('Home');
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     return (
         <SafeAreaView style= { styles.setupContainer }>
-            <Text style= { styles.title }>Welcome to Campus Closet</Text>
-            <Text style={{fontSize: 21, paddingVertical: 10}}>Enter your information below: </Text>
-            <View style={ styles.inputContainer }>
-                <View style={styles.singleInputContainer}>
-                    <Text>Name: </Text>
-                    <TextInput
-                        placeholder = "Jane Doe"
-                        style = {styles.input}
-                        value = { displayName }
-                        onChangeText = { text => setDisplayName(text) }
-                        autoCapitalize="words"
-                    />
-                </View>
-                <View style={styles.singleInputContainer}>
-                    <Text>Phone Number: </Text>
-                    <TextInput
-                        placeholder='(000) 000 - 0000'
-                        style = {styles.input}
-                        value = {phoneNumber}
-                        onChangeText = { text => setPhoneNumber(text)}
-                    />
-                </View>
-                <View style={styles.singleInputContainer}>
-                    <Text>Grad Year: </Text>
-                    <TextInput
-                        placeholder = "2026"
-                        style = {styles.input}
-                        value = { graduationYear }
-                        onChangeText = { text => setGraduationYear(text) }
-                    />
-                </View>
-                <View style={styles.inputView}>
-                    <Text style={{marginTop: 5}}>Bio: </Text>
-                    <TextInput
-                        placeholder="A fun fact about me is..."
-                        value={bio}
-                        onChangeText={setBio}
-                        multiline={true}
-                        style={styles.textInput}
-                        maxLength={100}
-                    />
+            <KeyboardAvoidingView
+                style={{ flex: 1, width: '100%', alignItems: 'center'}}
+                behavior="padding"
+                keyboardVerticalOffset={0}
+            >
+                <Text style= { styles.title }>Welcome to Campus Closet</Text>
+                <Text style={{fontSize: 21, paddingVertical: 10}}>Enter your information below: </Text>
+                <View style={ styles.inputContainer }>
+                    <View style={styles.singleInputContainer}>
+                        <Text>Name: </Text>
+                        <TextInput
+                            placeholder = "Jane Doe"
+                            style = {styles.input}
+                            value = { displayName }
+                            keyboardType='default'
+                            onChangeText = { text => setDisplayName(text) }
+                            autoCapitalize="words"
+                            multiline={false}
+                            autoCorrect={false}
+                        />
+                    </View>
+                    <View style={styles.singleInputContainer}>
+                        <Text>Phone Number: </Text>
+                        <TextInput
+                            placeholder='(000) 000 - 0000'
+                            style = {styles.input}
+                            value = {phoneNumber}
+                            maxLength={10}
+                            keyboardType='phone-pad'
+                            onChangeText = { text => setPhoneNumber(text)}
+                        />
+                    </View>
+                    <View style={styles.singleInputContainer}>
+                        <Text>Grad Year: </Text>
+                        <TextInput
+                            placeholder = "2026"
+                            style = {styles.input}
+                            value = { graduationYear }
+                            maxLength = {4}
+                            keyboardType='number-pad'
+                            onChangeText = { text => setGraduationYear(text) }
+                        />
+                    </View>
+                    <View style={styles.singleInputContainer}>
+                        <Text style={{marginTop: 5}}>Bio: </Text>
+                        <TextInput
+                            placeholder="A fun fact about me is..."
+                            value={bio}
+                            onChangeText={setBio}
+                            multiline={true}
+                            style={styles.input}
+                            maxLength={100}
+                        />
+                    </View>
+                    
                 </View>
                 
-            </View>
-            
-            <View style={styles.imageView}>
-                <Image 
-                    source={typeof profilePic === 'string' ? 
-                        { uri: profilePic } : 
-                        profilePic} 
-                    style={styles.profilePic} />
-                <TouchableOpacity style={styles.button} onPress={() => pickImage(0, [], setProfilePic)}>
-                    <Text style={styles.buttonText}>Upload Profile Picture</Text>
-                </TouchableOpacity>
-            </View>
-            
-            <View style= {styles.buttonView}>
-                <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleSubmit}
-                >
-                    <Text style={styles.buttonText}>Update Profile</Text>
-                </TouchableOpacity>
-            </View> 
-
+                <View style={styles.imageView}>
+                    <Image 
+                        source={typeof profilePic === 'string' ? 
+                            { uri: profilePic } : 
+                            profilePic} 
+                        style={styles.profilePic} />
+                    <TouchableOpacity style={styles.button} onPress={() => pickImage(0, profilePic, setProfilePic)}>
+                        <Text style={styles.buttonText}>Upload Profile Picture</Text>
+                    </TouchableOpacity>
+                </View>
+                
+                <View style= {styles.buttonView}>
+                    <TouchableOpacity
+                        style={styles.submitButton}
+                        onPress={handleSubmit}
+                    >
+                        <Text style={styles.buttonText}>Update Profile</Text>
+                    </TouchableOpacity>
+                </View> 
+            </KeyboardAvoidingView>
         </SafeAreaView>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -187,10 +152,11 @@ const styles = StyleSheet.create({
         padding: 15
     },
     input: {
-        fontSize: 18,
+        fontSize: 16,
         padding: 5,
         margin: 3,
-        flex: 1
+        flex: 1,
+        lineHeight: 25,
     },
     setupContainer: {
         flexDirection: 'column',

@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import auth from './auth'; 
+import auth from '../firebase/auth';
 
 export const requestCameraPermissions = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -46,7 +46,7 @@ export const chooseFromGallery = async () => {
     return result;
 };
 
-export const pickImage = async (index, images, setImages) => {
+export const pickImage = async (index, image, setImage) => {
     Alert.alert(
         'Select Photo',
         'Choose an option:',
@@ -55,10 +55,8 @@ export const pickImage = async (index, images, setImages) => {
                 text: 'Take Photo',
                 onPress: async () => {
                     const result = await takePhoto();
-                    if (result && !result.cancelled) {
-                        const newImages = [...images];
-                        newImages[index] = result.uri;
-                        setImages(newImages);
+                    if (result && !result.canceled) {
+                        setImage(result.uri);
                     }
                 }
             },
@@ -66,11 +64,9 @@ export const pickImage = async (index, images, setImages) => {
                 text: 'Choose From Gallery',
                 onPress: async () => {
                     const result = await chooseFromGallery();
-                    if (result && !result.cancelled) {
-                        const newImages = [...images];
-                        newImages[index] = result.assets ? result.assets[0].uri : result.uri;
-                        setImages(newImages);
-                        console.log("Set new images from choose: " + (result.assets ? result.assets[0].uri : result.uri));
+                    if (result && !result.canceled) {
+                        setImage(result.assets ? result.assets[0].uri : result.uri);
+                        console.log("Set new image from gallery: " + (result.assets ? result.assets[0].uri : result.uri));
                     }
                 }
             },
@@ -79,65 +75,66 @@ export const pickImage = async (index, images, setImages) => {
                 style: 'cancel'
             }
         ]
-    )
+    );
 };
 
 const uploadImageBlob = async (blob, path) => {
     const storage = getStorage();
-    const storageRef = ref(storage, `${path}/${auth.currentUser.uid}/${Date.now()}`);
+    const storageRef = path === 'profilePictures' 
+        ? ref(storage, `${path}/${auth.currentUser.uid}`)
+        : ref(storage, `${path}/${auth.currentUser.uid}/${Date.now()}`);
     const uploadTask = uploadBytesResumable(storageRef, blob);
-    console.log("successfully uploaded bytes resumable in blob");
+    console.log("Successfully uploaded bytes resumable in blob");
 
     await uploadTask;
     const downloadURL = await getDownloadURL(storageRef);
-    console.log("download url after getDownloadUrl - " + downloadURL);
+    console.log("Download URL after getDownloadUrl: " + downloadURL);
     return downloadURL;
 };
 
-export const uploadImageAsync = async (uris, path) => {
-    if (!uris || uris.length === 0) {
-        console.error("No image URI(s) available for upload.");
-        return [];
+export const uploadImageAsync = async (uri, path) => {
+    if (!uri) {
+        console.error("No image URI available for upload.");
+        return null;
     }
 
-    const uriArray = Array.isArray(uris) ? uris : [uris];
+    console.log("Uploading image with URI:", uri); // Log the URI
 
-    const uploadPromises = uriArray.map(async (uri) => {
-        console.log("Uploading image with URI:", uri); // Log the URI
-
-        const blob = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.onload = () => {
-                resolve(xhr.response);
-            };
-            xhr.onerror = function (e) {
-                console.log(e);
-                reject(e);
-            };
-            xhr.responseType = 'blob';
-            xhr.open('GET', uri, true);
-            xhr.send(null);
-        });
-
-        try {
-            const downloadURL = await uploadImageBlob(blob, path);
-            return downloadURL;
-        } catch (error) {
-            console.error("Upload failed or URL retrieval failed:", error);
-            return null;
-        } finally {
-            if (blob.close) {
-                blob.close();
-            }
-        }
+    const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+            resolve(xhr.response);
+        };
+        xhr.onerror = function (e) {
+            console.log(e);
+            reject(e);
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
     });
 
-    const downloadUrls = await Promise.all(uploadPromises);
-    return downloadUrls.filter(url => url !== null);
+    try {
+        console.log("About to try uploadImageBlob");
+        const downloadURL = await uploadImageBlob(blob, path);
+        return downloadURL;
+    } catch (error) {
+        console.error("Upload failed or URL retrieval failed:", error);
+        return null;
+    } finally {
+        if (blob.close) {
+            blob.close();
+        }
+    }
 };
 
 export const uploadImagesAsync = async (uris, path) => {
+    if (!Array.isArray(uris)) {
+        uris = [uris];
+    }
+
     const uploadPromises = uris.map(uri => uploadImageAsync(uri, path));
     const downloadUrls = await Promise.all(uploadPromises);
-    return downloadUrls.filter(url => url !== null); 
+    console.log("Successfully uploaded images");
+    return downloadUrls.filter(url => url !== null);
 };

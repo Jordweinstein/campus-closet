@@ -13,9 +13,9 @@ import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from "firebase/auth";
-import auth from '../auth'; 
+import auth from '../firebase/auth'; 
 import { createStackNavigator } from '@react-navigation/stack';
-import '../firebase-config';
+import '../firebase/firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import EditProfile from './Edit-Profile-Screen';
 import { AuthContext } from '../contexts/authContext';
@@ -51,6 +51,7 @@ const ProfileMain = () => {
     const navigation = useNavigation();
     const { userData, likedListingsData } = useContext(AuthContext);
     const { userListings } = useContext(ListingsContext);
+    console.log(userData);
 
 const handleSignOut = () => {
         signOut(auth).then(() => {
