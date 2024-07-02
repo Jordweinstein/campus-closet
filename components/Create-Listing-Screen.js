@@ -19,10 +19,10 @@ import { useState, useCallback } from "react";
 import { DatePickerModal } from 'react-native-paper-dates';
 import { addDoc, collection, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import categories from './Categories';
-import db from '../db';
+import db from '../firebase/db';
 import { getAuth } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
-import { uploadImageAsync, pickImage } from '../imageHandlingUtil';
+import { uploadImageAsync, pickImage } from '../util/imageHandling';
 export default function CreateListing() {
     const [brand, setBrand] = useState('');
     const [size, setSize] = useState('');

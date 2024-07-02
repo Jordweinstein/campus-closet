@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import db from '../db';
+import db from '../firebase/db';
 import { AuthContext } from './authContext';
 
 export const ListingsContext = createContext();

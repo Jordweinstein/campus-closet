@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { View, Text, TextInput, StyleSheet, Alert } from "react-native"
 import { TouchableOpacity } from "react-native-gesture-handler";
-import db from '../db';
+import db from '../firebase/db';
 import { useNavigation } from "@react-navigation/core";
-import auth from '../auth';
+import auth from '../firebase/auth';
 import { updateDoc, doc } from "firebase/firestore"; 
-import { pickImage, uploadImageAsync } from "../imageHandlingUtil";
+import { pickImage, uploadImageAsync } from "../util/imageHandling";
 
 export default function EditProfile() {
     const [name, setName] = useState(null);
