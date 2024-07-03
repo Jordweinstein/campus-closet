@@ -29,7 +29,6 @@ function MainNavigator() {
       if (user) {
         setUser(user);
         if (user.emailVerified) {
-          console.log(isProfileComplete);
           if (isProfileComplete) {
             setInitialRoute('Home');
           } else {
@@ -44,7 +43,6 @@ function MainNavigator() {
     });
     return () => unsubscribe();
   }, [auth]);
-  console.log(initialRoute);
 
   useEffect(() => {
     registerTranslation('en', {

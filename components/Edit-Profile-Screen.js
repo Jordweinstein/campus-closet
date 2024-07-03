@@ -39,7 +39,6 @@ export default function EditProfile() {
         if (Object.keys(updates).length > 0) {
             const userRef = doc(db, "users", auth.currentUser?.uid);
             await updateDoc(userRef, updates);
-            console.log("Information uploaded successfully.");
             navigation.navigate('ProfileMain');
         } else {
             console.log("No changes to save.");
@@ -75,6 +74,7 @@ export default function EditProfile() {
                 <TextInput
                     placeholder="example@unc.edu"
                     value={email}
+                    keyboardType='email-address'
                     onChangeText={setEmail}
                 />
             </View>

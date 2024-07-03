@@ -67,7 +67,6 @@ const Login = () => {
                 setPassword('');
                 emailInputRef.current.focus();
             } catch (error) {
-                console.log("Error during sign up or document creation: " + error.message);
                 if (error.code === 'auth/email-already-in-use') {
                     Alert.alert("Error", "The email address is already in use by another account.");
                 } else if (error.code === 'auth/weak-password') {
@@ -91,8 +90,6 @@ const Login = () => {
             const user = userCredential.user;
 
             if (user !== null && user.emailVerified) {
-                setEmail('');
-                setPassword('');
 
                 const userRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userRef); 
@@ -102,10 +99,11 @@ const Login = () => {
                     setIsProfileComplete(userData.isProfileComplete);
 
                     if (!userData.isProfileComplete) {
-                        console.log("in login: " + isProfileComplete);
                         navigation.navigate('ProfileSetup');
                     } else {
                         navigation.navigate('Home');
+                        setEmail('');
+                        setPassword('');
                     }
                 }
             } else {

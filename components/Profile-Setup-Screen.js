@@ -38,9 +38,8 @@ export default function ProfileSetup() {
                 profilePicUrl = await uploadImageAsync(profilePic, 'profilePictures');
             } catch (error) {
                 console.log(error);
-                return; // Stop further execution if upload fails
+                return; 
             }
-            console.log("sets prof");
         }
 
         try {

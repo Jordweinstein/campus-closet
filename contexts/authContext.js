@@ -56,10 +56,13 @@ export const AuthProvider = ({ children }) => {
           return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
         })
       );
-
-      setLikedListingsData(likedListingsDocs.filter((doc) => doc !== null));
+  
+      const uniqueListings = Array.from(new Set(likedListingsDocs.filter((doc) => doc !== null).map(item => item.id)))
+        .map(id => likedListingsDocs.find(item => item.id === id));
+  
+      setLikedListingsData(uniqueListings);
     };
-
+  
     if (likedListings.length > 0) {
       fetchLikedListings();
     } else {
@@ -80,6 +83,8 @@ export const AuthProvider = ({ children }) => {
         });
 
         setLikedListings((prev) => [...prev, listingId]);
+      } else {
+        console.log(`listing ${listingId} already here`);
       }
     } catch (error) {
       console.log(error);
