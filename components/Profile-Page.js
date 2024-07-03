@@ -18,6 +18,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import '../firebase/firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import EditProfile from './Edit-Profile-Screen';
+import Listing from './Listing-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 
@@ -42,6 +43,7 @@ export default function Profile() {
                     component={ EditProfile }
                     options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c'}}
                 />
+
             </Stack.Navigator>
         </ListingsProvider> 
     )
@@ -51,7 +53,6 @@ const ProfileMain = () => {
     const navigation = useNavigation();
     const { userData, likedListingsData } = useContext(AuthContext);
     const { userListings } = useContext(ListingsContext);
-    console.log(userData);
 
 const handleSignOut = () => {
         signOut(auth).then(() => {
