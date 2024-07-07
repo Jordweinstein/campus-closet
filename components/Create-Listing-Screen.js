@@ -10,7 +10,7 @@ import {
   StyleSheet,
   TextInput,
   Modal,
-  Dimensions,
+  Dimensions
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
@@ -22,7 +22,7 @@ import {
   collection,
   doc,
   updateDoc,
-  arrayUnion,
+  arrayUnion
 } from "firebase/firestore";
 import db from "../firebase/db";
 import { getAuth } from "firebase/auth";
@@ -47,52 +47,15 @@ export default function CreateListing() {
   const [isSizeModalVisible, setIsSizeModalVisible] = useState(false);
   const [nextUploadableImageIndex, setNextUploadableImageIndex] = useState(0);
 
-  const [range, setRange] = useState({ startDate: null, endDate: null });
-  const [open, setOpen] = useState(false);
-
   const auth = getAuth();
   const navigator = useNavigation();
-
-  const onDismiss = useCallback(
-    () => {
-      setOpen(false);
-    },
-    [setOpen]
-  );
-
-  const onConfirm = useCallback(
-    ({ startDate, endDate }) => {
-      setOpen(false);
-      setRange({ startDate, endDate });
-    },
-    [setOpen, setRange]
-  );
-
-  const getTomorrow = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow;
-  };
-
-  const getOneWeekFromTomorrow = () => {
-    const tomorrow = getTomorrow();
-    const oneWeekFromTomorrow = new Date(tomorrow);
-    oneWeekFromTomorrow.setDate(tomorrow.getDate() + 6);
-    return oneWeekFromTomorrow;
-  };
-
-  const validRange = {
-    startDate: getTomorrow(),
-    endDate: undefined,
-  };
 
   const renderSizeItem = ({ item }) =>
     <TouchableOpacity
       style={styles.modalItem}
       onPress={() => {
-        setSelectedCategory(item.value);
-        setIsCategoryModalVisible(false);
+        setSize(item.value);
+        setIsSizeModalVisible(false);
       }}
     >
       <Text style={styles.modalItemText}>
@@ -137,16 +100,6 @@ export default function CreateListing() {
       alert("You must choose to enable rent, buy, or both");
       return false;
     } else if (
-      isRentFocused &&
-      (!range.startDate || !range.endDate || range.startDate < getTomorrow())
-    ) {
-      alert(
-        "Please enter valid dates during which your item is available for rent. An item's start date of availability must be atleast one day after listing."
-      );
-      return false;
-    } else if (range.endDate - range.startDate < 7 * 24 * 60 * 60 * 1000) {
-      alert("Your rental must be available for atleast one week");
-    } else if (
       (isRentFocused && (rentPrice === 0.0 || rentPrice === null)) ||
       (isBuyFocused && (buyPrice === 0.0 || buyPrice === null))
     ) {
@@ -161,7 +114,7 @@ export default function CreateListing() {
       const userRef = doc(db, "users", user.uid);
 
       await updateDoc(userRef, {
-        listings: arrayUnion(listingId),
+        listings: arrayUnion(listingId)
       });
     } catch (error) {
       console.error("Error updating user document: ", error);
@@ -196,11 +149,9 @@ export default function CreateListing() {
 
       let purchaseMethods = [];
       let prices = [];
-      let datesAvailable = [];
       if (isRentFocused) {
         purchaseMethods.push("Rent");
         prices.push(rentPrice);
-        datesAvailable = [range.startDate, range.endDate];
       }
       if (isBuyFocused) {
         purchaseMethods.push("Buy");
@@ -212,7 +163,7 @@ export default function CreateListing() {
         listingRef = await addDoc(collection(db, "listings"), {
           brand: brand,
           category: selectedCategory,
-          datesAvailable: datesAvailable,
+          datesUnavailable: [],
           description: description,
           itemName: itemName,
           likes: 0,
@@ -222,6 +173,7 @@ export default function CreateListing() {
           price: prices,
           size: size,
           tags: selectedTheme,
+          timestamp: new Date()
         });
       } catch (error) {
         console.error("Error creating listing: ", error);
@@ -238,7 +190,6 @@ export default function CreateListing() {
       setRentPrice(0.0);
       setBuyPrice(0.0);
       setImages([]);
-      setRange({ undefined, undefined });
       setIsRentFocused(false);
       setIsBuyFocused(false);
       setNextUploadableImageIndex(0);
@@ -274,7 +225,7 @@ export default function CreateListing() {
                     style={{
                       width: "100%",
                       height: "100%",
-                      borderRadius: 10,
+                      borderRadius: 10
                     }}
                   />
                 : index === nextUploadableImageIndex &&
@@ -445,34 +396,6 @@ export default function CreateListing() {
                 keyboardType="decimal-pad"
               />}
           </TouchableOpacity>
-          {isRentFocused
-            ? <TouchableOpacity onPress={() => setOpen(true)}>
-                <FontAwesome
-                  name="calendar"
-                  size={24}
-                  color="black"
-                  style={{ paddingTop: 15, paddingRight: 30 }}
-                />
-              </TouchableOpacity>
-            : <View />}
-          <DatePickerModal
-            locale="en"
-            mode="range"
-            visible={open}
-            onDismiss={onDismiss}
-            startDate={range.startDate}
-            endDate={range.endDate}
-            onConfirm={onConfirm}
-            validRange={validRange}
-            inputMode="start"
-            onChange={params => {
-              if (params.endDate && params.endDate < getOneWeekFromTomorrow()) {
-                setRange({ ...range, endDate: minEndDate });
-              } else {
-                setRange(params);
-              }
-            }}
-          />
 
           <TouchableOpacity
             style={isBuyFocused ? styles.activeButton : styles.disabledButton}
@@ -510,28 +433,28 @@ export default function CreateListing() {
 const styles = StyleSheet.create({
   scrollViewStyle: {
     height: "20%",
-    width: "100%",
+    width: "100%"
   },
   uploadButton: {
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#050742",
-    height: "8%",
+    height: "8%"
   },
   imageUploadView: {
     flexDirection: "row",
     alignItems: "center",
     padding: 5,
-    justifyContent: "flex-start",
+    justifyContent: "flex-start"
   },
   createListingView: {
     width: "100%",
-    flex: 1,
+    flex: 1
   },
   contentWrapper: {
     flex: 1,
-    justifyContent: "flex-start",
+    justifyContent: "flex-start"
   },
   uploadButtonView: {
     height: "80%",
@@ -540,11 +463,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: "1%",
+    marginHorizontal: "1%"
   },
   input: {
     flex: 1,
-    textAlign: "left",
+    textAlign: "left"
   },
   textInputView: {
     flexDirection: "row",
@@ -552,7 +475,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 50,
     justifyContent: "space-between",
-    width: "100%",
+    width: "100%"
   },
   inputView: {
     alignItems: "center",
@@ -563,13 +486,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     borderRadius: 15,
     width: "90%",
-    alignSelf: "center",
+    alignSelf: "center"
   },
   itemNameView: {
     width: "90%",
     backgroundColor: "white",
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 10
   },
   descriptionView: {
     height: 95,
@@ -579,7 +502,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     width: "90%",
     marginTop: 10,
-    lineHeight: 20,
+    lineHeight: 20
   },
   priceView: {
     flexDirection: "row",
@@ -589,7 +512,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     width: "90%",
-    marginBottom: "5%",
+    marginBottom: "5%"
   },
   rentPriceView: {
     flexDirection: "row",
@@ -597,7 +520,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginRight: 10,
     borderRadius: 10,
-    flex: 1,
+    flex: 1
   },
   buyPriceView: {
     flexDirection: "row",
@@ -605,7 +528,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     marginLeft: 10,
     borderRadius: 10,
-    flex: 1,
+    flex: 1
   },
   disabledButton: {
     padding: 15,
@@ -614,7 +537,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     flexDirection: "row",
-    width: 120,
+    width: 120
   },
   activeButton: {
     padding: 15,
@@ -623,19 +546,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     flexDirection: "row",
-    width: 120,
+    width: 120
   },
   disabledButtonText: {
     color: "#888888",
-    fontSize: 16,
+    fontSize: 16
   },
   activeButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 16
   },
   scrollViewContent: {
     flexGrow: 1,
-    justifyContent: "flex-start",
+    justifyContent: "flex-start"
   },
 
   // Modal styling
@@ -647,16 +570,16 @@ const styles = StyleSheet.create({
     width: "40%",
     backgroundColor: "#fff",
     alignItems: "center",
-    alignSelf: "flex-start",
+    alignSelf: "flex-start"
   },
   buttonText: {
-    fontSize: 14,
+    fontSize: 14
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)"
   },
   modalContent: {
     width: "80%",
@@ -664,30 +587,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 20,
     alignItems: "center",
-    maxHeight: "70%",
+    maxHeight: "70%"
   },
   modalTitle: {
     fontSize: 18,
-    marginBottom: 20,
+    marginBottom: 20
   },
   modalItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#ccc"
   },
   modalItemText: {
-    fontSize: 16,
+    fontSize: 16
   },
   closeButton: {
     marginTop: 20,
     padding: 10,
     backgroundColor: "navy",
-    borderRadius: 8,
+    borderRadius: 8
   },
   closeButtonText: {
     color: "#fff",
-    fontSize: 16,
-  },
+    fontSize: 16
+  }
 });
 
 const categories = [
@@ -699,7 +622,7 @@ const categories = [
   { key: "6", value: "Shoes" },
   { key: "7", value: "Accessories" },
   { key: "8", value: "Skirts" },
-  { key: "9", value: "Sweaters" },
+  { key: "9", value: "Sweaters" }
 ];
 
 const themes = [
@@ -708,5 +631,5 @@ const themes = [
   { key: "3", value: "Sundresses" },
   { key: "4", value: "Night Out" },
   { key: "5", value: "Casual" },
-  { key: "6", value: "Beach" },
+  { key: "6", value: "Beach" }
 ];

@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   View,
   Text,
+  Alert,
   StyleSheet,
   Image,
 } from "react-native";
@@ -14,6 +15,7 @@ import { deleteDoc, doc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { ref, getStorage, deleteObject } from "@firebase/storage";
 import { useNavigation } from "@react-navigation/core";
+import { isDate } from "date-fns";
 
 export default function Listing({ route }) {
   const { listing } = route.params;
@@ -23,13 +25,17 @@ export default function Listing({ route }) {
   const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
   const [likeCount, setLikeCount] = useState(listing.likes);
   const navigation = useNavigation();
+  const date = new Date(); // today's date
+
 
   useEffect(
     () => {
       setIsLiked(likedListings.includes(listing.id));
+      
     },
     [likedListings, listing.id]
   );
+  
 
   const handleLike = async () => {
     console.log(listing);
@@ -71,7 +77,20 @@ export default function Listing({ route }) {
 
     await deleteDoc(doc(db, "listings", listing.id));
     navigation.goBack();
+    alert("Listing successfully deleted.");
   }
+
+  const isDateInRange = (date, start, end) => {
+    const dateTimestamp = new Date(date).getTime();
+      const startTimestamp = parseFloat(start) * 1000;
+    const endTimestamp = parseFloat(end) * 1000;
+  
+    return dateTimestamp >= startTimestamp && dateTimestamp <= endTimestamp;
+  }
+  
+  const myDate = "Wed Jul 03 2024 19:05:13 GMT-0400";
+  const start = "063855662400.000000000"; // Unix timestamp in seconds
+  const end = "063856353599.000000000";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,6 +124,7 @@ export default function Listing({ route }) {
               </TouchableOpacity>
             )}
           </View>
+         
           <View
             style={{
               flexDirection: "row",
@@ -113,7 +133,7 @@ export default function Listing({ route }) {
             }}
           >
             { (listing.owner !== user.uid ) ? (
-                <>
+              <>
                 <TouchableOpacity onPress={handleLike}>
                     <AntDesign
                     name={isLiked ? "heart" : "hearto"}
@@ -130,13 +150,34 @@ export default function Listing({ route }) {
               : (
                 <TouchableOpacity
                     style = {{marginBottom: 5}}
-                    onPress = {handleDelete}
-                >
+                    onPress={() =>
+                      Alert.alert(
+                        "Warning",
+                        "Are you sure you want to delete this listing?",
+                        [
+                          {
+                            
+                            text: "Cancel",
+                            onPress: () => {
+                              console.log("Cancelled delete listing.")
+                              console.log("my date: " + date);
+                              console.log("start" + listing.datesAvailable[0]);
+                              console.log("end" + listing.datesAvailable[1]);
+                            
+                            },
+                          },
+                          {
+                            text: "Confirm",
+                            onPress: () => handleDelete(),
+                          },
+                        ],
+                        { cancelable: true }
+                      )
+                    }
+                  >
                     <MaterialIcons name="delete" size={30} color="black" />
-                </TouchableOpacity>
-              )
-        
-        }
+                  </TouchableOpacity>
+                )}
             
           </View>
         </View>
@@ -162,12 +203,16 @@ export default function Listing({ route }) {
         </View>
 
         <View style={styles.hContainer}>
-          <View style={styles.categoryTag}>
-            <Text style={styles.customText}>
-              {listing.tags}
-            </Text>
-          </View>
-
+          {(listing.tags.size > 0) ? 
+           <View style={styles.categoryTag}>
+           <Text style={styles.customText}>
+             {listing.tags}
+           </Text>
+         </View>
+         :
+         <></>
+        
+        }
           <View style={styles.categoryTag}>
             <Text style={styles.customText}>
               {listing.category}

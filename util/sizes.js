@@ -1,9 +1,9 @@
 const sizes = [
-  { key: "1", value: "Extra Small" },
+  { key: "1", value: "XS" },
   { key: "2", value: "Small" },
   { key: "3", value: "Medium" },
   { key: "4", value: "Large" },
-  { key: "5", value: "Extra Large" },
+  { key: "5", value: "XL" },
   { key: "6", value: "0" },
   { key: "7", value: "1" },
   { key: "8", value: "2" },
@@ -36,6 +36,7 @@ const sizes = [
   { key: "35", value: "10" },
   { key: "36", value: "10.5" },
   { key: "37", value: "11" },
+  { key: "38", value: "One Size" }
 ];
 
 export default sizes;
