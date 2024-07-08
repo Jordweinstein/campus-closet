@@ -118,15 +118,29 @@ const ShopMain = ({ navigation }) => {
         }}
       >
         <View style={styles.itemTextContainer}>
-          <Text style={{ fontWeight: "bold", marginLeft: 10, marginRight: 5 }}>
+          <Text
+            style={{
+              fontWeight: "bold",
+              marginLeft: 10,
+              marginRight: 5,
+              fontFamily: "optima"
+            }}
+          >
             {item.brand} ‣
           </Text>
-          <Text>
+          <Text style={{ fontFamily: "optima" }}>
             {item.category}
           </Text>
         </View>
 
-        <Text style={{ fontSize: 12, marginRight: 10, fontWeight: 500 }}>
+        <Text
+          style={{
+            fontSize: 12,
+            marginRight: 10,
+            fontWeight: 500,
+            fontFamily: "optima"
+          }}
+        >
           {item.size}
         </Text>
       </View>
@@ -188,7 +202,7 @@ const ShopMain = ({ navigation }) => {
           style={styles.textContainer}
           onPress={() => setFilteredListings(listings)}
         >
-          <Text>Remove Filters</Text>
+          <Text style={{ fontFamily: "optima" }}>Remove Filters</Text>
         </TouchableOpacity>
       </View>
 
@@ -365,7 +379,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: 2,
     marginLeft: 5,
-    fontFamily: "JosefinSans",
+    fontFamily: "optima",
     fontSize: 15
   },
   title: {

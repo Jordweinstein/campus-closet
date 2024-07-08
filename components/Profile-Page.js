@@ -73,7 +73,7 @@ export default function Profile() {
           {userData ? (
             <>
               <Text style={styles.title}>{userData.displayName}</Text>
-              <Text> email: {userData.email} </Text>
+              <Text style={{fontFamily: 'optima'}}> email: {userData.email} </Text>
               <View style={styles.profileContainer}>
                 <View style={{ flexDirection: 'row' }}>
                   <Image
@@ -88,7 +88,7 @@ export default function Profile() {
           ) : (
             <>
               <Text style={styles.title}>User</Text>
-              <Text> email: </Text>
+              <Text style={{fontFamily: 'optima'}}> email: </Text>
             </>
           )}
   
@@ -148,19 +148,19 @@ export default function Profile() {
             style={styles.button}
             onPress={handleSignOut}
           >
-            <Text>Sign out</Text>
+            <Text style={{fontFamily: 'optima'}}>Sign out</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate('EditProfile')}
           >
-            <Text>Edit Profile</Text>
+            <Text style={{fontFamily: 'optima'}}>Edit Profile</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.button}
             onPress={() => setHelpModalVisible(true)}
           >
-            <Text>Help</Text>
+            <Text style={{fontFamily: 'optima'}}>Help</Text>
           </TouchableOpacity>
         </View>
   
@@ -185,10 +185,10 @@ export default function Profile() {
               or rental, you will communicate with your seller and arrange a pick up/drop off.</Text>
 
               <Text style={styles.boldModalText}>What if my rented item comes back damaged?</Text>
-              <Text style={styles.modalText}>Campus Closet is not responsible for any damage to your items, but 
-              by using this application you agree to repairing or reimbursing for any damage. If a rental was also 
-              listed for sale and is returned damage, the renter must pay the cost to purchase the item or chooset
-                to dry clean. </Text>
+              <Text style={styles.modalText}>Campus Closet is not responsible for any damage to your items. Upon registration,
+              a user agrees to terms and conditions which oblige them repair or reimburse any damage to rented items. </Text>
+              <Text style={{fontFamily: 'optima',}}>If you would like to submit a report, email to unccampuscloset@gmail.com</Text>
+              
 
               <TouchableOpacity
                 style={styles.closeButton}
@@ -240,7 +240,7 @@ export default function Profile() {
     bioText: {
       textAlign: 'center',
       fontWeight: "200",
-      fontFamily: 'JosefinSans',
+      fontFamily: 'optima',
       fontSize: 15,
       marginHorizontal: 10,
     },
@@ -255,6 +255,7 @@ export default function Profile() {
     },
     h2: {
       fontSize: 18,
+      fontFamily: 'optima',
       fontWeight: 'bold',
       marginBottom: 10,
       marginTop: 20,
@@ -336,15 +337,18 @@ export default function Profile() {
     modalTitle: {
       fontSize: 18,
       marginBottom: 20,
+      fontFamily: 'optima',
     },
     modalText: {
       fontSize: 14,
       marginBottom: 20,
+      fontFamily: 'optima',
     },
     boldModalText: {
         fontSize: 17,
         fontWeight: 'bold',
         marginBottom: 20,
+        fontFamily: 'optima',
       },
     closeButton: {
       marginTop: 20,
@@ -354,6 +358,7 @@ export default function Profile() {
     },
     closeButtonText: {
       color: "#fff",
-      fontSize: 16
+      fontSize: 16,
+      fontFamily: 'optima',
     }
 });

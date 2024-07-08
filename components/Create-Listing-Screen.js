@@ -259,7 +259,7 @@ export default function CreateListing() {
           </View>
           <View style={styles.inputView}>
             <View style={styles.textInputView}>
-              <Text style={{ width: "60%" }}>Brand: </Text>
+              <Text style={styles.inputTitleText}>Brand: </Text>
               <TextInput
                 placeholder="Enter brand name"
                 style={styles.input}
@@ -270,7 +270,7 @@ export default function CreateListing() {
               />
             </View>
             <View style={styles.textInputView}>
-              <Text style={{ width: "60%" }}>Category: </Text>
+              <Text style={styles.inputTitleText}>Category: </Text>
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => setIsCategoryModalVisible(true)}
@@ -282,7 +282,7 @@ export default function CreateListing() {
             </View>
 
             <View style={styles.textInputView}>
-              <Text style={{ width: "60%" }}>Size: </Text>
+              <Text style={styles.inputTitleText}>Size: </Text>
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => setIsSizeModalVisible(true)}
@@ -293,7 +293,7 @@ export default function CreateListing() {
               </TouchableOpacity>
             </View>
             <View style={styles.textInputView}>
-              <Text style={{ flex: 1 }}>Themes: </Text>
+              <Text style={styles.inputTitleText}>Themes: </Text>
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => setIsThemeModalVisible(true)}
@@ -431,7 +431,11 @@ export default function CreateListing() {
         </KeyboardAvoidingView>
 
         <TouchableOpacity onPress={handleUpload} style={styles.uploadButton}>
-          <Text style={{ color: "white", fontSize: 16 }}>Upload Listing</Text>
+          <Text
+            style={{ color: "white", fontSize: 16, fontFamily: "optima-bold" }}
+          >
+            Upload Listing
+          </Text>
         </TouchableOpacity>
       </SafeAreaView>;
 }
@@ -500,6 +504,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10
   },
+  inputTitleText: {
+    width: "60%",
+    fontFamily: "optima"
+  },
   descriptionView: {
     height: 95,
     textAlignVertical: "top",
@@ -556,11 +564,13 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: "#888888",
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: "optima"
   },
   activeButtonText: {
     color: "#FFFFFF",
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: "optima"
   },
   scrollViewContent: {
     flexGrow: 1,
@@ -579,7 +589,8 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start"
   },
   buttonText: {
-    fontSize: 14
+    fontSize: 14,
+    fontFamily: "optima"
   },
   modalContainer: {
     flex: 1,
@@ -597,7 +608,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    marginBottom: 20
+    marginBottom: 20,
+    fontFamily: "optima"
   },
   modalItem: {
     padding: 15,
@@ -605,7 +617,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ccc"
   },
   modalItemText: {
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: "optima"
   },
   closeButton: {
     marginTop: 20,
@@ -615,7 +628,8 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: "#fff",
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: "optima"
   }
 });
 

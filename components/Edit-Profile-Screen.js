@@ -63,7 +63,7 @@ export default function EditProfile() {
         <View style={styles.editProfileView}>
             <Text style={styles.title}>Edit Profile</Text>
             <View style={styles.inputView}>
-                <Text>Name:  </Text>
+                <Text style={{fontFamily: 'optima'}}>Name:  </Text>
                 <TextInput
                     placeholder="Jane Doe"
                     value={name}
@@ -72,7 +72,7 @@ export default function EditProfile() {
             </View>
 
             <View style={styles.inputView}>
-                <Text style={{marginTop: 5}}>Bio: </Text>
+                <Text style={{marginTop: 5, fontFamily: 'optima'}}>Bio: </Text>
                 <TextInput
                     placeholder="A fun fact about me is..."
                     value={bio}
@@ -84,7 +84,7 @@ export default function EditProfile() {
             </View>
 
             <View style={styles.inputView}>
-                <Text>Email:  </Text>
+                <Text style={{fontFamily: 'optima'}}>Email:  </Text>
                 <TextInput
                     placeholder="example@unc.edu"
                     value={email}
@@ -94,7 +94,7 @@ export default function EditProfile() {
             </View>
             
             <View style={styles.inputView}>
-                <Text>Phone Number:  </Text>
+                <Text style={{fontFamily: 'optima'}}>Phone Number:  </Text>
                 <TextInput
                     placeholder="123 456 7890"
                     keyboardType="phone-pad"
@@ -105,17 +105,17 @@ export default function EditProfile() {
                 /> 
             </View>
             <View style={styles.pictureInputView}>
-                <Text>Profile Picture:  </Text>
+                <Text style={{fontFamily: 'optima'}}>Profile Picture:  </Text>
                 <TouchableOpacity 
                     style={ styles.uploadImageButton }
                     onPress={() => pickImage(0, [], setImage) }
                 >
-                    <Text>Upload Image</Text>
+                    <Text style={{fontFamily: 'optima'}}>Upload Image</Text>
                 </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                <Text style={{ color: 'white', fontWeight: '500' }}>Submit Changes</Text>
+                <Text style={{ color: 'white', fontWeight: '500', fontFamily: 'optima' }}>Submit Changes</Text>
             </TouchableOpacity>
         </View>
         
@@ -128,8 +128,9 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     title: {
-        fontSize: 24,
+        fontSize: 48,
         margin: 10,
+        fontFamily: 'BebasNeue',
     },
     inputView: {
         flexDirection: 'row',

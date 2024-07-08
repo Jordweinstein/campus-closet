@@ -70,8 +70,8 @@
 	<false/>
 	<key>UIAppFonts</key>
 	<array>
-		<string>BebasNeue.ttf</string>
-		<string>UbuntuSans.ttf</string>
+		<string>Bebas Neue.ttf</string>
+		<string>Cabin.ttf</string>
 	</array>
 </dict>
 </plist>

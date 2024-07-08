@@ -2,12 +2,12 @@
   "migIndex": 1,
   "data": [
     {
-      "path": "assets/fonts/BebasNeue.ttf",
+      "path": "assets/fonts/Bebas Neue.ttf",
       "sha1": "8b3aaeb978f3cb5f575860774b50c332338563c1"
     },
     {
-      "path": "assets/fonts/UbuntuSans.ttf",
-      "sha1": "47b8264acccef2a4c5f3c7afe7ec3425b8c854d8"
+      "path": "assets/fonts/Cabin.ttf",
+      "sha1": "e9411cf09432f0476329de4882df8d63229f080a"
     }
   ]
 }

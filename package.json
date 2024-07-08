@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/cabin": "^0.2.3",
+    "@expo-google-fonts/inter": "^0.2.3",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/datetimepicker": "8.0.1",
@@ -23,7 +25,9 @@
     "@react-navigation/stack": "^6.3.29",
     "date-fns": "^3.6.0",
     "expo": "~51.0.17",
+    "expo-font": "~12.0.7",
     "expo-image-picker": "~15.0.7",
+    "expo-splash-screen": "~0.27.5",
     "expo-status-bar": "~1.12.1",
     "firebase": "^10.12.2",
     "react": "18.2.0",

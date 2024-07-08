@@ -11,6 +11,7 @@ import {
 import "react-native-gesture-handler";
 import { createStackNavigator } from "@react-navigation/stack";
 import ListingScreen from "./Listing-Screen";
+
 import GameDay from "../assets/images/gameday.jpeg";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 
@@ -36,7 +37,6 @@ export default function Home() {
 }
 const HomeMain = ({ navigation }) => {
   const { trendingListings, recentListings } = useContext(ListingsContext);
-  console.log("recent: " + recentListings);
 
   return (
     <SafeAreaView>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   h2: {
     textAlign: "left",
     fontWeight: 2,
-    fontFamily: "JosefinSans",
+    fontFamily: "optima",
     fontSize: 18
   },
   textContainer: {
@@ -140,46 +140,3 @@ const styles = StyleSheet.create({
     marginVertical: 15
   }
 });
-
-const items = [
-  {
-    id: 1,
-    category: "Skirts",
-    description: "Princess Polly black mini skirt",
-    brand: "Princess Polly",
-    price: 10.0,
-    purchaseMode: { buy: 23.0 },
-    tags: ["Game Day"],
-    size: "Medium"
-  },
-  {
-    id: 2,
-    category: "Dresses",
-    description: "Floral maxi dress",
-    brand: "Revolve",
-    price: 21.0,
-    purchaseMode: { rent: 12.0 },
-    tags: ["Formal"],
-    size: "Small"
-  },
-  {
-    id: 3,
-    category: "Tops",
-    description: "black crop top",
-    brand: "Edikted",
-    price: [19.0, 41.0],
-    purchaseMode: { rent: 10.0, buy: 15.0 },
-    tags: ["Going Out", "Date Night"],
-    size: "M"
-  },
-  {
-    id: 4,
-    category: "Accessories",
-    description: "White UNC Trucker Hat",
-    brand: "Shrunken Head",
-    price: [15.0, 30.0],
-    purchaseMode: { rent: 9.0, buy: 15.0 },
-    tags: ["Game Day"],
-    size: "One Size"
-  }
-];

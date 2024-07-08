@@ -159,6 +159,7 @@ export default function Listing({ route }) {
           startDate={range.startDate}
           endDate={range.endDate}
           onConfirm={onConfirm}
+          presentationStyle="pageSheet"
         />
 
          
@@ -179,7 +180,7 @@ export default function Listing({ route }) {
                     />
                 </TouchableOpacity>
 
-                <Text style={{ margin: 10 }}>
+                <Text style={{ margin: 10, fontFamily: 'optima' }}>
                     {likeCount === 0 ? "" : likeCount}
                 </Text>
               </>
@@ -220,20 +221,20 @@ export default function Listing({ route }) {
         </View>
 
         <View style={styles.hContainer}>
-          <Text style={{ paddingRight: 15, fontSize: 20, fontWeight: "bold" }}>
+          <Text style={{ paddingRight: 15, fontSize: 20, fontWeight: "bold", fontFamily: 'optima' }}>
             {(listing.brand || "No brand") + "   ‣"}
           </Text>
-          <Text style={{ fontSize: 20 }}>
+          <Text style={{ fontSize: 20, fontFamily: 'optima' }}>
             {listing.itemName || "No item name"}
           </Text>
         </View>
         <View style={styles.hContainer}>
-          <Text>
+          <Text style={{ fontFamily: 'optima'}}>
             {listing.description}
           </Text>
         </View>
         <View style={styles.hContainer}>
-          <Text style={{ fontWeight: "bold" }}>Size: </Text>
+          <Text style={{ fontWeight: "bold", fontFamily: 'optima' }}>Size: </Text>
           <Text>
             {listing.size}
           </Text>
@@ -284,6 +285,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
+    fontFamily: 'optima',
   },
   image: {
     width: "100%",
@@ -300,6 +302,7 @@ const styles = StyleSheet.create({
   },
   customText: {
     padding: 5,
+    fontFamily: 'optima',
   },
   categoryTag: {
     backgroundColor: "#c4dbff",
@@ -325,5 +328,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "navy",
     fontSize: 16,
+    fontFamily: 'optima',
   },
 });
