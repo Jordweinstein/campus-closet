@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, TextInput, StyleSheet, Alert } from "react-native"
+import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native"
 import { TouchableOpacity } from "react-native-gesture-handler";
 import db from '../firebase/db';
 import { useNavigation } from "@react-navigation/core";
@@ -13,6 +13,7 @@ export default function EditProfile() {
     const [email, setEmail] = useState(null);
     const [phoneNumber, setPhoneNumber] = useState(null);
     const [image, setImage] = useState(null);
+    const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
 
     const handleSubmit = async () => {
@@ -20,32 +21,45 @@ export default function EditProfile() {
         let profilePicUrl = image;
     
         if (image) {
-            profilePicUrl = await uploadImageAsync(image, 'profilePictures');
-            updates.profilePic = profilePicUrl;
+          profilePicUrl = await uploadImageAsync(image, 'profilePictures');
+          updates.profilePic = profilePicUrl;
         }
     
         if (name !== null) updates.displayName = name;
         if (bio !== null) updates.bio = bio;
         if (email !== null) {
-            if (email.endsWith('.edu')){ 
-                updates.email = email;
-            } else {
-                Alert.alert("Error", "Email must end in .edu");
-                return;
-            }
+          if (email.endsWith('.edu')) {
+            updates.email = email;
+          } else {
+            Alert.alert("Error", "Email must end in .edu");
+            return;
+          }
         }
         if (phoneNumber !== null) updates.phoneNumber = phoneNumber;
     
         if (Object.keys(updates).length > 0) {
+          setLoading(true);
+          try {
             const userRef = doc(db, "users", auth.currentUser?.uid);
             await updateDoc(userRef, updates);
             navigation.navigate('ProfileMain');
+          } catch (error) {
+            console.error("Error updating document: ", error);
+            Alert.alert("Error", "Failed to update profile.");
+          } finally {
+            setLoading(false);
+          }
         } else {
-            console.log("No changes to save.");
+          console.log("No changes to save.");
         }
-    };
+      };
 
     return (
+        (loading) ?     
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator size="large" />
+        </View>
+         :
         <View style={styles.editProfileView}>
             <Text style={styles.title}>Edit Profile</Text>
             <View style={styles.inputView}>

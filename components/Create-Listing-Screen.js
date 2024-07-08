@@ -10,7 +10,8 @@ import {
   StyleSheet,
   TextInput,
   Modal,
-  Dimensions
+  Dimensions,
+  ActivityIndicator
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
@@ -46,6 +47,7 @@ export default function CreateListing() {
   const [imageUrls, setImageUrls] = useState([]);
   const [isSizeModalVisible, setIsSizeModalVisible] = useState(false);
   const [nextUploadableImageIndex, setNextUploadableImageIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const auth = getAuth();
   const navigator = useNavigation();
@@ -199,235 +201,239 @@ export default function CreateListing() {
 
   const { width, height } = Dimensions.get("window");
 
-  return (
-    <SafeAreaView style={styles.createListingView}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior="padding"
-        keyboardVerticalOffset={100}
-      >
-        <ScrollView
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          style={styles.scrollViewStyle}
-          contentContainerStyle={styles.imageUploadView}
+  return loading
+    ? <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    : <SafeAreaView style={styles.createListingView}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior="padding"
+          keyboardVerticalOffset={100}
         >
-          {[0, 1, 2, 3].map(index =>
-            <TouchableOpacity
-              key={index}
-              style={styles.uploadButtonView}
-              onPress={() => handleImageUpload(index)}
-              disabled={index > nextUploadableImageIndex}
-            >
-              {images[index]
-                ? <Image
-                    source={{ uri: images[index] }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: 10
-                    }}
-                  />
-                : index === nextUploadableImageIndex &&
-                  <AntDesign name="pluscircleo" size={24} color="black" />}
-            </TouchableOpacity>
-          )}
-        </ScrollView>
+          <ScrollView
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            style={styles.scrollViewStyle}
+            contentContainerStyle={styles.imageUploadView}
+          >
+            {[0, 1, 2, 3].map(index =>
+              <TouchableOpacity
+                key={index}
+                style={styles.uploadButtonView}
+                onPress={() => handleImageUpload(index)}
+                disabled={index > nextUploadableImageIndex}
+              >
+                {images[index]
+                  ? <Image
+                      source={{ uri: images[index] }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: 10
+                      }}
+                    />
+                  : index === nextUploadableImageIndex &&
+                    <AntDesign name="pluscircleo" size={24} color="black" />}
+              </TouchableOpacity>
+            )}
+          </ScrollView>
 
-        <View style={{ alignItems: "center" }}>
-          <TextInput
-            placeholder="Item name"
-            style={styles.itemNameView}
-            value={itemName}
-            onChangeText={text => setItemName(text)}
-            autoCapitalize="words"
-          />
-          <TextInput
-            placeholder="Item description"
-            style={styles.descriptionView}
-            value={description}
-            onChangeText={text => setDescription(text)}
-            autoCapitalize="sentences"
-            maxLength={200}
-            multiline={true}
-          />
-        </View>
-        <View style={styles.inputView}>
-          <View style={styles.textInputView}>
-            <Text style={{ width: "60%" }}>Brand: </Text>
+          <View style={{ alignItems: "center" }}>
             <TextInput
-              placeholder="Enter brand name"
-              style={styles.input}
-              value={brand}
-              maxLength={30}
-              onChangeText={text => setBrand(text)}
+              placeholder="Item name"
+              style={styles.itemNameView}
+              value={itemName}
+              onChangeText={text => setItemName(text)}
               autoCapitalize="words"
             />
+            <TextInput
+              placeholder="Item description"
+              style={styles.descriptionView}
+              value={description}
+              onChangeText={text => setDescription(text)}
+              autoCapitalize="sentences"
+              maxLength={200}
+              multiline={true}
+            />
           </View>
-          <View style={styles.textInputView}>
-            <Text style={{ width: "60%" }}>Category: </Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setIsCategoryModalVisible(true)}
-            >
-              <Text style={styles.buttonText}>
-                {selectedCategory || "Select a category"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.textInputView}>
-            <Text style={{ width: "60%" }}>Size: </Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setIsSizeModalVisible(true)}
-            >
-              <Text style={styles.buttonText}>
-                {size || "Select a size"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.textInputView}>
-            <Text style={{ flex: 1 }}>Themes: </Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setIsThemeModalVisible(true)}
-            >
-              <Text style={styles.buttonText}>
-                {selectedTheme || "Select a theme"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isSizeModalVisible}
-            onRequestClose={() => setIsSizeModalVisible(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Select Size</Text>
-                <FlatList
-                  data={sizes}
-                  renderItem={renderSizeItem}
-                  keyExtractor={item => item.key}
-                />
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setIsSizeModalVisible(false)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isCategoryModalVisible}
-            onRequestClose={() => setIsCategoryModalVisible(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Select Category</Text>
-                <FlatList
-                  data={categories}
-                  renderItem={renderCategoryItem}
-                  keyExtractor={item => item.key}
-                />
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setIsCategoryModalVisible(false)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isThemeModalVisible}
-            onRequestClose={() => setIsThemeModalVisible(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Select Theme</Text>
-                <FlatList
-                  data={themes}
-                  renderItem={renderThemeItem}
-                  keyExtractor={item => item.key}
-                />
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setIsThemeModalVisible(false)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-        </View>
-
-        <View style={styles.priceView}>
-          <TouchableOpacity
-            style={isRentFocused ? styles.activeButton : styles.disabledButton}
-            onPress={() => setIsRentFocused(!isRentFocused)}
-          >
-            <Text
-              style={
-                isRentFocused
-                  ? styles.activeButtonText
-                  : styles.disabledButtonText
-              }
-            >
-              Rent ${" "}
-            </Text>
-            {isRentFocused &&
+          <View style={styles.inputView}>
+            <View style={styles.textInputView}>
+              <Text style={{ width: "60%" }}>Brand: </Text>
               <TextInput
-                style={{ flex: 1, color: "white" }}
-                placeholder="0.00"
-                value={rentPrice}
-                placeholderTextColor="white"
-                onChangeText={text => setRentPrice(text)}
-                keyboardType="decimal-pad"
-              />}
-          </TouchableOpacity>
+                placeholder="Enter brand name"
+                style={styles.input}
+                value={brand}
+                maxLength={30}
+                onChangeText={text => setBrand(text)}
+                autoCapitalize="words"
+              />
+            </View>
+            <View style={styles.textInputView}>
+              <Text style={{ width: "60%" }}>Category: </Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => setIsCategoryModalVisible(true)}
+              >
+                <Text style={styles.buttonText}>
+                  {selectedCategory || "Select a category"}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-          <TouchableOpacity
-            style={isBuyFocused ? styles.activeButton : styles.disabledButton}
-            onPress={() => setIsBuyFocused(!isBuyFocused)}
-          >
-            <Text
-              style={
-                isBuyFocused
-                  ? styles.activeButtonText
-                  : styles.disabledButtonText
-              }
+            <View style={styles.textInputView}>
+              <Text style={{ width: "60%" }}>Size: </Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => setIsSizeModalVisible(true)}
+              >
+                <Text style={styles.buttonText}>
+                  {size || "Select a size"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.textInputView}>
+              <Text style={{ flex: 1 }}>Themes: </Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => setIsThemeModalVisible(true)}
+              >
+                <Text style={styles.buttonText}>
+                  {selectedTheme || "Select a theme"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={isSizeModalVisible}
+              onRequestClose={() => setIsSizeModalVisible(false)}
             >
-              Buy ${" "}
-            </Text>
-            {isBuyFocused &&
-              <TextInput
-                value={buyPrice}
-                placeholder="0.00"
-                placeholderTextColor="white"
-                onChangeText={text => setBuyPrice(text)}
-                style={{ flex: 1, color: "white" }}
-                keyboardType="decimal-pad"
-              />}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Select Size</Text>
+                  <FlatList
+                    data={sizes}
+                    renderItem={renderSizeItem}
+                    keyExtractor={item => item.key}
+                  />
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setIsSizeModalVisible(false)}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
 
-      <TouchableOpacity onPress={handleUpload} style={styles.uploadButton}>
-        <Text style={{ color: "white", fontSize: 16 }}>Upload Listing</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={isCategoryModalVisible}
+              onRequestClose={() => setIsCategoryModalVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Select Category</Text>
+                  <FlatList
+                    data={categories}
+                    renderItem={renderCategoryItem}
+                    keyExtractor={item => item.key}
+                  />
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setIsCategoryModalVisible(false)}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={isThemeModalVisible}
+              onRequestClose={() => setIsThemeModalVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Select Theme</Text>
+                  <FlatList
+                    data={themes}
+                    renderItem={renderThemeItem}
+                    keyExtractor={item => item.key}
+                  />
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setIsThemeModalVisible(false)}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          </View>
+
+          <View style={styles.priceView}>
+            <TouchableOpacity
+              style={
+                isRentFocused ? styles.activeButton : styles.disabledButton
+              }
+              onPress={() => setIsRentFocused(!isRentFocused)}
+            >
+              <Text
+                style={
+                  isRentFocused
+                    ? styles.activeButtonText
+                    : styles.disabledButtonText
+                }
+              >
+                Rent ${" "}
+              </Text>
+              {isRentFocused &&
+                <TextInput
+                  style={{ flex: 1, color: "white" }}
+                  placeholder="0.00"
+                  value={rentPrice}
+                  placeholderTextColor="white"
+                  onChangeText={text => setRentPrice(text)}
+                  keyboardType="decimal-pad"
+                />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={isBuyFocused ? styles.activeButton : styles.disabledButton}
+              onPress={() => setIsBuyFocused(!isBuyFocused)}
+            >
+              <Text
+                style={
+                  isBuyFocused
+                    ? styles.activeButtonText
+                    : styles.disabledButtonText
+                }
+              >
+                Buy ${" "}
+              </Text>
+              {isBuyFocused &&
+                <TextInput
+                  value={buyPrice}
+                  placeholder="0.00"
+                  placeholderTextColor="white"
+                  onChangeText={text => setBuyPrice(text)}
+                  style={{ flex: 1, color: "white" }}
+                  keyboardType="decimal-pad"
+                />}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+
+        <TouchableOpacity onPress={handleUpload} style={styles.uploadButton}>
+          <Text style={{ color: "white", fontSize: 16 }}>Upload Listing</Text>
+        </TouchableOpacity>
+      </SafeAreaView>;
 }
 
 const styles = StyleSheet.create({

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useCallback, useEffect } from "react";
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
+import { DatePickerModal } from 'react-native-paper-dates';
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { AuthContext } from "../contexts/authContext";
@@ -15,7 +16,6 @@ import { deleteDoc, doc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { ref, getStorage, deleteObject } from "@firebase/storage";
 import { useNavigation } from "@react-navigation/core";
-import { isDate } from "date-fns";
 
 export default function Listing({ route }) {
   const { listing } = route.params;
@@ -24,6 +24,10 @@ export default function Listing({ route }) {
   );
   const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
   const [likeCount, setLikeCount] = useState(listing.likes);
+
+  const [range, setRange] = useState({ startDate: undefined, endDate: undefined });
+  const [open, setOpen] = useState(false);
+
   const navigation = useNavigation();
   const date = new Date(); // today's date
 
@@ -36,6 +40,31 @@ export default function Listing({ route }) {
     [likedListings, listing.id]
   );
   
+
+  const onDismiss = useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
+
+  const onConfirm = useCallback(
+    ({ startDate, endDate }) => {
+      if (startDate && endDate) {
+        const dayInMillis = 24 * 60 * 60 * 1000;
+        const differenceInDays = Math.round((new Date(endDate) - new Date(startDate)) / dayInMillis);
+
+        if (differenceInDays % 3 !== 0 || differenceInDays < 3) {
+          Alert.alert("Invalid Date Range", "Please select a date range in intervals of 3 days.");
+          return;
+        }
+
+        setOpen(false);
+        setRange({ startDate, endDate });
+        // add navigation to stripe page here
+      } else {
+        Alert.alert("Invalid Date Range", "Both start date and end date must be selected.");
+      }
+    },
+    [setOpen, setRange]
+  );
 
   const handleLike = async () => {
     console.log(listing);
@@ -80,18 +109,6 @@ export default function Listing({ route }) {
     alert("Listing successfully deleted.");
   }
 
-  const isDateInRange = (date, start, end) => {
-    const dateTimestamp = new Date(date).getTime();
-      const startTimestamp = parseFloat(start) * 1000;
-    const endTimestamp = parseFloat(end) * 1000;
-  
-    return dateTimestamp >= startTimestamp && dateTimestamp <= endTimestamp;
-  }
-  
-  const myDate = "Wed Jul 03 2024 19:05:13 GMT-0400";
-  const start = "063855662400.000000000"; // Unix timestamp in seconds
-  const end = "063856353599.000000000";
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.imageContainer}>
@@ -112,7 +129,14 @@ export default function Listing({ route }) {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {listing.purchaseMethod.map((mode, index) =>
+          {listing.purchaseMethod.map((mode, index) => {
+            return (mode === "Rent") ? (
+              <TouchableOpacity key={index} onPress={() => setOpen(true)} style={styles.purchaseButton}>
+                <Text style={styles.buttonText}>
+                  {mode} ${listing.price[index]}
+                </Text>
+              </TouchableOpacity>
+            ) : (
               <TouchableOpacity
                 key={index}
                 style={styles.purchaseButton}
@@ -122,8 +146,21 @@ export default function Listing({ route }) {
                   {mode} ${listing.price[index]}
                 </Text>
               </TouchableOpacity>
-            )}
-          </View>
+            );
+          })}
+        </View>
+
+        <DatePickerModal
+          locale="en"
+          mode="range"
+          visible={open}
+          label="Select rental period"
+          onDismiss={onDismiss}
+          startDate={range.startDate}
+          endDate={range.endDate}
+          onConfirm={onConfirm}
+        />
+
          
           <View
             style={{
