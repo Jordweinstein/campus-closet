@@ -47,6 +47,10 @@ const Login = () => {
 
     const handleSignUp = async () => {
         if (email.endsWith('.edu')) {
+            if (!email.endsWith('@unc.edu')) {
+                alert("Campus Closet is only available for use at UNC Chapel Hill at this time. Stay tuned...");
+                return;
+            }
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
@@ -199,7 +203,7 @@ const Login = () => {
             </View>
 
             <TouchableOpacity onPress={handleResetPassword}>
-                <Text style={{padding: 10}}>Forgot password?</Text>
+                <Text style={{padding: 10, fontFamily: 'optima'}}>Forgot password?</Text>
             </TouchableOpacity>
 
             <View style = {styles.buttonContainer}>
@@ -235,7 +239,9 @@ const styles = StyleSheet.create({
         width: 300,
         height: 50,
         backgroundColor: 'white',
+        fontFamily: 'optima',
         padding: 10,
+        fontFamily: 'optima',
         margin: 10,
         borderRadius: 10,
     },
@@ -253,7 +259,8 @@ const styles = StyleSheet.create({
         margin: 5
     },
     buttonText: {
-        color: 'white'
+        color: 'white',
+        fontFamily: 'optima',
     },
     titleView: {
         justifyContent: 'flex-end',

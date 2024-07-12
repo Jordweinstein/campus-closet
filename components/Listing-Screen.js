@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   View,
   Text,
+  ActivityIndicator,
   Alert,
   StyleSheet,
   Image,
@@ -19,7 +20,7 @@ import { useNavigation } from "@react-navigation/core";
 
 export default function Listing({ route }) {
   const { listing } = route.params;
-  const { addLikedListing, removeLikedListing, likedListings, user } = useContext(
+  const { addLikedListing, removeLikedListing, likedListings, user, removeListingReferenceFromUser } = useContext(
     AuthContext
   );
   const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
@@ -28,9 +29,10 @@ export default function Listing({ route }) {
   const [range, setRange] = useState({ startDate: undefined, endDate: undefined });
   const [open, setOpen] = useState(false);
 
-  const navigation = useNavigation();
-  const date = new Date(); // today's date
+  const [loading, setLoading] = useState(false);
 
+  const navigation = useNavigation();
+  const date = new Date(); 
 
   useEffect(
     () => {
@@ -39,7 +41,21 @@ export default function Listing({ route }) {
     },
     [likedListings, listing.id]
   );
-  
+
+  const disabledDates = [];
+  for (let i = 0; i < listing.unavailableStartDates.length; i++) {
+    const start = listing.unavailableStartDates[i].toDate();
+    const end = listing.unavailableEndDates[i].toDate();
+
+    let currentDate = new Date(start);
+    while (currentDate <= end) {
+      disabledDates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    if (disabledDates[disabledDates.length - 1].getTime() !== end.getTime()) {
+      disabledDates.push(new Date(end));
+    }
+  }
 
   const onDismiss = useCallback(() => {
     setOpen(false);
@@ -81,6 +97,7 @@ export default function Listing({ route }) {
 
   const handleDelete = async () => {
     // deleting images from storage
+    setLoading(true);
     const storage = getStorage();
     const promises = listing.images.map(async (url) => {
         const decodedUrl = decodeURIComponent(url);
@@ -100,16 +117,27 @@ export default function Listing({ route }) {
       try {
         await Promise.all(promises);
         console.log("All files deleted successfully");
+
+        await removeListingReferenceFromUser(listing.id);
+        
+        await deleteDoc(doc(db, "listings", listing.id));
+
+        navigation.goBack();
+        alert("Listing successfully deleted.");
       } catch (error) {
         console.error("Error deleting files:", error);
+      } finally {
+        setLoading(false);
       }
-
-    await deleteDoc(doc(db, "listings", listing.id));
-    navigation.goBack();
-    alert("Listing successfully deleted.");
+    
   }
 
   return (
+    (loading) ?
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator size="large" />
+        </View>
+    :
     <SafeAreaView style={styles.container}>
       <View style={styles.imageContainer}>
         <SwiperFlatList index={0} showPagination>
@@ -160,6 +188,7 @@ export default function Listing({ route }) {
           endDate={range.endDate}
           onConfirm={onConfirm}
           presentationStyle="pageSheet"
+          validRange={{ disabledDates,}}
         />
 
          
@@ -170,7 +199,7 @@ export default function Listing({ route }) {
               paddingBottom: 7,
             }}
           >
-            { (listing.owner !== user.uid ) ? (
+            { (user && (listing.owner !== user.uid) ) ? (
               <>
                 <TouchableOpacity onPress={handleLike}>
                     <AntDesign

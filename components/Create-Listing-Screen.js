@@ -10,25 +10,19 @@ import {
   StyleSheet,
   TextInput,
   Modal,
-  Dimensions,
   ActivityIndicator
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
-import { useState, useCallback } from "react";
+import { useState, useContext } from "react";
 import sizes from "../util/sizes";
-import { DatePickerModal } from "react-native-paper-dates";
 import {
   addDoc,
   collection,
-  doc,
-  updateDoc,
-  arrayUnion
 } from "firebase/firestore";
 import db from "../firebase/db";
-import { getAuth } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import { uploadImageAsync, pickImage } from "../util/imageHandling";
+import { AuthContext } from "../contexts/authContext";
 
 export default function CreateListing() {
   const [brand, setBrand] = useState("");
@@ -49,7 +43,8 @@ export default function CreateListing() {
   const [nextUploadableImageIndex, setNextUploadableImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const auth = getAuth();
+  const {user, addListingReferenceToUser} = useContext(AuthContext);
+
   const navigator = useNavigation();
 
   const renderSizeItem = ({ item }) =>
@@ -110,19 +105,6 @@ export default function CreateListing() {
     } else return true;
   };
 
-  const addListingReferenceToUser = async listingId => {
-    try {
-      const user = getAuth().currentUser;
-      const userRef = doc(db, "users", user.uid);
-
-      await updateDoc(userRef, {
-        listings: arrayUnion(listingId)
-      });
-    } catch (error) {
-      console.error("Error updating user document: ", error);
-    }
-  };
-
   const handleImageUpload = async index => {
     if (index <= nextUploadableImageIndex) {
       const result = await pickImage(index, images, image => {
@@ -139,6 +121,7 @@ export default function CreateListing() {
   const uploadedImageUrls = [];
 
   const handleUpload = async () => {
+    setLoading(true);
     if (verifyPresentInput()) {
       for (const image of images) {
         const img = await uploadImageAsync(image, "listingImages");
@@ -146,8 +129,6 @@ export default function CreateListing() {
       }
 
       setImageUrls(uploadedImageUrls);
-
-      console.log("Image urls:", uploadedImageUrls);
 
       let purchaseMethods = [];
       let prices = [];
@@ -165,11 +146,12 @@ export default function CreateListing() {
         listingRef = await addDoc(collection(db, "listings"), {
           brand: brand,
           category: selectedCategory,
-          datesUnavailable: [],
+          unavailableEndDates: [],
+          unavailableStartDates: [],
           description: description,
           itemName: itemName,
           likes: 0,
-          owner: auth.currentUser.uid,
+          owner: user.uid,
           images: uploadedImageUrls,
           purchaseMethod: purchaseMethods,
           price: prices,
@@ -183,6 +165,9 @@ export default function CreateListing() {
 
       await addListingReferenceToUser(listingRef.id);
 
+      navigator.navigate("ProfileMain");
+      setLoading(false);
+
       setItemName("");
       setBrand("");
       setSelectedCategory("");
@@ -195,11 +180,8 @@ export default function CreateListing() {
       setIsRentFocused(false);
       setIsBuyFocused(false);
       setNextUploadableImageIndex(0);
-      navigator.navigate("ProfileMain");
     }
   };
-
-  const { width, height } = Dimensions.get("window");
 
   return loading
     ? <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -400,7 +382,7 @@ export default function CreateListing() {
                   value={rentPrice}
                   placeholderTextColor="white"
                   onChangeText={text => setRentPrice(text)}
-                  keyboardType="decimal-pad"
+                  keyboardType="numbers-and-punctuation"
                 />}
             </TouchableOpacity>
 
@@ -424,7 +406,7 @@ export default function CreateListing() {
                   placeholderTextColor="white"
                   onChangeText={text => setBuyPrice(text)}
                   style={{ flex: 1, color: "white" }}
-                  keyboardType="decimal-pad"
+                  keyboardType="numbers-and-punctuation"
                 />}
             </TouchableOpacity>
           </View>
@@ -477,7 +459,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    textAlign: "left"
+    textAlign: "left",
+    fontFamily: "optima"
   },
   textInputView: {
     flexDirection: "row",
@@ -507,6 +490,7 @@ const styles = StyleSheet.create({
   inputTitleText: {
     width: "60%",
     fontFamily: "optima"
+
   },
   descriptionView: {
     height: 95,

@@ -37,7 +37,7 @@ export default function Profile() {
           <Stack.Screen
             name="CreateListing"
             component={CreateListing}
-            options={{ headerShown: true, headerTitle: "" }}
+            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
           <Stack.Screen
             name="EditProfile"
@@ -256,7 +256,6 @@ export default function Profile() {
     h2: {
       fontSize: 18,
       fontFamily: 'optima',
-      fontWeight: 'bold',
       marginBottom: 10,
       marginTop: 20,
       textAlign: 'left'

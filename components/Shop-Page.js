@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import {
   SafeAreaView,
   FlatList,
@@ -16,6 +16,7 @@ import "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FontAwesome } from "@expo/vector-icons";
 import { createStackNavigator } from "@react-navigation/stack";
+
 import ListingScreen from "./Listing-Screen";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 import sizes from "../util/sizes";
@@ -62,6 +63,7 @@ const ShopMain = ({ navigation }) => {
   const [maxPrice, setMaxPrice] = useState(null);
 
   const [filteredListings, setFilteredListings] = useState(listings);
+  const [filtersActive, setFiltersActive] = useState(false);
 
   const { listings } = useContext(ListingsContext);
 
@@ -99,7 +101,18 @@ const ShopMain = ({ navigation }) => {
     });
 
     setFilteredListings(filtered);
+    setFiltersActive(filtered.length !== listings.length);
   };
+
+  const resetFilters = () => {
+    setFilteredListings(listings);
+    setSearchQuery('');
+    setSelectedSize('');
+    setIsAvailable(false);
+    setMinPrice(null);
+    setMaxPrice(null);
+    setFiltersActive(false);
+  }
 
   const renderItem = ({ item, index }) =>
     <View style={{ width: "48%" }}>
@@ -175,11 +188,8 @@ const ShopMain = ({ navigation }) => {
           onPress={() => setSizeModalVisible(true)}
         >
           <Ionicons name="funnel" size={20} color="black" />
-          {selectedSize === ""
-            ? <Text style={styles.h3}>Size</Text>
-            : <Text style={styles.h3}>
-                Size: {selectedSize}
-              </Text>}
+          <Text style={styles.h3}>Size</Text>
+            
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.textContainer}
@@ -199,10 +209,10 @@ const ShopMain = ({ navigation }) => {
 
       <View style={styles.container}>
         <TouchableOpacity
-          style={styles.textContainer}
-          onPress={() => setFilteredListings(listings)}
+          style={[styles.removeFilterContainer, filtersActive ? styles.filterActive : styles.filterInactive]}
+          onPress={resetFilters}
         >
-          <Text style={{ fontFamily: "optima" }}>Remove Filters</Text>
+          <Text style={filtersActive ? styles.textActive : styles.textInactive}>Remove Filters</Text>
         </TouchableOpacity>
       </View>
 
@@ -231,22 +241,12 @@ const ShopMain = ({ navigation }) => {
               keyExtractor={item => item.key}
             />
 
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
+            <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setSizeModalVisible(false)}
               >
-                <Text style={styles.closeButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              {/* change function of this */}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSizeModalVisible(false)}
-              >
-                <Text style={styles.closeButtonText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -303,7 +303,8 @@ const ShopMain = ({ navigation }) => {
                   borderColor: "lightgrey",
                   borderWidth: 1,
                   borderRadius: 10,
-                  margin: 5
+                  margin: 5,
+                  fontFamily: 'optima',
                 }}
               />
             </View>
@@ -320,7 +321,8 @@ const ShopMain = ({ navigation }) => {
                   borderColor: "lightgrey",
                   borderWidth: 1,
                   borderRadius: 10,
-                  margin: 5
+                  margin: 5,
+                  fontFamily: "optima"
                 }}
               />
             </View>
@@ -362,7 +364,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 30,
     alignSelf: "center",
-    marginBottom: 15
+    marginBottom: 15,
+    fontFamily: 'optima',
+    fontSize: 16,
   },
   textContainer: {
     flex: 1,
@@ -374,6 +378,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center"
+  },
+  removeFilterContainer: {
+    flex: 1,
+    marginHorizontal: 5,
+    marginBottom: 7,
+    borderRadius: 40,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  filterActive: {
+    backgroundColor: "#040936",
+    color: "white",
+  },
+  filterInactive: {
+    backgroundColor: "lightgrey",
+    color: "black",
+  },
+  textActive: {
+    color: "white", 
+    fontFamily: "optima",
+    fontWeight: "medium"
+  },
+  textInactive: {
+    color: "black", 
+    fontFamily: "optima",
+    fontWeight: "medium"
   },
   h3: {
     textAlign: "center",
@@ -426,7 +458,8 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start"
   },
   buttonText: {
-    fontSize: 14
+    fontSize: 14,
+    fontFamily: 'optima',
   },
   modalContainer: {
     flex: 1,
@@ -444,7 +477,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    marginBottom: 20
+    marginBottom: 20,
+    fontFamily: 'optima',
   },
   modalItem: {
     padding: 15,
@@ -452,17 +486,19 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ccc"
   },
   modalItemText: {
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: 'optima',
   },
   closeButton: {
     marginTop: 20,
     marginHorizontal: 5,
     padding: 10,
     backgroundColor: "#040936",
-    borderRadius: 8
+    borderRadius: 8,
   },
   closeButtonText: {
     color: "#fff",
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: 'optima',
   }
 });

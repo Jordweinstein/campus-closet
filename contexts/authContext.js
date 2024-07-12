@@ -11,6 +11,13 @@ export const AuthProvider = ({ children }) => {
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [likedListings, setLikedListings] = useState([]);
   const [likedListingsData, setLikedListingsData] = useState([]);
+  const auth = getAuth();
+
+  let userDocRef;
+
+  if (auth.currentUser) {
+    userDocRef = doc(db, 'users', auth.currentUser.uid);
+  }
 
   const setNullData = () => {
     setUser(null);
@@ -19,10 +26,9 @@ export const AuthProvider = ({ children }) => {
     setLikedListings([]);
   }
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribeAuth = onAuthStateChanged(auth, (authenticatedUser) => {
       if (authenticatedUser) {
-        const userDocRef = doc(db, 'users', authenticatedUser.uid);
+
         
         const unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {
@@ -73,7 +79,6 @@ export const AuthProvider = ({ children }) => {
   const addLikedListing = async (listingId) => {
     try {
       if (!likedListings.includes(listingId)) {
-        const userDocRef = doc(db, 'users', user.uid);
         const listingRef = doc(db, 'listings', listingId);
         await updateDoc(userDocRef, {
           likedListings: arrayUnion(listingId),
@@ -93,7 +98,6 @@ export const AuthProvider = ({ children }) => {
 
   const removeLikedListing = async (listingId) => {
     try {
-      const userDocRef = doc(db, 'users', user.uid);
       const listingRef = doc(db, 'listings', listingId);
       await updateDoc(userDocRef, {
         likedListings: arrayRemove(listingId),
@@ -108,6 +112,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const addListingReferenceToUser = async listingId => {
+    try {
+      await updateDoc(userDocRef, {
+        listings: arrayUnion(listingId)
+      });
+    } catch (error) {
+      console.error("Error updating user document: ", error);
+    }
+  };
+
+  const removeListingReferenceFromUser = async listingId => {
+    try {
+      await updateDoc(userDocRef, {
+        listings: arrayRemove(listingId)
+      });
+    } catch (error) {
+      console.error("Error removing listing from user document: " + error);
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -120,6 +144,8 @@ export const AuthProvider = ({ children }) => {
         addLikedListing,
         removeLikedListing,
         likedListingsData,
+        addListingReferenceToUser,
+        removeListingReferenceFromUser,
       }}
     >
       {children}
