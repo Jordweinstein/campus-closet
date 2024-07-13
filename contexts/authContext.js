@@ -13,48 +13,42 @@ export const AuthProvider = ({ children }) => {
   const [likedListingsData, setLikedListingsData] = useState([]);
   const auth = getAuth();
 
-  let userDocRef;
-
-  if (auth.currentUser) {
-    userDocRef = doc(db, 'users', auth.currentUser.uid);
-  }
-
-  const setNullData = () => {
-    setUser(null);
-    setUserData(null);
-    setIsProfileComplete(false);
-    setLikedListings([]);
-  }
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authenticatedUser) => {
       if (authenticatedUser) {
+        setUser(authenticatedUser);
+        const userDocRef = doc(db, 'users', authenticatedUser.uid);
 
-        
         const unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {
             const userDetails = userDocSnap.data();
-            setUser(authenticatedUser);
             setUserData(userDetails);
             setIsProfileComplete(userDetails.isProfileComplete || false);
             setLikedListings(userDetails.likedListings || []);
           } else {
-            setNullData();
+            setNullData(); 
           }
         }, (error) => {
           console.error("Error fetching user data: ", error);
           setNullData();
         });
 
-        return () => unsubscribeUserDoc();
+        return () => unsubscribeUserDoc(); 
       } else {
-        setNullData();
+        setNullData(); 
       }
     });
 
-    return () => unsubscribeAuth();
-  }, []);
+    return () => unsubscribeAuth(); 
+  }, [auth]);
 
+  // Fetch listings data for liked listings
   useEffect(() => {
+    if (!likedListings.length) {
+      setLikedListingsData([]);
+      return;
+    }
+
     const fetchLikedListings = async () => {
       const likedListingsDocs = await Promise.all(
         likedListings.map(async (listingId) => {
@@ -62,76 +56,54 @@ export const AuthProvider = ({ children }) => {
           return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
         })
       );
-  
-      const uniqueListings = Array.from(new Set(likedListingsDocs.filter((doc) => doc !== null).map(item => item.id)))
+
+      const uniqueListings = Array.from(new Set(likedListingsDocs.filter(doc => doc !== null).map(item => item.id)))
         .map(id => likedListingsDocs.find(item => item.id === id));
-  
+
       setLikedListingsData(uniqueListings);
     };
-  
-    if (likedListings.length > 0) {
-      fetchLikedListings();
-    } else {
-      setLikedListingsData([]);
-    }
+
+    fetchLikedListings();
   }, [likedListings]);
 
-  const addLikedListing = async (listingId) => {
-    try {
-      if (!likedListings.includes(listingId)) {
-        const listingRef = doc(db, 'listings', listingId);
-        await updateDoc(userDocRef, {
-          likedListings: arrayUnion(listingId),
-        });
-        await updateDoc(listingRef, {
-          likes: increment(1),
-        });
-
-        setLikedListings((prev) => [...prev, listingId]);
-      } else {
-        console.log(`listing ${listingId} already here`);
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  // Function to clear all user-specific data
+  const setNullData = () => {
+    setUser(null);
+    setUserData(null);
+    setIsProfileComplete(false);
+    setLikedListings([]);
+    setLikedListingsData([]);
   };
 
-  const removeLikedListing = async (listingId) => {
-    try {
+  // Function to add liked listing
+  const addLikedListing = async (listingId) => {
+    if (!likedListings.includes(listingId)) {
       const listingRef = doc(db, 'listings', listingId);
-      await updateDoc(userDocRef, {
-        likedListings: arrayRemove(listingId),
+      await updateDoc(doc(db, 'users', user.uid), {
+        likedListings: arrayUnion(listingId),
       });
       await updateDoc(listingRef, {
+        likes: increment(1),
+      });
+
+      setLikedListings(prev => [...prev, listingId]);
+    }
+  };
+
+  // Function to remove liked listing
+  const removeLikedListing = async (listingId) => {
+    const listingRef = doc(db, 'listings', listingId);
+    await updateDoc(doc(db, 'users', user.uid), {
+      likedListings: arrayRemove(listingId),
+    });
+    await updateDoc(listingRef, {
         likes: increment(-1),
-      });
+    });
 
-      setLikedListings((prev) => prev.filter((id) => id !== listingId));
-    } catch (error) {
-      console.log(error);
-    }
+    setLikedListings(prev => prev.filter(id => id !== listingId));
   };
 
-  const addListingReferenceToUser = async listingId => {
-    try {
-      await updateDoc(userDocRef, {
-        listings: arrayUnion(listingId)
-      });
-    } catch (error) {
-      console.error("Error updating user document: ", error);
-    }
-  };
-
-  const removeListingReferenceFromUser = async listingId => {
-    try {
-      await updateDoc(userDocRef, {
-        listings: arrayRemove(listingId)
-      });
-    } catch (error) {
-      console.error("Error removing listing from user document: " + error);
-    }
-  }
-
+  // Providing context values
   return (
     <AuthContext.Provider
       value={{
@@ -144,8 +116,6 @@ export const AuthProvider = ({ children }) => {
         addLikedListing,
         removeLikedListing,
         likedListingsData,
-        addListingReferenceToUser,
-        removeListingReferenceFromUser,
       }}
     >
       {children}

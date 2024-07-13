@@ -14,6 +14,12 @@ export default function EditProfile() {
     const [phoneNumber, setPhoneNumber] = useState(null);
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [nFocus, setNFocus] = useState(false);
+    const [bFocus, setBFocus] = useState(false);
+    const [eFocus, setEFocus] = useState(false);
+    const [pFocus, setPFocus] = useState(false);
+    const [ppFocus, setPpFocus] = useState(false);
+
     const navigation = useNavigation();
 
     const handleSubmit = async () => {
@@ -62,17 +68,27 @@ export default function EditProfile() {
          :
         <View style={styles.editProfileView}>
             <Text style={styles.title}>Edit Profile</Text>
-            <View style={styles.inputView}>
-                <Text style={{fontFamily: 'optima'}}>Name:  </Text>
+            <Text style={{fontFamily: 'optima', marginBottom: 10}}>Select a field to edit your profile</Text>
+            
+            <TouchableOpacity 
+                onPress = {() => setNFocus(!nFocus)}
+                style={[styles.inputView, (nFocus) ? styles.activeInput : styles.inactiveInput]}
+            >
+                <Text style={[{fontFamily: 'optima'}, (nFocus) ? styles.activeText : styles.inactiveText]}>Name:  </Text>
                 <TextInput
                     placeholder="Jane Doe"
                     value={name}
                     onChangeText={setName} 
-                />
-            </View>
+                    editable={nFocus}
 
-            <View style={styles.inputView}>
-                <Text style={{marginTop: 5, fontFamily: 'optima'}}>Bio: </Text>
+                />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+                onPress = {() => setBFocus(!bFocus)}
+                style={[styles.inputView, (bFocus) ? styles.activeInput : styles.inactiveInput]}
+            >
+                <Text style={[{fontFamily: 'optima', marginTop: 5}, (bFocus) ? styles.activeText : styles.inactiveText]}>Bio:  </Text>
                 <TextInput
                     placeholder="A fun fact about me is..."
                     value={bio}
@@ -80,21 +96,30 @@ export default function EditProfile() {
                     multiline={true}
                     style={styles.textInput}
                     maxLength={100}
+                    editable={bFocus}
                 />
-            </View>
+            </TouchableOpacity>
 
-            <View style={styles.inputView}>
-                <Text style={{fontFamily: 'optima'}}>Email:  </Text>
+            <TouchableOpacity 
+                onPress = {() => setEFocus(!eFocus)}
+                style={[styles.inputView, (eFocus) ? styles.activeInput : styles.inactiveInput]}
+            >
+                <Text style={[{fontFamily: 'optima'}, (eFocus) ? styles.activeText : styles.inactiveText]}>Email:  </Text>
                 <TextInput
                     placeholder="example@unc.edu"
                     value={email}
                     keyboardType='email-address'
                     onChangeText={setEmail}
+                    editable={eFocus}
+
                 />
-            </View>
+            </TouchableOpacity>
             
-            <View style={styles.inputView}>
-                <Text style={{fontFamily: 'optima'}}>Phone Number:  </Text>
+            <TouchableOpacity 
+                onPress = {() => setPFocus(!pFocus)}
+                style={[styles.inputView, (pFocus) ? styles.activeInput : styles.inactiveInput]}
+            >
+                <Text style={[{fontFamily: 'optima'}, (pFocus) ? styles.activeText : styles.inactiveText]}>Phone Number:  </Text>
                 <TextInput
                     placeholder="123 456 7890"
                     keyboardType="phone-pad"
@@ -102,17 +127,22 @@ export default function EditProfile() {
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
                     maxLength={10}
+                    editable={pFocus}
+
                 /> 
-            </View>
-            <View style={styles.pictureInputView}>
-                <Text style={{fontFamily: 'optima'}}>Profile Picture:  </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                onPress = {() => setPpFocus(!ppFocus)}
+                style={[styles.inputView, (ppFocus) ? styles.activeInput : styles.inactiveInput]}
+            >
+                <Text style={[{fontFamily: 'optima', marginRight: '29%'}, (ppFocus) ? styles.activeText : styles.inactiveText]}>Profile Picture:  </Text>
                 <TouchableOpacity 
                     style={ styles.uploadImageButton }
                     onPress={() => pickImage(0, [], setImage) }
                 >
                     <Text style={{fontFamily: 'optima'}}>Upload Image</Text>
                 </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                 <Text style={{ color: 'white', fontWeight: '500', fontFamily: 'optima' }}>Submit Changes</Text>
@@ -136,9 +166,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         padding: 15,
         backgroundColor: 'white',
-        width: '95%',
+        minWidth: '90%',
         margin: 5,
         borderRadius: 10,
+    },
+    activeInput: {
+        backgroundColor: 'white',
+    },
+    inactiveInput: {
+        backgroundColor: 'darkgrey',
+    },
+    activeText: {
+        color: 'black'
+    },
+    inactiveText: {
+        color: 'grey'
     },
     textInput: {
         flex: 1,
@@ -160,6 +202,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#e3e3e3',
         padding: 5,
         borderRadius: 7,
+        alignSelf: "flex-end"
     },
     submitButton: {
         marginTop: '25%',

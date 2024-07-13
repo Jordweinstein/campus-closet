@@ -190,12 +190,23 @@ export default function Profile() {
               <Text style={{fontFamily: 'optima',}}>If you would like to submit a report, email to unccampuscloset@gmail.com</Text>
               
 
+            <View style={[styles.buttonContainer]}>
               <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setHelpModalVisible(false)}
-              >
+                  style={styles.closeButton}
+                  onPress={() => setHelpModalVisible(false)}
+                >
+
                 <Text style={styles.closeButtonText}>Close</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => console.log("terms and conditions")}
+                >
+
+                <Text style={styles.closeButtonText}>Terms & Conditions</Text>
+              </TouchableOpacity>
+            </View>
+              
             </View>
           </View>
         </Modal>
@@ -353,7 +364,8 @@ export default function Profile() {
       marginTop: 20,
       padding: 10,
       backgroundColor: "navy",
-      borderRadius: 8
+      borderRadius: 8,
+      marginHorizontal: 5
     },
     closeButtonText: {
       color: "#fff",
