@@ -75,11 +75,9 @@ const ShopMain = ({ navigation }) => {
   );
 
   const filterListings = () => {
+    const currDate = new Date();
     const filtered = listings.filter(listing => {
       const matchesSize = selectedSize ? listing.size === selectedSize : true;
-      const matchesAvailability = isAvailable
-        ? listing.isAvailable === isAvailable
-        : true;
       const matchesMinPrice = minPrice
         ? listing.price >= parseFloat(minPrice)
         : true;
@@ -90,6 +88,12 @@ const ShopMain = ({ navigation }) => {
         ? listing.itemName.includes(searchQuery) ||
           listing.brand.includes(searchQuery)
         : true;
+      const matchesAvailability = true;
+      for (let i = 0; i < listing.unavailableStartDates; i++) {
+        if (!(listing.unavailableStartDates[i] < currDate < listing.unavailableEndDates[i])) {
+          matchesAvailability = false;
+        }
+      }
 
       return (
         matchesSize &&

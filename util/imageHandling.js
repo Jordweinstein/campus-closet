@@ -141,5 +141,11 @@ export const uploadImagesAsync = async (uris, path) => {
   const uploadPromises = uris.map(uri => uploadImageAsync(uri, path));
   const downloadUrls = await Promise.all(uploadPromises);
   console.log("Successfully uploaded images");
-  return downloadUrls.filter(url => url !== null);
+  try {
+    return downloadUrls.filter(url => url !== null);
+  } catch (error) {
+    console.log("1" + error);
+    return null;
+  }
+
 };

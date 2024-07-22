@@ -15,11 +15,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authenticatedUser) => {
+      let unsubscribeUserDoc;
+
       if (authenticatedUser) {
         setUser(authenticatedUser);
         const userDocRef = doc(db, 'users', authenticatedUser.uid);
 
-        const unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
+        unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {
             const userDetails = userDocSnap.data();
             setUserData(userDetails);
@@ -32,14 +34,15 @@ export const AuthProvider = ({ children }) => {
           console.error("Error fetching user data: ", error);
           setNullData();
         });
-
-        return () => unsubscribeUserDoc(); 
       } else {
         setNullData(); 
       }
+      return () => {
+        if (unsubscribeUserDoc) unsubscribeUserDoc();
+        setNullData();
+      };
     });
-
-    return () => unsubscribeAuth(); 
+    return () => unsubscribeAuth();
   }, [auth]);
 
   // Fetch listings data for liked listings
