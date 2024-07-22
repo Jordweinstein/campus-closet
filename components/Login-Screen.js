@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { getAuth, 
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
@@ -16,6 +16,7 @@ import { AuthContext } from "../contexts/authContext";
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
     const auth = getAuth();
     const emailInputRef = useRef(null);
     const navigation = useNavigation();
@@ -52,6 +53,7 @@ const Login = () => {
                 return;
             }
             try {
+                setLoading(true);
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 await sendEmailVerification(user);
@@ -70,6 +72,7 @@ const Login = () => {
                 setEmail('');
                 setPassword('');
                 emailInputRef.current.focus();
+
             } catch (error) {
                 if (error.code === 'auth/email-already-in-use') {
                     Alert.alert("Error", "The email address is already in use by another account.");
@@ -78,6 +81,8 @@ const Login = () => {
                 } else {
                     validateParameters();
                 }
+            } finally {
+                setLoading(false);
             }
         } else {
             Alert.alert("Error", "Please register with an email ending in .edu");
@@ -94,7 +99,7 @@ const Login = () => {
             const user = userCredential.user;
 
             if (user !== null && user.emailVerified) {
-
+                setLoading(true);
                 const userRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userRef); 
 
@@ -103,11 +108,15 @@ const Login = () => {
                     setIsProfileComplete(userData.isProfileComplete);
 
                     if (!userData.isProfileComplete) {
-                        navigation.navigate('ProfileSetup');
+                        navigation.replace('ProfileSetup');
+                        setLoading(false);
                     } else {
-                        navigation.navigate('Home');
+                        navigation.replace('Home');
                         setEmail('');
                         setPassword('');
+                        setTimeout(() => {
+                            setLoading(false);
+                          }, 100);
                     }
                 }
             } else {
@@ -173,6 +182,11 @@ const Login = () => {
     }
 
     return (
+        (loading) ?
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator size="large" />
+        </View>
+        :
         <>
         <View style={styles.titleView}>
             <Text style={styles.title}>Campus Closet</Text>

@@ -163,7 +163,11 @@ export default function CreateListing() {
         console.error("Error creating listing: ", error);
       }
 
+      try {
       await addListingReferenceToUser(listingRef.id);
+      } catch (error) {
+        console.log("error adding listing reference" + error);
+      }
 
       navigator.navigate("ProfileMain");
       setLoading(false);
