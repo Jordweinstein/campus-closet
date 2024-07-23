@@ -135,10 +135,10 @@ const ShopMain = ({ navigation }) => {
         : true;
   
       let matchesAvailability = true;
-      if (listing.unavailablestartdates && listing.unavailableenddates) {
-        matchesAvailability = !listing.unavailablestartdates.some((startTimestamp, index) => {
+      if (listing.unavailableStartDates && listing.unavailableEndDates) {
+        matchesAvailability = !listing.unavailableStartDates.some((startTimestamp, index) => {
           const startDate = startTimestamp.toDate();
-          const endDate = listing.unavailableenddates[index].toDate();
+          const endDate = listing.unavailableEndDates[index].toDate();
           return startDate <= currDate && currDate <= endDate;
         });
       }
