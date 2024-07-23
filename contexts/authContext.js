@@ -106,6 +106,38 @@ export const AuthProvider = ({ children }) => {
     setLikedListings(prev => prev.filter(id => id !== listingId));
   };
 
+  // Function to add listing reference to user's listing
+  const addListingReferenceToUser = async (listingId) => {
+    try {
+        const user = getAuth().currentUser;
+        const userRef = doc(db, "users", user.uid);
+
+        await updateDoc(userRef, {
+            listings: arrayUnion(listingId)
+        });
+
+        console.log("Successfully added listing reference to user document");
+    } catch (error) {
+        console.error("Error updating user document: ", error);
+    }
+  };
+
+// Function to remove listing reference to user's listing
+const removeListingReferenceFromUser = async (listingId) => {
+  try {
+      const user = getAuth().currentUser;
+      const userRef = doc(db, "users", user.uid);
+
+      await updateDoc(userRef, {
+          listings: arrayRemove(listingId)
+      });
+
+      console.log("Successfully removed listing reference to user document");
+  } catch (error) {
+      console.error("Error updating user document: ", error);
+  }
+};
+
   // Providing context values
   return (
     <AuthContext.Provider
@@ -119,6 +151,8 @@ export const AuthProvider = ({ children }) => {
         addLikedListing,
         removeLikedListing,
         likedListingsData,
+        addListingReferenceToUser,
+        removeListingReferenceFromUser
       }}
     >
       {children}

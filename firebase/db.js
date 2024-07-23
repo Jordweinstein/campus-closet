@@ -1,5 +1,14 @@
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import app from './firebase-config';
 
-const db = getFirestore(app);
+if (!getFirestore.length) {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+  } else {
+    db = getFirestore(app);
+  }
+
 export default db;

@@ -17,12 +17,15 @@ import { deleteDoc, doc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { ref, getStorage, deleteObject } from "@firebase/storage";
 import { useNavigation } from "@react-navigation/core";
+import { ListingsContext } from "../contexts/listingContext";
 
 export default function Listing({ route }) {
   const { listing } = route.params;
   const { addLikedListing, removeLikedListing, likedListings, user, removeListingReferenceFromUser } = useContext(
     AuthContext
   );
+  const { removeListing } = useContext(ListingsContext);
+
   const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
   const [likeCount, setLikeCount] = useState(listing.likes);
 
@@ -83,7 +86,6 @@ export default function Listing({ route }) {
   );
 
   const handleLike = async () => {
-    console.log(listing);
     if (isLiked) {
       setIsLiked(false);
       setLikeCount(likeCount - 1);
@@ -94,43 +96,6 @@ export default function Listing({ route }) {
       await addLikedListing(listing.id);
     }
   };
-
-  const handleDelete = async () => {
-    // deleting images from storage
-    setLoading(true);
-    const storage = getStorage();
-    const promises = listing.images.map(async (url) => {
-        const decodedUrl = decodeURIComponent(url);
-        const startIndex = decodedUrl.indexOf("/o/") + 3;
-        const endIndex = decodedUrl.indexOf("?alt=");
-        const filePath = decodedUrl.substring(startIndex, endIndex);
-    
-        const imageRef = ref(storage, filePath);
-        await deleteObject(imageRef).then(() => {
-            console.log(filePath + " image deleted successfully");
-        }).catch((error) => {
-            console.log(error);
-        })
-      });
-    
-      // deleting document from firestore
-      try {
-        await Promise.all(promises);
-        console.log("All files deleted successfully");
-
-        await removeListingReferenceFromUser(listing.id);
-        
-        await deleteDoc(doc(db, "listings", listing.id));
-
-        navigation.goBack();
-        alert("Listing successfully deleted.");
-      } catch (error) {
-        console.error("Error deleting files:", error);
-      } finally {
-        setLoading(false);
-      }
-    
-  }
 
   return (
     (loading) ?
@@ -201,7 +166,15 @@ export default function Listing({ route }) {
           >
             { (user && (listing.owner !== user.uid) ) ? (
               <>
-                <TouchableOpacity onPress={handleLike}>
+                <TouchableOpacity onPress={() => {
+                  handleLike();
+                  console.log("my date: " + date);
+                  console.log("start" + listing.unavailableStartDates[1]);
+                  console.log("type" + typeof(listing.unavailableEndDates[1]));
+                  console.log("end" + listing.unavailableEndDates[1]);
+                  console.log("in range? " + (listing.unavailableStartDates[1].toDate() < new Date() && new Date() < listing.unavailableEndDates[1].toDate()))
+                  
+                  }}>
                     <AntDesign
                     name={isLiked ? "heart" : "hearto"}
                     size={24}
@@ -227,15 +200,13 @@ export default function Listing({ route }) {
                             text: "Cancel",
                             onPress: () => {
                               console.log("Cancelled delete listing.")
-                              console.log("my date: " + date);
-                              console.log("start" + listing.datesAvailable[0]);
-                              console.log("end" + listing.datesAvailable[1]);
+          
                             
                             },
                           },
                           {
                             text: "Confirm",
-                            onPress: () => handleDelete(),
+                            onPress: () => removeListing(listing),
                           },
                         ],
                         { cancelable: true }
