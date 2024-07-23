@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Button,
+  ActivityIndicator,
   Switch
 } from "react-native";
 import "react-native-gesture-handler";
@@ -65,18 +65,18 @@ const ShopMain = ({ navigation }) => {
   const [filteredListings, setFilteredListings] = useState(listings);
   const [filtersActive, setFiltersActive] = useState(false);
 
-  const { listings } = useContext(ListingsContext);
+  const { listings, setListings, lastDoc, setLastDoc, loading, setLoading } = useContext(ListingsContext);
 
-  useEffect(
-    () => {
-      filterListings();
-    },
-    [selectedSize, isAvailable, minPrice, maxPrice, listings, searchQuery]
-  );
+  useEffect(() => {
+    const filtered = filterListings(listings, selectedSize, minPrice, maxPrice, searchQuery);
+    setFilteredListings(filtered);
+    setFiltersActive(filtered.length !== listings.length || isAvailable);
+  }, [selectedSize, isAvailable, minPrice, maxPrice, listings, searchQuery]);
 
-  const filterListings = () => {
+  const filterListings = (listings, selectedSize, minPrice, maxPrice, searchQuery) => {
     const currDate = new Date();
-    const filtered = listings.filter(listing => {
+  
+    return listings.filter((listing) => {
       const matchesSize = selectedSize ? listing.size === selectedSize : true;
       const matchesMinPrice = minPrice
         ? listing.price >= parseFloat(minPrice)
@@ -85,16 +85,25 @@ const ShopMain = ({ navigation }) => {
         ? listing.price <= parseFloat(maxPrice)
         : true;
       const matchesSearchQuery = searchQuery
-        ? listing.itemName.includes(searchQuery) ||
-          listing.brand.includes(searchQuery)
+        ? listing.itemName.includes(searchQuery) || listing.brand.includes(searchQuery)
         : true;
-      const matchesAvailability = true;
-      for (let i = 0; i < listing.unavailableStartDates; i++) {
-        if (!(listing.unavailableStartDates[i] < currDate < listing.unavailableEndDates[i])) {
-          matchesAvailability = false;
-        }
-      }
+  
+      // Check availability -- add logic for sold items
+      let matchesAvailability = true;
 
+      if (listing.unavailableStartDates && listing.unavailableEndDates) {
+        matchesAvailability = !listing.unavailableStartDates.some((startTimestamp, index) => {
+          const startDate = startTimestamp.toDate();
+          const endDate = listing.unavailableEndDates[index].toDate();
+  
+          console.log("Current date: ", currDate);
+          console.log("Start date: ", startDate);
+          console.log("End date: ", endDate);
+  
+          return startDate <= currDate && currDate <= endDate;
+        });
+      }
+  
       return (
         matchesSize &&
         matchesAvailability &&
@@ -103,9 +112,49 @@ const ShopMain = ({ navigation }) => {
         matchesSearchQuery
       );
     });
-
-    setFilteredListings(filtered);
-    setFiltersActive(filtered.length !== listings.length);
+  };
+  const fetchMoreListings = async () => {
+    if (!lastDoc || loading) return;
+  
+    setLoading(true);
+    let nextQuery = query(
+      collection(db, "listings"),
+      orderBy("timestamp", "desc"),
+      startAfter(lastDoc),
+      limit(10)
+    );
+  
+    // Apply initial filters to the query
+    const currDate = new Date();
+    const availableListings = data.filter((listing) => {
+      const matchesSize = selectedSize ? listing.size === selectedSize : true;
+      const matchesMinPrice = minPrice ? listing.price >= parseFloat(minPrice) : true;
+      const matchesMaxPrice = maxPrice ? listing.price <= parseFloat(maxPrice) : true;
+      const matchesSearchQuery = searchQuery
+        ? listing.itemName.includes(searchQuery) || listing.brand.includes(searchQuery)
+        : true;
+  
+      let matchesAvailability = true;
+      if (listing.unavailablestartdates && listing.unavailableenddates) {
+        matchesAvailability = !listing.unavailablestartdates.some((startTimestamp, index) => {
+          const startDate = startTimestamp.toDate();
+          const endDate = listing.unavailableenddates[index].toDate();
+          return startDate <= currDate && currDate <= endDate;
+        });
+      }
+  
+      return (
+        matchesSize &&
+        matchesAvailability &&
+        matchesMinPrice &&
+        matchesMaxPrice &&
+        matchesSearchQuery
+      );
+    });
+  
+    setListings((prevListings) => [...prevListings, ...availableListings]);
+    setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+    setLoading(false);
   };
 
   const resetFilters = () => {
@@ -116,15 +165,21 @@ const ShopMain = ({ navigation }) => {
     setMinPrice(null);
     setMaxPrice(null);
     setFiltersActive(false);
-  }
+  };
 
   const renderItem = ({ item, index }) =>
     <View style={{ width: "48%" }}>
       <TouchableOpacity
-        onPress={() => navigation.navigate("ListingScreen", { listing: item })}
+        onPress={() => {
+          navigation.navigate("ListingScreen", { listing: item })
+        }}
         style={styles.gridItem}
       >
-        <Image source={{ uri: item.images[0] }} style={styles.image} />
+        <Image source={{ 
+          uri: item.images[0] }} 
+          style={styles.image} 
+          onLoad={() => console.log(`Image loaded: ${item.images[0]}`)}
+        />
       </TouchableOpacity>
 
       <View
@@ -177,7 +232,7 @@ const ShopMain = ({ navigation }) => {
     </TouchableOpacity>;
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{flex: 1}}>
       <Text style={styles.title}>Shop</Text>
 
       <TextInput
@@ -227,6 +282,9 @@ const ShopMain = ({ navigation }) => {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
+        onEndReached={fetchMoreListings}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loading && <ActivityIndicator size="large" color="#0000ff" />}
       />
 
       {/* Size filter modal */}
@@ -447,7 +505,8 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
   list: {
-    paddingHorizontal: 10
+    paddingHorizontal: 10,
+    flexGrow: 1
   },
 
   // modals

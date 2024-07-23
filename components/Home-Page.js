@@ -11,7 +11,6 @@ import {
 import "react-native-gesture-handler";
 import { createStackNavigator } from "@react-navigation/stack";
 import ListingScreen from "./Listing-Screen";
-
 import GameDay from "../assets/images/gameday.jpeg";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 
@@ -64,9 +63,12 @@ const HomeMain = ({ navigation }) => {
               onPress={() => navigation.navigate("ListingScreen", { listing })}
             >
               <Image
-                source={{ uri: listing.images[0] }}
+                source={{ 
+                  uri: listing.images[0], 
+                }}
                 style={{ width: 125, height: 125, margin: 5, borderRadius: 10 }}
               />
+
             </TouchableOpacity>
           )}
         </ScrollView>

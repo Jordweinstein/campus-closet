@@ -1,13 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import {
-  collection,
-  limit,
-  onSnapshot,
-  orderBy,
-  getDocs,
-  query,
-  where
-} from "@firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, startAfter, getDocs } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import db from "../firebase/db";
 import { AuthContext } from "./authContext";
 
@@ -18,131 +11,117 @@ export const ListingsProvider = ({ children }) => {
   const [userListings, setUserListings] = useState([]);
   const [trendingListings, setTrendingListings] = useState([]);
   const [recentListings, setRecentListings] = useState([]);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { user } = useContext(AuthContext);
   const listingsRef = collection(db, "listings");
 
-  // fetch all listings
-  useEffect(
-    () => {
-      if (!user) {
-        return;
+  const fetchData = (queryKey, setData, queryRef) => {
+    const unsubscribe = onSnapshot(
+      queryRef,
+      (querySnapshot) => {
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setData(data);
+      },
+      (error) => {
+        console.error(`Error fetching ${queryKey} data:`, error);
       }
+    );
 
-      const unsubscribe = onSnapshot(
-        collection(db, "listings"),
-        querySnapshot => {
-          const listingsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setListings(listingsData);
-        },
-        error => {
-          console.error("Error fetching listings data:", error);
-        }
-      );
+    return () => {
+      unsubscribe();
+    };
+  };
 
-      return () => {
-        unsubscribe();
-      };
-    },
-    [user]
-  );
+  useEffect(() => {
+    if (!user) return;
 
-  // fetch user's listings
-  useEffect(
-    () => {
-      let unsubscribe;
-
-      if (user) {
-        const q = query(listingsRef, where("owner", "==", user.uid));
-
-        unsubscribe = onSnapshot(
-          q,
-          querySnapshot => {
-            const listingsData = querySnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            setUserListings(listingsData);
-          },
-          error => {
-            console.error("Error fetching user listings", error);
-          }
-        );
+    const fetchPaginatedData = async () => {
+      setLoading(true);
+      let paginatedQuery;
+      if (lastDoc) {
+        paginatedQuery = query(listingsRef, orderBy("timestamp", "desc"), startAfter(lastDoc), limit(10));
       } else {
-        setUserListings([]);
+        paginatedQuery = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
       }
 
-      return () => {
-        if (unsubscribe) {
-          unsubscribe();
-        }
-      };
-    },
-    [user]
-  );
-
-  // Fetch trending listings based on like count
-  useEffect(() => {
-    let unsubscribe;
-
-    if (user) {
-      const q = query(listingsRef, orderBy("likes", "desc"), limit(10));
-
-      unsubscribe = onSnapshot(
-        q,
-        querySnapshot => {
-          const trendingListingsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setTrendingListings(trendingListingsData);
-        },
-        error => {
-          console.error("Error fetching trending listings", error);
-        }
-      );
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      const querySnapshot = await getDocs(paginatedQuery);
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setListings((prevData) => [...prevData, ...data]);
+      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+      setLoading(false);
     };
+
+    fetchPaginatedData();
   }, [user]);
 
-  // Fetch recent listings based on timestamp of upload
   useEffect(() => {
-    let unsubscribe;
-    if (user) {
-      const q = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
-
-      unsubscribe = onSnapshot(
-        q,
-        querySnapshot => {
-          const recentListingsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setRecentListings(recentListingsData);
-        },
-        error => {
-          console.error("Error fetching recent listings", error);
-        }
-      );
+    if (!user) {
+      setUserListings([]);
+      return;
     }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    const userQuery = query(listingsRef, where("owner", "==", user.uid));
+    fetchData(`userListingsCache_${user.uid}`, setUserListings, userQuery);
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const trendingQuery = query(listingsRef, orderBy("likes", "desc"), limit(10));
+    fetchData("trendingListingsCache", setTrendingListings, trendingQuery);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const recentQuery = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
+    fetchData("recentListingsCache", setRecentListings, recentQuery);
+  }, [user]);
+
+  const removeListing = async (listing) => {
+    // deleting images from storage
+    setLoading(true);
+    const storage = getStorage();
+    const promises = listing.images.map(async (url) => {
+        const decodedUrl = decodeURIComponent(url);
+        const startIndex = decodedUrl.indexOf("/o/") + 3;
+        const endIndex = decodedUrl.indexOf("?alt=");
+        const filePath = decodedUrl.substring(startIndex, endIndex);
+    
+        const imageRef = ref(storage, filePath);
+        await deleteObject(imageRef).then(() => {
+            console.log(filePath + " image deleted successfully");
+        }).catch((error) => {
+            console.log(error);
+        })
+      });
+    
+      // deleting document from firestore
+      try {
+        await Promise.all(promises);
+        console.log("All files deleted successfully");
+
+        await removeListingReferenceFromUser(listing.id);
+        
+        await deleteDoc(doc(db, "listings", listing.id));
+
+        navigation.goBack();
+        alert("Listing successfully deleted.");
+      } catch (error) {
+        console.error("Error deleting files:", error);
+      } finally {
+        setLoading(false);
+      }
+    
+  }
 
   return (
     <ListingsContext.Provider
-      value={{ listings, userListings, trendingListings, recentListings }}
+      value={{ listings, removeListing, userListings, trendingListings, recentListings, setLastDoc, setLoading, loading }}
     >
       {children}
     </ListingsContext.Provider>

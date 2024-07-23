@@ -43,7 +43,7 @@ export default function CreateListing() {
   const [nextUploadableImageIndex, setNextUploadableImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const {user, addListingReferenceToUser} = useContext(AuthContext);
+  const {user, addListingReferenceToUser, removeListingReferenceFromUser} = useContext(AuthContext);
 
   const navigator = useNavigation();
 
