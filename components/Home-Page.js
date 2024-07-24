@@ -11,7 +11,6 @@ import {
 import "react-native-gesture-handler";
 import { createStackNavigator } from "@react-navigation/stack";
 import ListingScreen from "./Listing-Screen";
-import GameDay from "../assets/images/gameday.jpeg";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 
 const Stack = createStackNavigator();
@@ -36,6 +35,7 @@ export default function Home() {
 }
 const HomeMain = ({ navigation }) => {
   const { trendingListings, recentListings } = useContext(ListingsContext);
+  const GameDay = require("../assets/images/gameday.jpeg");
 
   return (
     <SafeAreaView>
