@@ -7,8 +7,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
 import Home from "./Home-Page.js";
 import Shop from "./Shop-Page.js";
-import Chat from "./Chat-Page.js";
-import { ListingProvider } from '../contexts/listingContext.js';
 import Profile from "./Profile-Page.js";
 
 const Tab = createBottomTabNavigator();

@@ -19,7 +19,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import '../firebase/firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import EditProfile from './Edit-Profile-Screen';
-import Listing from './Listing-Screen';
+import Offers from './Offers-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 
@@ -42,6 +42,11 @@ export default function Profile() {
           <Stack.Screen
             name="EditProfile"
             component={EditProfile}
+            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
+          />
+          <Stack.Screen
+            name="Offers"
+            component={Offers}
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
         </Stack.Navigator>
@@ -92,8 +97,11 @@ export default function Profile() {
             </>
           )}
   
-          <View style={[styles.textContainer]}>
+          <View style={styles.textContainer}>
             <Text style={styles.h2}>My Listings</Text>
+            <TouchableOpacity style={[styles.closeButton, {marginLeft: '40%'}]} onPress={() => navigation.navigate('Offers')}>
+              <Text style={styles.closeButtonText}>View Offers</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('CreateListing')}>
               <Ionicons name="add-circle-outline" size={24} color="black" />
             </TouchableOpacity>
@@ -311,7 +319,7 @@ export default function Profile() {
       flexDirection: 'column',
       flexWrap: 'wrap',
       alignItems: 'center',
-      paddingBottom: 100, // Add padding to avoid overlap with bottom buttons
+      paddingBottom: 100, 
     },
     listingImage: {
       width: 125,

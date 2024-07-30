@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { collection, query, where, orderBy, limit, onSnapshot, startAfter, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, startAfter, getDocs, doc, getDoc } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import db from "../firebase/db";
 import { AuthContext } from "./authContext";
@@ -11,9 +11,11 @@ export const ListingsProvider = ({ children }) => {
   const [userListings, setUserListings] = useState([]);
   const [trendingListings, setTrendingListings] = useState([]);
   const [recentListings, setRecentListings] = useState([]);
+  const [acceptedOffers, setAcceptedOffers] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
   const [loading, setLoading] = useState(false);
   const { user } = useContext(AuthContext);
+
   const listingsRef = collection(db, "listings");
 
   const fetchData = (queryKey, setData, queryRef) => {
@@ -34,6 +36,18 @@ export const ListingsProvider = ({ children }) => {
     return () => {
       unsubscribe();
     };
+  };
+
+  const fetchListingsByIds = async (listingIds) => {
+    const listings = [];
+    for (const id of listingIds) {
+      const docRef = doc(db, "listings", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        listings.push({ id: docSnap.id, ...docSnap.data() });
+      }
+    }
+    return listings;
   };
 
   useEffect(() => {
@@ -61,6 +75,7 @@ export const ListingsProvider = ({ children }) => {
     fetchPaginatedData();
   }, [user]);
 
+  // fetch user listings
   useEffect(() => {
     if (!user) {
       setUserListings([]);
@@ -70,58 +85,57 @@ export const ListingsProvider = ({ children }) => {
     fetchData(`userListingsCache_${user.uid}`, setUserListings, userQuery);
   }, [user]);
 
+  // fetch trending listings
   useEffect(() => {
     if (!user) return;
     const trendingQuery = query(listingsRef, orderBy("likes", "desc"), limit(10));
     fetchData("trendingListingsCache", setTrendingListings, trendingQuery);
   }, [user]);
 
+  // fetch recent listings
   useEffect(() => {
     if (!user) return;
     const recentQuery = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
     fetchData("recentListingsCache", setRecentListings, recentQuery);
   }, [user]);
-
+  
   const removeListing = async (listing) => {
-    // deleting images from storage
     setLoading(true);
     const storage = getStorage();
     const promises = listing.images.map(async (url) => {
-        const decodedUrl = decodeURIComponent(url);
-        const startIndex = decodedUrl.indexOf("/o/") + 3;
-        const endIndex = decodedUrl.indexOf("?alt=");
-        const filePath = decodedUrl.substring(startIndex, endIndex);
-    
-        const imageRef = ref(storage, filePath);
-        await deleteObject(imageRef).then(() => {
-            console.log(filePath + " image deleted successfully");
-        }).catch((error) => {
-            console.log(error);
-        })
+      const decodedUrl = decodeURIComponent(url);
+      const startIndex = decodedUrl.indexOf("/o/") + 3;
+      const endIndex = decodedUrl.indexOf("?alt=");
+      const filePath = decodedUrl.substring(startIndex, endIndex);
+
+      const imageRef = ref(storage, filePath);
+      await deleteObject(imageRef).then(() => {
+        console.log(filePath + " image deleted successfully");
+      }).catch((error) => {
+        console.log(error);
       });
-    
-      // deleting document from firestore
-      try {
-        await Promise.all(promises);
-        console.log("All files deleted successfully");
+    });
 
-        await removeListingReferenceFromUser(listing.id);
-        
-        await deleteDoc(doc(db, "listings", listing.id));
+    try {
+      await Promise.all(promises);
+      console.log("All files deleted successfully");
 
-        navigation.goBack();
-        alert("Listing successfully deleted.");
-      } catch (error) {
-        console.error("Error deleting files:", error);
-      } finally {
-        setLoading(false);
-      }
-    
-  }
+      await removeListingReferenceFromUser(listing.id);
+
+      await deleteDoc(doc(db, "listings", listing.id));
+
+      navigation.goBack();
+      alert("Listing successfully deleted.");
+    } catch (error) {
+      console.error("Error deleting files:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ListingsContext.Provider
-      value={{ listings, removeListing, userListings, trendingListings, recentListings, setLastDoc, setLoading, loading }}
+      value={{ listings, removeListing, userListings, trendingListings, recentListings, fetchListingsByIds, acceptedOffers, setLastDoc, setLoading, loading }}
     >
       {children}
     </ListingsContext.Provider>

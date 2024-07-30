@@ -13,14 +13,20 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { AuthContext } from "../contexts/authContext";
-import { deleteDoc, doc } from "@firebase/firestore";
-import db from "../firebase/db";
-import { ref, getStorage, deleteObject } from "@firebase/storage";
 import { useNavigation } from "@react-navigation/core";
 import { ListingsContext } from "../contexts/listingContext";
+import { OffersProvider, OffersContext } from "../contexts/offersContext";
 
-export default function Listing({ route }) {
+export default function ListingContainer({ route }){
+  return (
+    <OffersProvider>
+      <Listing route = {route}/>
+    </OffersProvider>
+  )
+}
+const Listing = ({ route }) => {
   const { listing } = route.params;
+  const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
   const { addLikedListing, removeLikedListing, likedListings, user, removeListingReferenceFromUser } = useContext(
     AuthContext
   );
@@ -33,6 +39,7 @@ export default function Listing({ route }) {
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [hasOffered, setHasOffered] = useState(false);
 
   const navigation = useNavigation();
   const date = new Date(); 
@@ -40,9 +47,18 @@ export default function Listing({ route }) {
   useEffect(
     () => {
       setIsLiked(likedListings.includes(listing.id));
-      
     },
     [likedListings, listing.id]
+  );
+
+  useEffect(
+    () => {
+      for (let i = 0; i < sentOffers.length; i++) {
+        if (sentOffers[i].listing === listing.id) {
+          setHasOffered(true);
+        }
+      }
+    }, [sentOffers, listing.id]
   );
 
   const disabledDates = [];
@@ -69,20 +85,33 @@ export default function Listing({ route }) {
       if (startDate && endDate) {
         const dayInMillis = 24 * 60 * 60 * 1000;
         const differenceInDays = Math.round((new Date(endDate) - new Date(startDate)) / dayInMillis);
-
+  
         if (differenceInDays % 3 !== 0 || differenceInDays < 3) {
           Alert.alert("Invalid Date Range", "Please select a date range in intervals of 3 days.");
           return;
         }
-
-        setOpen(false);
+  
         setRange({ startDate, endDate });
-        // add navigation to stripe page here
+        setOpen(false);
+  
+        Alert.alert(
+          "Send Rental Offer",
+          "By sending this rental offer, you agree to the Terms and Conditions which includes an agreement to uphold the payment for your selected dates. If accepted, you will receive contact information to arrange pickup and payment.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Send Offer", onPress: () => {
+              console.log("listing: " + listing);
+              console.log("range" + startDate + "///" + endDate);
+              sendRentalOffer(listing, [startDate, endDate]);
+            }}
+          ]
+        );
+  
       } else {
         Alert.alert("Invalid Date Range", "Both start date and end date must be selected.");
       }
     },
-    [setOpen, setRange]
+    [sendRentalOffer, listing]
   );
 
   const handleLike = async () => {
@@ -114,6 +143,8 @@ export default function Listing({ route }) {
         </SwiperFlatList>
       </View>
       <View style={styles.contentContainer}>
+
+        {/* price display for different purchase methods */}
         <View
           style={{
             flexDirection: "row",
@@ -121,42 +152,57 @@ export default function Listing({ route }) {
             alignItems: "center",
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {listing.purchaseMethod.map((mode, index) => {
-            return (mode === "Rent") ? (
-              <TouchableOpacity key={index} onPress={() => setOpen(true)} style={styles.purchaseButton}>
-                <Text style={styles.buttonText}>
-                  {mode} ${listing.price[index]}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                key={index}
-                style={styles.purchaseButton}
-                onPress={() => console.log(`${mode} Button Pressed!`)}
-              >
-                <Text style={styles.buttonText}>
-                  {mode} ${listing.price[index]}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+          {(hasOffered) ? (
+            <Text>Offer Sent</Text>
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {listing.purchaseMethod.map((mode, index) => {
+                return (mode === "Rent") ? (
+                  <TouchableOpacity key={index} onPress={() => setOpen(true)} style={styles.purchaseButton}>
+                    <Text style={styles.buttonText}>
+                      {mode} ${listing.price[index]}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.purchaseButton}
+                    onPress={() => {
+                      Alert.alert(
+                        "Send Purchase Offer",
+                        "By sending this purchase offer, you agree to the Terms and Conditions which includes an agreement to uphold the payment for your purchase. If your offer is accepted, you will receive contact information to arrange pickup and payment.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Send Offer", onPress: () => {
+                            sendBuyOffer(listing);
+                          }}
+                        ]
+                      );
+                    }}
+                  >
+                    <Text style={styles.buttonText}>
+                      {mode} ${listing.price[index]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          
+          <DatePickerModal
+            locale="en"
+            mode="range"
+            visible={open}
+            label="Select rental period"
+            saveLabel="Send Offer"
+            onDismiss={onDismiss}
+            startDate={range.startDate}
+            endDate={range.endDate}
+            onConfirm={onConfirm}
+            presentationStyle="pageSheet"
+            validRange={{ disabledDates }}
+          />
 
-        <DatePickerModal
-          locale="en"
-          mode="range"
-          visible={open}
-          label="Select rental period"
-          onDismiss={onDismiss}
-          startDate={range.startDate}
-          endDate={range.endDate}
-          onConfirm={onConfirm}
-          presentationStyle="pageSheet"
-          validRange={{ disabledDates,}}
-        />
-
-         
           <View
             style={{
               flexDirection: "row",
@@ -168,11 +214,6 @@ export default function Listing({ route }) {
               <>
                 <TouchableOpacity onPress={() => {
                   handleLike();
-                  console.log("my date: " + date);
-                  console.log("start" + listing.unavailableStartDates[1]);
-                  console.log("type" + typeof(listing.unavailableEndDates[1]));
-                  console.log("end" + listing.unavailableEndDates[1]);
-                  console.log("in range? " + (listing.unavailableStartDates[1].toDate() < new Date() && new Date() < listing.unavailableEndDates[1].toDate()))
                   
                   }}>
                     <AntDesign
@@ -190,7 +231,8 @@ export default function Listing({ route }) {
               : (
                 <TouchableOpacity
                     style = {{marginBottom: 5}}
-                    onPress={() =>
+                    onPress={() =>{
+                      console.log(hasOffered)
                       Alert.alert(
                         "Warning",
                         "Are you sure you want to delete this listing?",
@@ -210,7 +252,7 @@ export default function Listing({ route }) {
                           },
                         ],
                         { cancelable: true }
-                      )
+                      )}
                     }
                   >
                     <MaterialIcons name="delete" size={30} color="black" />
@@ -242,13 +284,13 @@ export default function Listing({ route }) {
 
         <View style={styles.hContainer}>
           {(listing.tags.size > 0) ? 
-           <View style={styles.categoryTag}>
-           <Text style={styles.customText}>
-             {listing.tags}
-           </Text>
-         </View>
-         :
-         <></>
+          <View style={styles.categoryTag}>
+          <Text style={styles.customText}>
+            {listing.tags}
+          </Text>
+        </View>
+        :
+        <></>
         
         }
           <View style={styles.categoryTag}>

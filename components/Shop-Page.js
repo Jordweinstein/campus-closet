@@ -16,7 +16,6 @@ import "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FontAwesome } from "@expo/vector-icons";
 import { createStackNavigator } from "@react-navigation/stack";
-
 import ListingScreen from "./Listing-Screen";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 import sizes from "../util/sizes";

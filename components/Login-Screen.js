@@ -65,6 +65,7 @@ const Login = () => {
                     graduationYear: "",
                     listings: [],
                     likedListings: [],
+                    offeredListings: [],
                     profilePicUrl: "",
                     isProfileComplete: false
                 });
