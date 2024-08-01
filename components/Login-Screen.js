@@ -65,7 +65,9 @@ const Login = () => {
                     graduationYear: "",
                     listings: [],
                     likedListings: [],
+                    offeredListings: [],
                     profilePicUrl: "",
+                    insta: "",
                     isProfileComplete: false
                 });
 
@@ -93,30 +95,30 @@ const Login = () => {
         if (!validateParameters()) {
             return;
         }
-
+    
         try {
+            setLoading(true); 
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-
+    
             if (user !== null && user.emailVerified) {
-                setLoading(true);
                 const userRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userRef); 
-
+                const userDoc = await getDoc(userRef);
+    
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     setIsProfileComplete(userData.isProfileComplete);
-
+    
                     if (!userData.isProfileComplete) {
-                        navigation.replace('ProfileSetup');
                         setLoading(false);
+                        navigation.replace('ProfileSetup');
                     } else {
-                        navigation.replace('Home');
                         setEmail('');
                         setPassword('');
                         setTimeout(() => {
                             setLoading(false);
-                          }, 100);
+                        }, 100);
+                        navigation.replace('Home');
                     }
                 }
             } else {
@@ -135,7 +137,7 @@ const Login = () => {
                         );
                     }
                 };
-
+    
                 Alert.alert(
                     "Email Not Verified",
                     "Please verify your email before logging in.",
@@ -144,11 +146,12 @@ const Login = () => {
                         { text: "Resend Verification", onPress: resendVerificationEmail }
                     ]
                 );
+                setLoading(false); 
             }
         } catch (error) {
             console.error(error);
-            validateParameters();
-
+            setLoading(false); 
+    
             switch (error.code) {
                 case 'auth/user-not-found':
                     Alert.alert("Error", "No account found with this email. Please sign up or check your email address.");

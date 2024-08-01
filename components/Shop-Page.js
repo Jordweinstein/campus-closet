@@ -15,7 +15,6 @@ import "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FontAwesome } from "@expo/vector-icons";
 import { createStackNavigator } from "@react-navigation/stack";
-
 import ListingScreen from "./Listing-Screen";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 import sizes from "../util/sizes";
@@ -86,6 +85,7 @@ const ShopMain = ({ navigation }) => {
         matchesAvailability = !listing.unavailableStartDates.some((startTimestamp, index) => {
           const startDate = startTimestamp.toDate();
           const endDate = listing.unavailableEndDates[index].toDate();
+  
           return startDate <= currDate && currDate <= endDate;
         });
       }
@@ -116,7 +116,10 @@ const ShopMain = ({ navigation }) => {
         onPress={() => navigation.navigate("ListingScreen", { listing: item })}
         style={styles.gridItem}
       >
-        <Image source={{ uri: item.images[0] }} style={styles.image} />
+        <Image source={{ 
+          uri: item.images[0] }} 
+          style={styles.image} 
+        />
       </TouchableOpacity>
 
       <View

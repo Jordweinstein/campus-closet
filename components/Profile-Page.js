@@ -19,9 +19,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import '../firebase/firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import EditProfile from './Edit-Profile-Screen';
-import Listing from './Listing-Screen';
+import Offers from './Offers-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
+import SwiperFlatList from 'react-native-swiper-flatlist';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -41,6 +42,11 @@ export default function Profile() {
           <Stack.Screen
             name="EditProfile"
             component={EditProfile}
+            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
+          />
+          <Stack.Screen
+            name="Offers"
+            component={Offers}
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
         </Stack.Navigator>
@@ -89,8 +95,11 @@ export default function Profile() {
             </>
           )}
   
-          <View style={[styles.textContainer]}>
+          <View style={styles.textContainer}>
             <Text style={styles.h2}>My Listings</Text>
+            <TouchableOpacity style={[styles.closeButton, {marginLeft: '30%'}]} onPress={() => navigation.navigate('Offers')}>
+              <Text style={styles.closeButtonText}>View Offers</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('CreateListing')}>
               <Ionicons name="add-circle-outline" size={24} color="black" />
             </TouchableOpacity>
@@ -169,31 +178,25 @@ export default function Profile() {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <ScrollView horizontal={false} contentContainerStyle={{flex: 1, alignItems: 'center'}}>
-                <Text style={styles.modalTitle}>Campus Closet FAQs</Text>
-                
-                <Text style={styles.boldModalText}>What is Campus Closet?</Text>
-                <Text style={styles.modalText}>Campus Closet was created to provide UNC students with the opportunity to rent and 
-                sell clothes to one another, aiming to achieve two key goals: enhancing sustainability and ensuring a steady supply 
-                of cute outfits.</Text>
+              <Text style={styles.modalTitle}>Campus Closet FAQs (Swipe!)</Text>
+              <View style={{width: 250, height: 300}}>
+                <SwiperFlatList
+                  
+                  data={faqs}
+                  renderItem={({ item }) => (
+                    <View style={styles.questionView}>
+                      <Text style={styles.boldModalText}>{item.title}</Text>
+                      <Text style={styles.modalText}>{item.content}</Text>
+                    </View>
+                  )}
+                />
+              </View>
 
-                <Text style={styles.boldModalText}>How does it work?</Text>
-                <Text style={styles.modalText}>You can list your clothing items for rent, sale, or both! 
-                You are able to rent from your fellow Tar Heels in increments of 3 days. When a seller accepts your offer to 
-                buy/rent, you are able to communicate with your seller and arrange pick up/drop off and payment.</Text>
-
-                <Text style={styles.boldModalText}>What if my item comes back damaged?</Text>
-                <Text style={styles.modalText}>Campus Closet is not responsible for any damage to your items. Upon registration,
-                a user agrees to terms and conditions which oblige them repair or reimburse any damage to rented items -- honor code! 
-                We are all on the same team :)</Text>
-                <Text style={{fontFamily: 'optima',}}>If you would like to submit a report, email to unccampuscloset@gmail.com</Text>
-              </ScrollView>
-      
-              <View style={[styles.buttonContainer]}>
-                <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setHelpModalVisible(false)}
-                  >
+            <View style={[styles.buttonContainer]}>
+              <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setHelpModalVisible(false)}
+                >
 
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
@@ -221,6 +224,12 @@ export default function Profile() {
       paddingTop: 10,
       fontWeight: "500",
       fontFamily: 'BebasNeue',
+    },
+    questionView: {
+      flex: 1,
+      alignItems: 'center',
+      padding: 10,
+      width: 250,
     },
     profileContainer: {
       alignItems: 'center',
@@ -269,7 +278,7 @@ export default function Profile() {
     textContainer: {
       paddingHorizontal: 20,
       width: '100%',
-      marginBottom: 7,
+      marginBottom: 10,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -336,7 +345,7 @@ export default function Profile() {
       borderRadius: 8,
       padding: 20,
       alignItems: "center",
-      maxHeight: "45%",
+      height: "40%"
     },
     modalTitle: {
       fontSize: 18,
@@ -349,16 +358,16 @@ export default function Profile() {
       fontFamily: 'optima',
     },
     boldModalText: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginBottom: 10,
-      fontFamily: 'optima',
-    },
+        fontSize: 17,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        fontFamily: 'optima',
+      },
     closeButton: {
       marginTop: 10,
       marginBottom: 10,
       padding: 10,
-      backgroundColor: "navy",
+      backgroundColor: "#000747",
       borderRadius: 8,
       marginHorizontal: 5,
     },
@@ -367,5 +376,25 @@ export default function Profile() {
       fontSize: 16,
       fontFamily: 'optima',
     }
-  });
-  
+});
+
+const faqs =[
+  {
+    title: "What is Campus Closet?",
+    content: "Campus Closet was created to give UNC students the ability to rent " +
+             "and sell clothes to each other to solve two achieve two goals: increased " +
+             "sustainability, and not running out of cute outfits."
+  },
+  {
+    title: "How does it work?",
+    content: "You can list your clothing items for rent, sale, or both! " +
+             "You are able to rent from your fellow Tar Heels in increments of 3 days. After purchase " +
+             "or rental, you will communicate with your seller and arrange a pick up/drop off."
+  },
+  {
+    title: "What if my rented item comes back damaged?",
+    content: "Campus Closet is not responsible for any damage to your items. Upon registration, " +
+             "a user agrees to terms and conditions which oblige them to repair or reimburse any damage to rented items. " +
+             "If you would like to submit a report, email to unccampuscloset@gmail.com"
+  }
+];
