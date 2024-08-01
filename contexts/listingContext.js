@@ -1,9 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { collection, query, where, orderBy, limit, onSnapshot, startAfter, getDocs, doc, getDoc } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { collection, query, where, orderBy, limit, onSnapshot, startAfter, getDocs, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { getStorage, ref, deleteObject } from "firebase/storage";
 import db from "../firebase/db";
 import { AuthContext } from "./authContext";
-
+import { useNavigation } from "@react-navigation/core";
 export const ListingsContext = createContext();
 
 export const ListingsProvider = ({ children }) => {
@@ -14,8 +14,8 @@ export const ListingsProvider = ({ children }) => {
   const [acceptedOffers, setAcceptedOffers] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { user } = useContext(AuthContext);
-
+  const { user, removeListingReferenceFromUser } = useContext(AuthContext);
+  const navigation = useNavigation();
   const listingsRef = collection(db, "listings");
 
   const fetchData = (queryKey, setData, queryRef) => {
@@ -120,7 +120,12 @@ export const ListingsProvider = ({ children }) => {
       await Promise.all(promises);
       console.log("All files deleted successfully");
 
-      await removeListingReferenceFromUser(listing.id);
+      try {
+        await removeListingReferenceFromUser(listing.id);
+        console.log("successfully removed listing reference from user doc");
+      } catch (error) {
+        console.log(error)
+      }
 
       await deleteDoc(doc(db, "listings", listing.id));
 

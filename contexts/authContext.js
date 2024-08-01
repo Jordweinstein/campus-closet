@@ -69,6 +69,17 @@ export const AuthProvider = ({ children }) => {
     fetchLikedListings();
   }, [likedListings]);
 
+  const fetchInstaById = async (userId) => {
+    const docRef = doc(db, "users", userId);
+    const docRefSnapshot = await getDoc(docRef);
+
+    if (docRefSnapshot.exists()) {
+      return docRefSnapshot.data().insta; 
+    } else {
+      throw new Error('User not found'); 
+    }
+  };
+
   // Function to clear all user-specific data
   const setNullData = () => {
     setUser(null);
@@ -138,13 +149,13 @@ const removeListingReferenceFromUser = async (listingId) => {
   }
 };
 
-  // Providing context values
   return (
     <AuthContext.Provider
       value={{
         user,
         userData,
         setUser,
+        fetchInstaById,
         isProfileComplete,
         setIsProfileComplete,
         likedListings,

@@ -95,10 +95,6 @@ const ShopMain = ({ navigation }) => {
           const startDate = startTimestamp.toDate();
           const endDate = listing.unavailableEndDates[index].toDate();
   
-          console.log("Current date: ", currDate);
-          console.log("Start date: ", startDate);
-          console.log("End date: ", endDate);
-  
           return startDate <= currDate && currDate <= endDate;
         });
       }
@@ -177,7 +173,6 @@ const ShopMain = ({ navigation }) => {
         <Image source={{ 
           uri: item.images[0] }} 
           style={styles.image} 
-          onLoad={() => console.log(`Image loaded: ${item.images[0]}`)}
         />
       </TouchableOpacity>
 

@@ -27,7 +27,7 @@ export default function ListingContainer({ route }){
 const Listing = ({ route }) => {
   const { listing } = route.params;
   const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
-  const { addLikedListing, removeLikedListing, likedListings, user, removeListingReferenceFromUser } = useContext(
+  const { addLikedListing, removeLikedListing, likedListings, user } = useContext(
     AuthContext
   );
   const { removeListing } = useContext(ListingsContext);
@@ -100,8 +100,6 @@ const Listing = ({ route }) => {
           [
             { text: "Cancel", style: "cancel" },
             { text: "Send Offer", onPress: () => {
-              console.log("listing: " + listing);
-              console.log("range" + startDate + "///" + endDate);
               sendRentalOffer(listing, [startDate, endDate]);
             }}
           ]
@@ -232,7 +230,6 @@ const Listing = ({ route }) => {
                 <TouchableOpacity
                     style = {{marginBottom: 5}}
                     onPress={() =>{
-                      console.log(hasOffered)
                       Alert.alert(
                         "Warning",
                         "Are you sure you want to delete this listing?",
@@ -241,9 +238,7 @@ const Listing = ({ route }) => {
                             
                             text: "Cancel",
                             onPress: () => {
-                              console.log("Cancelled delete listing.")
-          
-                            
+                              console.log("Cancelled delete listing.")                       
                             },
                           },
                           {

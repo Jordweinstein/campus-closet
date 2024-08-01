@@ -78,7 +78,6 @@ export default function Profile() {
           {userData ? (
             <>
               <Text style={styles.title}>{userData.displayName}</Text>
-              <Text style={{fontFamily: 'optima'}}> email: {userData.email} </Text>
               <View style={styles.profileContainer}>
                 <View style={{ flexDirection: 'row' }}>
                   <Image
@@ -371,7 +370,7 @@ export default function Profile() {
     closeButton: {
       marginTop: 20,
       padding: 10,
-      backgroundColor: "navy",
+      backgroundColor: "#000747",
       borderRadius: 8,
       marginHorizontal: 5
     },

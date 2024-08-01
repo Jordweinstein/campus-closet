@@ -15,14 +15,15 @@ export default function ProfileSetup() {
     const [profilePic, setProfilePic] = useState(defaultProfPic);
     const [phoneNumber, setPhoneNumber] = useState('');
     const navigation = useNavigation();
-    const { user, setIsProfileComplete} = useContext(AuthContext);
+    const [insta, setInsta] = useState('');
+    const { user, setIsProfileComplete } = useContext(AuthContext);
 
     const handleSubmit = async () => {
         if (!auth.currentUser || !auth.currentUser.uid) {
             console.error("No logged-in user available.");
             return;
         }
-        if (!displayName || !bio || !graduationYear || !profilePic || profilePic === defaultProfPic) {
+        if (!displayName || !insta || !bio || !graduationYear || !profilePic || profilePic === defaultProfPic) {
             Alert.alert("Error", "Please fill in all fields.");
             return;
         }
@@ -51,7 +52,8 @@ export default function ProfileSetup() {
                 graduationYear: graduationYear,
                 profilePic: profilePicUrl,
                 phoneNumber: phoneNumber,
-                isProfileComplete: true
+                isProfileComplete: true,
+                insta: insta
             });
             Alert.alert("Success", "Profile updated successfully.");
             setIsProfileComplete(true);
@@ -104,6 +106,16 @@ export default function ProfileSetup() {
                             maxLength = {4}
                             keyboardType='number-pad'
                             onChangeText = { text => setGraduationYear(text) }
+                        />
+                    </View>
+                    <View style={styles.singleInputContainer}>
+                        <Text>Instagram Handle: </Text>
+                        <TextInput
+                            placeholder = "campuscloset"
+                            style = {styles.input}
+                            value = { insta }
+                            keyboardType='default'
+                            onChangeText = { text => setInsta(text) }
                         />
                     </View>
                     <View style={styles.singleInputContainer}>

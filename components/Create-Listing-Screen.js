@@ -184,6 +184,8 @@ export default function CreateListing() {
       setIsRentFocused(false);
       setIsBuyFocused(false);
       setNextUploadableImageIndex(0);
+    } else {
+      setLoading(false);
     }
   };
 
