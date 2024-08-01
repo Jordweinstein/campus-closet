@@ -8,12 +8,15 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { registerTranslation } from "react-native-paper-dates";
 import { AuthContext, AuthProvider } from "./contexts/authContext";
 import auth from "./firebase/auth";
+import { ListingsProvider } from "./contexts/listingContext";
 
 function AppContainer() {
   return (
     <NavigationContainer>
       <AuthProvider>
-        <MainNavigator />
+        <ListingsProvider>
+          <MainNavigator />
+        </ListingsProvider>
       </AuthProvider>
     </NavigationContainer>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native"
+import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator, Keyboard } from "react-native"
 import { TouchableOpacity } from "react-native-gesture-handler";
 import db from '../firebase/db';
 import { useNavigation } from "@react-navigation/core";
@@ -80,7 +80,8 @@ export default function EditProfile() {
                     value={name}
                     onChangeText={setName} 
                     editable={nFocus}
-
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss()}
                 />
             </TouchableOpacity>
 
@@ -97,6 +98,8 @@ export default function EditProfile() {
                     style={styles.textInput}
                     maxLength={100}
                     editable={bFocus}
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss()}
                 />
             </TouchableOpacity>
 
@@ -111,7 +114,8 @@ export default function EditProfile() {
                     keyboardType='email-address'
                     onChangeText={setEmail}
                     editable={eFocus}
-
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss()}
                 />
             </TouchableOpacity>
             
@@ -128,6 +132,8 @@ export default function EditProfile() {
                     onChangeText={setPhoneNumber}
                     maxLength={10}
                     editable={pFocus}
+                    returnKeyType="done"
+                    onSubmitEditing={() => Keyboard.dismiss()}
 
                 /> 
             </TouchableOpacity>

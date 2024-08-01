@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  ActivityIndicator,
   Switch
 } from "react-native";
 import "react-native-gesture-handler";
@@ -21,15 +20,7 @@ import ListingScreen from "./Listing-Screen";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 import sizes from "../util/sizes";
 
-export default function Shop() {
-  return (
-    <ListingsProvider>
-      <ShopContent />
-    </ListingsProvider>
-  );
-}
-
-function ShopContent() {
+export default function ShopContent() {
   const Stack = createStackNavigator();
 
   return (
@@ -65,7 +56,7 @@ const ShopMain = ({ navigation }) => {
   const [filteredListings, setFilteredListings] = useState(listings);
   const [filtersActive, setFiltersActive] = useState(false);
 
-  const { listings, setListings, lastDoc, setLastDoc, loading, setLoading } = useContext(ListingsContext);
+  const { listings } = useContext(ListingsContext);
 
   useEffect(() => {
     const filtered = filterListings(listings, selectedSize, minPrice, maxPrice, searchQuery);
@@ -95,11 +86,6 @@ const ShopMain = ({ navigation }) => {
         matchesAvailability = !listing.unavailableStartDates.some((startTimestamp, index) => {
           const startDate = startTimestamp.toDate();
           const endDate = listing.unavailableEndDates[index].toDate();
-  
-          console.log("Current date: ", currDate);
-          console.log("Start date: ", startDate);
-          console.log("End date: ", endDate);
-  
           return startDate <= currDate && currDate <= endDate;
         });
       }
@@ -112,49 +98,6 @@ const ShopMain = ({ navigation }) => {
         matchesSearchQuery
       );
     });
-  };
-  const fetchMoreListings = async () => {
-    if (!lastDoc || loading) return;
-  
-    setLoading(true);
-    let nextQuery = query(
-      collection(db, "listings"),
-      orderBy("timestamp", "desc"),
-      startAfter(lastDoc),
-      limit(10)
-    );
-  
-    // Apply initial filters to the query
-    const currDate = new Date();
-    const availableListings = data.filter((listing) => {
-      const matchesSize = selectedSize ? listing.size === selectedSize : true;
-      const matchesMinPrice = minPrice ? listing.price >= parseFloat(minPrice) : true;
-      const matchesMaxPrice = maxPrice ? listing.price <= parseFloat(maxPrice) : true;
-      const matchesSearchQuery = searchQuery
-        ? listing.itemName.includes(searchQuery) || listing.brand.includes(searchQuery)
-        : true;
-  
-      let matchesAvailability = true;
-      if (listing.unavailableStartDates && listing.unavailableEndDates) {
-        matchesAvailability = !listing.unavailableStartDates.some((startTimestamp, index) => {
-          const startDate = startTimestamp.toDate();
-          const endDate = listing.unavailableEndDates[index].toDate();
-          return startDate <= currDate && currDate <= endDate;
-        });
-      }
-  
-      return (
-        matchesSize &&
-        matchesAvailability &&
-        matchesMinPrice &&
-        matchesMaxPrice &&
-        matchesSearchQuery
-      );
-    });
-  
-    setListings((prevListings) => [...prevListings, ...availableListings]);
-    setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
-    setLoading(false);
   };
 
   const resetFilters = () => {
@@ -165,21 +108,15 @@ const ShopMain = ({ navigation }) => {
     setMinPrice(null);
     setMaxPrice(null);
     setFiltersActive(false);
-  };
+  }
 
   const renderItem = ({ item, index }) =>
     <View style={{ width: "48%" }}>
       <TouchableOpacity
-        onPress={() => {
-          navigation.navigate("ListingScreen", { listing: item })
-        }}
+        onPress={() => navigation.navigate("ListingScreen", { listing: item })}
         style={styles.gridItem}
       >
-        <Image source={{ 
-          uri: item.images[0] }} 
-          style={styles.image} 
-          onLoad={() => console.log(`Image loaded: ${item.images[0]}`)}
-        />
+        <Image source={{ uri: item.images[0] }} style={styles.image} />
       </TouchableOpacity>
 
       <View
@@ -246,7 +183,7 @@ const ShopMain = ({ navigation }) => {
           style={styles.textContainer}
           onPress={() => setSizeModalVisible(true)}
         >
-          <Ionicons name="funnel" size={20} color="black" />
+          <Ionicons name="funnel" size={18} color="black" />
           <Text style={styles.h3}>Size</Text>
             
         </TouchableOpacity>
@@ -254,14 +191,14 @@ const ShopMain = ({ navigation }) => {
           style={styles.textContainer}
           onPress={() => setAvailModalVisible(true)}
         >
-          <FontAwesome name="calendar" size={20} color="black" />
+          <FontAwesome name="calendar" size={18} color="black" />
           <Text style={styles.h3}> Availability </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.textContainer}
           onPress={() => setPriceModalVisible(true)}
         >
-          <FontAwesome name="dollar" size={20} color="black" />
+          <FontAwesome name="dollar" size={18} color="black" />
           <Text style={styles.h3}> Price </Text>
         </TouchableOpacity>
       </View>
@@ -282,9 +219,6 @@ const ShopMain = ({ navigation }) => {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
-        onEndReached={fetchMoreListings}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={loading && <ActivityIndicator size="large" color="#0000ff" />}
       />
 
       {/* Size filter modal */}
@@ -421,9 +355,12 @@ const styles = StyleSheet.create({
     marginBottom: 5
   },
   searchContainer: {
-    width: "90%",
+    width: "95%",
     backgroundColor: "lightgrey",
-    padding: 15,
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
     borderRadius: 30,
     alignSelf: "center",
     marginBottom: 15,
@@ -435,8 +372,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     marginBottom: 7,
     backgroundColor: "lightgrey",
-    borderRadius: 40,
-    padding: 10,
+    borderRadius: 20,
+    padding: '3%',
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center"
@@ -472,13 +409,12 @@ const styles = StyleSheet.create({
   h3: {
     textAlign: "center",
     fontWeight: 2,
-    marginLeft: 5,
     fontFamily: "optima",
-    fontSize: 15
+    fontSize: 15,
+    marginLeft: 2,
   },
   title: {
     fontSize: 56,
-    paddingTop: 10,
     fontWeight: 5,
     alignSelf: "center",
     fontFamily: "BebasNeue"
@@ -505,8 +441,7 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
   list: {
-    paddingHorizontal: 10,
-    flexGrow: 1
+    paddingHorizontal: 10
   },
 
   // modals

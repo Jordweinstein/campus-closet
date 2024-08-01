@@ -39,26 +39,29 @@ export const ListingsProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchPaginatedData = async () => {
+    const fetchAllListings = () => {
       setLoading(true);
-      let paginatedQuery;
-      if (lastDoc) {
-        paginatedQuery = query(listingsRef, orderBy("timestamp", "desc"), startAfter(lastDoc), limit(10));
-      } else {
-        paginatedQuery = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
-      }
+      // Create a query against the collection.
+      const listingsQuery = query(collection(db, "listings"));
 
-      const querySnapshot = await getDocs(paginatedQuery);
-      const data = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setListings((prevData) => [...prevData, ...data]);
-      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
-      setLoading(false);
+      const unsubscribe = onSnapshot(listingsQuery, (querySnapshot) => {
+        const allListings = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setListings(allListings);
+        setLoading(false);
+      }, (error) => {
+        console.error("Error fetching listings: ", error);
+        setLoading(false);
+      });
+
+      return () => {
+        unsubscribe(); // Clean up the subscription on component unmount
+      };
     };
 
-    fetchPaginatedData();
+    fetchAllListings();
   }, [user]);
 
   useEffect(() => {

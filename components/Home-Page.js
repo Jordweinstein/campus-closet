@@ -17,7 +17,6 @@ const Stack = createStackNavigator();
 
 export default function Home() {
   return (
-    <ListingsProvider>
       <Stack.Navigator>
         <Stack.Screen
           name="HomeMain"
@@ -30,7 +29,6 @@ export default function Home() {
           options={{ headerTitle: "", headerTintColor: "black" }}
         />
       </Stack.Navigator>
-    </ListingsProvider>
   );
 }
 const HomeMain = ({ navigation }) => {
