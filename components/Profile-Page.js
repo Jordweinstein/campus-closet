@@ -182,7 +182,7 @@ export default function Profile() {
                 You are able to rent from your fellow Tar Heels in increments of 3 days. When a seller accepts your offer to 
                 buy/rent, you are able to communicate with your seller and arrange pick up/drop off and payment.</Text>
 
-                <Text style={styles.boldModalText}>What if my rented item comes back damaged?</Text>
+                <Text style={styles.boldModalText}>What if my item comes back damaged?</Text>
                 <Text style={styles.modalText}>Campus Closet is not responsible for any damage to your items. Upon registration,
                 a user agrees to terms and conditions which oblige them repair or reimburse any damage to rented items -- honor code! 
                 We are all on the same team :)</Text>
@@ -336,7 +336,7 @@ export default function Profile() {
       borderRadius: 8,
       padding: 20,
       alignItems: "center",
-      maxHeight: "65%",
+      maxHeight: "45%",
     },
     modalTitle: {
       fontSize: 18,
@@ -349,7 +349,7 @@ export default function Profile() {
       fontFamily: 'optima',
     },
     boldModalText: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: 'bold',
       marginBottom: 10,
       fontFamily: 'optima',
