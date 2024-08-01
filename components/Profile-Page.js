@@ -22,6 +22,7 @@ import EditProfile from './Edit-Profile-Screen';
 import Offers from './Offers-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
+import SwiperFlatList from 'react-native-swiper-flatlist';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -98,7 +99,7 @@ export default function Profile() {
   
           <View style={styles.textContainer}>
             <Text style={styles.h2}>My Listings</Text>
-            <TouchableOpacity style={[styles.closeButton, {marginLeft: '40%'}]} onPress={() => navigation.navigate('Offers')}>
+            <TouchableOpacity style={[styles.closeButton, {marginLeft: '30%'}]} onPress={() => navigation.navigate('Offers')}>
               <Text style={styles.closeButtonText}>View Offers</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('CreateListing')}>
@@ -179,23 +180,19 @@ export default function Profile() {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Campus Closet FAQs</Text>
-              
-              <Text style={styles.boldModalText}>What is Campus Closet?</Text>
-              <Text style={styles.modalText}>Campus Closet was created to give UNC students the ability to rent 
-                and sell clothes to each other to solve two achieve two goals: increased 
-                sustainability, and not running out of cute outfits.</Text>
-
-                <Text style={styles.boldModalText}>How does it work?</Text>
-              <Text style={styles.modalText}>You can list your clothing items for rent, sale, or both! 
-              You are able to rent from your fellow Tar Heels in increments of 3 days. After purchase 
-              or rental, you will communicate with your seller and arrange a pick up/drop off.</Text>
-
-              <Text style={styles.boldModalText}>What if my rented item comes back damaged?</Text>
-              <Text style={styles.modalText}>Campus Closet is not responsible for any damage to your items. Upon registration,
-              a user agrees to terms and conditions which oblige them repair or reimburse any damage to rented items. </Text>
-              <Text style={{fontFamily: 'optima',}}>If you would like to submit a report, email to unccampuscloset@gmail.com</Text>
-              
+              <Text style={styles.modalTitle}>Campus Closet FAQs (Swipe!)</Text>
+              <View style={{width: 250, height: 300}}>
+                <SwiperFlatList
+                  
+                  data={faqs}
+                  renderItem={({ item }) => (
+                    <View style={styles.questionView}>
+                      <Text style={styles.boldModalText}>{item.title}</Text>
+                      <Text style={styles.modalText}>{item.content}</Text>
+                    </View>
+                  )}
+                />
+              </View>
 
             <View style={[styles.buttonContainer]}>
               <TouchableOpacity
@@ -231,6 +228,12 @@ export default function Profile() {
       paddingTop: 10,
       fontWeight: "500",
       fontFamily: 'BebasNeue',
+    },
+    questionView: {
+      flex: 1,
+      alignItems: 'center',
+      padding: 10,
+      width: 250,
     },
     profileContainer: {
       alignItems: 'center',
@@ -281,7 +284,7 @@ export default function Profile() {
     textContainer: {
       paddingHorizontal: 20,
       width: '100%',
-      marginBottom: 7,
+      marginBottom: 10,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -349,11 +352,11 @@ export default function Profile() {
       borderRadius: 8,
       padding: 20,
       alignItems: "center",
-      maxHeight: "70%"
+      height: "40%"
     },
     modalTitle: {
       fontSize: 18,
-      marginBottom: 20,
+      marginBottom: 10,
       fontFamily: 'optima',
     },
     modalText: {
@@ -364,11 +367,11 @@ export default function Profile() {
     boldModalText: {
         fontSize: 17,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginBottom: 10,
         fontFamily: 'optima',
       },
     closeButton: {
-      marginTop: 20,
+      marginTop: 10,
       padding: 10,
       backgroundColor: "#000747",
       borderRadius: 8,
@@ -380,3 +383,24 @@ export default function Profile() {
       fontFamily: 'optima',
     }
 });
+
+const faqs =[
+  {
+    title: "What is Campus Closet?",
+    content: "Campus Closet was created to give UNC students the ability to rent " +
+             "and sell clothes to each other to solve two achieve two goals: increased " +
+             "sustainability, and not running out of cute outfits."
+  },
+  {
+    title: "How does it work?",
+    content: "You can list your clothing items for rent, sale, or both! " +
+             "You are able to rent from your fellow Tar Heels in increments of 3 days. After purchase " +
+             "or rental, you will communicate with your seller and arrange a pick up/drop off."
+  },
+  {
+    title: "What if my rented item comes back damaged?",
+    content: "Campus Closet is not responsible for any damage to your items. Upon registration, " +
+             "a user agrees to terms and conditions which oblige them to repair or reimburse any damage to rented items. " +
+             "If you would like to submit a report, email to unccampuscloset@gmail.com"
+  }
+];
