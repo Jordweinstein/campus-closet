@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { collection, query, where, orderBy, limit, onSnapshot, startAfter, getDocs, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, writeBatch, onSnapshot, orderBy, limit, getDoc } from "firebase/firestore";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import db from "../firebase/db";
 import { AuthContext } from "./authContext";
@@ -55,7 +55,6 @@ export const ListingsProvider = ({ children }) => {
 
     const fetchAllListings = () => {
       setLoading(true);
-      // Create a query against the collection.
       const listingsQuery = query(collection(db, "listings"));
 
       const unsubscribe = onSnapshot(listingsQuery, (querySnapshot) => {
@@ -71,7 +70,7 @@ export const ListingsProvider = ({ children }) => {
       });
 
       return () => {
-        unsubscribe(); // Clean up the subscription on component unmount
+        unsubscribe(); 
       };
     };
 
@@ -101,45 +100,59 @@ export const ListingsProvider = ({ children }) => {
     const recentQuery = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
     fetchData("recentListingsCache", setRecentListings, recentQuery);
   }, [user]);
-  
-  const removeListing = async (listing) => {
+
+  const deleteListingOffers = async (listingId) => {
+    const offersRef = collection(db, "offers");
+    const q = query(offersRef, where("listing", "==", listingId));
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            console.log("No offers to delete for listingId:", listingId);
+            return; 
+        }
+
+        const batch = writeBatch(db);
+        querySnapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        console.log(`All offers with listingId ${listingId} have been deleted.`);
+    } catch (error) {
+        console.error("Error deleting offers:", error);
+    }
+};
+
+const removeListing = async (listing) => {
     setLoading(true);
     const storage = getStorage();
     const promises = listing.images.map(async (url) => {
-      const decodedUrl = decodeURIComponent(url);
-      const startIndex = decodedUrl.indexOf("/o/") + 3;
-      const endIndex = decodedUrl.indexOf("?alt=");
-      const filePath = decodedUrl.substring(startIndex, endIndex);
+        const decodedUrl = decodeURIComponent(url);
+        const startIndex = decodedUrl.indexOf("/o/") + 3;
+        const endIndex = decodedUrl.indexOf("?alt=");
+        const filePath = decodedUrl.substring(startIndex, endIndex);
 
-      const imageRef = ref(storage, filePath);
-      await deleteObject(imageRef).then(() => {
-        console.log(filePath + " image deleted successfully");
-      }).catch((error) => {
-        console.log(error);
-      });
+        const imageRef = ref(storage, filePath);
+        return deleteObject(imageRef);
     });
 
     try {
-      await Promise.all(promises);
-      console.log("All files deleted successfully");
+        await Promise.all(promises);
+        console.log("All files deleted successfully.");
 
-      try {
         await removeListingReferenceFromUser(listing.id);
-        console.log("successfully removed listing reference from user doc");
-      } catch (error) {
-        console.log(error)
-      }
+        await deleteListingOffers(listing.id);
 
-      await deleteDoc(doc(db, "listings", listing.id));
-
-      navigation.goBack();
-      alert("Listing successfully deleted.");
+        await deleteDoc(doc(db, "listings", listing.id));
+        navigation.goBack();
+        alert("Listing successfully deleted.");
     } catch (error) {
-      console.error("Error deleting files:", error);
+        console.error("Error during the listing removal process:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   return (
     <ListingsContext.Provider

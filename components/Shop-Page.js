@@ -6,6 +6,7 @@ import {
   Text,
   View,
   StyleSheet,
+  Keyboard,
   TouchableOpacity,
   TextInput,
   Modal,
@@ -179,6 +180,8 @@ const ShopMain = ({ navigation }) => {
         placeholder="Search for your favorite brand..."
         value={searchQuery}
         style={styles.searchContainer}
+        returnKeyType="done"
+        onSubmitEditing={Keyboard.dismiss}
         onChangeText={text => setSearchQuery(text)}
       />
       <View style={styles.container}>

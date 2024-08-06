@@ -49,6 +49,7 @@ export default function Profile() {
             component={Offers}
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
+         
         </Stack.Navigator>
     );
   }
@@ -97,7 +98,7 @@ export default function Profile() {
   
           <View style={styles.textContainer}>
             <Text style={styles.h2}>My Listings</Text>
-            <TouchableOpacity style={[styles.closeButton, {marginLeft: '30%'}]} onPress={() => navigation.navigate('Offers')}>
+            <TouchableOpacity style={[styles.offerButton, {marginLeft: '30%'}]} onPress={() => navigation.navigate('Offers')}>
               <Text style={styles.closeButtonText}>View Offers</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('CreateListing')}>
@@ -200,13 +201,7 @@ export default function Profile() {
 
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => console.log("terms and conditions")}
-                  >
-
-                  <Text style={styles.closeButtonText}>Terms & Conditions</Text>
-                </TouchableOpacity>
+                
               </View>
             </View>
         </View>
@@ -356,6 +351,13 @@ export default function Profile() {
       fontSize: 14,
       marginBottom: 10,
       fontFamily: 'optima',
+    },
+    offerButton: {
+      padding: 10,
+      backgroundColor: "#000747",
+      borderRadius: 8,
+      marginHorizontal: 5,
+      marginTop: 10,
     },
     boldModalText: {
         fontSize: 17,

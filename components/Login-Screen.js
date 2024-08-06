@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, Keyboard } from 'react-native';
 import { getAuth, 
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
@@ -70,6 +70,7 @@ const Login = () => {
                     insta: "",
                     isProfileComplete: false
                 });
+                
 
                 setEmail('');
                 setPassword('');
@@ -206,8 +207,10 @@ const Login = () => {
                     ref={emailInputRef}
                     value= { email }
                     keyboardType='email-address'
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss}
                     onChangeText={text => setEmail(text)}
-                    autoFocus={true}
+                    autoCorrect={false}
                 />
                 <TextInput
                     placeholder = "password"
@@ -215,6 +218,9 @@ const Login = () => {
                     value= { password }
                     onChangeText={text => setPassword(text)}
                     secureTextEntry
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss}
+                    autoCorrect={false}
                 />
                     
             </View>

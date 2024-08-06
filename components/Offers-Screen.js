@@ -321,7 +321,6 @@ const styles = StyleSheet.create({
     description: {
         backgroundColor: "#000747",
         padding: 3,
-        height: '37%',
     },
     button: {
         padding: 10,

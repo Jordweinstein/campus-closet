@@ -10,6 +10,7 @@ import {
   StyleSheet,
   TextInput,
   Modal,
+  Keyboard,
   ActivityIndicator
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
@@ -35,6 +36,7 @@ export default function CreateListing() {
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState("");
   const [isThemeModalVisible, setIsThemeModalVisible] = useState(false);
+  const [isHelpVisible, setIsHelpVisible] = useState(false);
   const [isRentFocused, setIsRentFocused] = useState(false);
   const [isBuyFocused, setIsBuyFocused] = useState(false);
   const [images, setImages] = useState([]);
@@ -234,6 +236,8 @@ export default function CreateListing() {
               value={itemName}
               onChangeText={text => setItemName(text)}
               autoCapitalize="words"
+              returnKeyType="done"
+              onSubmitEditing={Keyboard.dismiss}
             />
             <TextInput
               placeholder="Item description"
@@ -243,6 +247,8 @@ export default function CreateListing() {
               autoCapitalize="sentences"
               maxLength={200}
               multiline={true}
+              returnKeyType="done"
+              onSubmitEditing={Keyboard.dismiss}
             />
           </View>
           <View style={styles.inputView}>
@@ -255,6 +261,8 @@ export default function CreateListing() {
                 maxLength={30}
                 onChangeText={text => setBrand(text)}
                 autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
               />
             </View>
             <View style={styles.textInputView}>
@@ -389,8 +397,18 @@ export default function CreateListing() {
                   placeholderTextColor="white"
                   onChangeText={text => setRentPrice(text)}
                   keyboardType="numbers-and-punctuation"
+                  returnKeyType="done"
+                  onSubmitEditing={Keyboard.dismiss}
                 />}
             </TouchableOpacity>
+              
+            {(isRentFocused) ?
+              <View style={styles.icon}><AntDesign name="questioncircle" size={24} color="gray" /></View>
+            
+              :
+              <></>
+
+          }
 
             <TouchableOpacity
               style={isBuyFocused ? styles.activeButton : styles.disabledButton}
@@ -413,6 +431,8 @@ export default function CreateListing() {
                   onChangeText={text => setBuyPrice(text)}
                   style={{ flex: 1, color: "white" }}
                   keyboardType="numbers-and-punctuation"
+                  returnKeyType="done"
+                  onSubmitEditing={Keyboard.dismiss}
                 />}
             </TouchableOpacity>
           </View>
@@ -516,30 +536,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     width: "90%",
-    marginBottom: "5%"
-  },
-  rentPriceView: {
-    flexDirection: "row",
-    backgroundColor: "white",
-    padding: 10,
-    marginRight: 10,
-    borderRadius: 10,
-    flex: 1
-  },
-  buyPriceView: {
-    flexDirection: "row",
-    padding: 10,
-    backgroundColor: "white",
-    marginLeft: 10,
-    borderRadius: 10,
-    flex: 1
+    marginBottom: "5%",
+    marginTop: '5%',
   },
   disabledButton: {
     padding: 15,
     borderRadius: 8,
     backgroundColor: "#d3d3d3",
     alignItems: "center",
-    marginTop: 20,
     flexDirection: "row",
     width: 120
   },
@@ -548,7 +552,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#050742",
     alignItems: "center",
-    marginTop: 20,
     flexDirection: "row",
     width: 120
   },
@@ -565,6 +568,9 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     justifyContent: "flex-start"
+  },
+  icon: {
+    alignSelf: 'center'
   },
 
   // Modal styling

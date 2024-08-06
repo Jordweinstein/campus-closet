@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { addDoc, getDoc, doc, updateDoc, collection, onSnapshot, query, where, arrayUnion } from "firebase/firestore";
+import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, onSnapshot, query, where, arrayUnion } from "firebase/firestore";
 import { AuthContext } from "./authContext";
 import db from "../firebase/db";
 
@@ -14,13 +14,26 @@ export const OffersProvider = ({ children }) => {
     const [acceptedOffers, setAcceptedOffers] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    const calculateNumRentalIntervals = (startDate, endDate) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const difference = end - start;
+
+        const days = difference / (1000 * 60 * 60 * 24);
+
+        console.log("in function" + Math.ceil(days/3));
+        return Math.ceil(days/3);
+    }
     // Function to send rental offer
     const sendRentalOffer = async (listing, range) => {
+        const price = calculateNumRentalIntervals(range[0], range[1]) * listing.price[0];
+        console.log(price);
         const offerData = {
             isAccepted: false,
             listing: listing.id,
             isRental: true,
-            price: listing.price[0],
+            price: price,
             receiver: listing.owner,
             rentalPeriod: range,
             sender: user.uid,
