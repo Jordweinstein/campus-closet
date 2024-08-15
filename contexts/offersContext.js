@@ -22,13 +22,11 @@ export const OffersProvider = ({ children }) => {
 
         const days = difference / (1000 * 60 * 60 * 24);
 
-        console.log("in function" + Math.ceil(days/3));
         return Math.ceil(days/3);
     }
     // Function to send rental offer
     const sendRentalOffer = async (listing, range) => {
         const price = calculateNumRentalIntervals(range[0], range[1]) * listing.price[0];
-        console.log(price);
         const offerData = {
             isAccepted: false,
             listing: listing.id,

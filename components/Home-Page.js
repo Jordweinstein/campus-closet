@@ -13,6 +13,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import ListingScreen from "./Listing-Screen";
 import GameDay from "../assets/images/gameday.jpeg";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
+import { AuthContext } from "../contexts/authContext";
 
 const Stack = createStackNavigator();
 
@@ -34,15 +35,21 @@ export default function Home() {
 }
 const HomeMain = ({ navigation }) => {
   const { trendingListings, recentListings } = useContext(ListingsContext);
+  const { user } = useContext(AuthContext);
 
+  if (!user) {
+    return null;
+  }
+  
   return (
+    
     <SafeAreaView>
       <ScrollView
         horizontal={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollVerticalContainer}
       >
-        <Text style={styles.title}>Campus Closet</Text>
+        <Text style={styles.title}>Campus Closets</Text>
 
         <Image source={GameDay} style={styles.image} />
 

@@ -23,6 +23,7 @@ import Offers from './Offers-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
+import Login from './Login-Screen';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -62,6 +63,7 @@ export default function Profile() {
   
     const handleSignOut = () => {
       signOut(auth).then(() => {
+        navigation.navigate(Login);
         Alert.alert("Sign out successful.");
       }).catch((error) => {
         Alert.alert("Error", "Sign out unsuccessful.");
@@ -157,12 +159,7 @@ export default function Profile() {
           >
             <Text style={{fontFamily: 'optima'}}>Sign out</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Text style={{fontFamily: 'optima'}}>Edit Profile</Text>
-          </TouchableOpacity> */}
+          
           <TouchableOpacity
             style={styles.button}
             onPress={() => setHelpModalVisible(true)}

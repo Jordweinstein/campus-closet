@@ -41,9 +41,6 @@ const Listing = ({ route }) => {
   const [loading, setLoading] = useState(false);
   const [hasOffered, setHasOffered] = useState(false);
 
-  const navigation = useNavigation();
-  const date = new Date(); 
-
   useEffect(
     () => {
       setIsLiked(likedListings.includes(listing.id));

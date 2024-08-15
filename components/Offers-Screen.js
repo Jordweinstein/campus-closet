@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Text, FlatList, Dimensions, StyleSheet, View, Image, ActivityIndicator, TouchableOpacity, Alert, SafeAreaView } from "react-native";
+import { Text, FlatList, Dimensions, StyleSheet, View, Image, TouchableOpacity, Alert, SafeAreaView } from "react-native";
 import { OffersProvider, OffersContext } from "../contexts/offersContext";
 import { Entypo } from '@expo/vector-icons';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
@@ -26,13 +26,13 @@ const Offers = () => {
     const [loading, setLoading] = useState(true);  
     const { respondOffer, activeOffers, acceptedOffers, finalizeOffer } = useContext(OffersContext);
     const { fetchListingsByIds } = useContext(ListingsContext);
+    const { user } = useContext(AuthContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
     const [instaUsernames, setInstaUsernames] = useState({});
     const navigation = useNavigation();
     
     useEffect(() => {
         const fetchAcceptedOffers = async () => {
-            // setLoading(true);
             listingIds = [];
             if (acceptedOffers.length > 0) {
                 for (let i = 0; i < acceptedOffers.length; i++) {
@@ -41,7 +41,6 @@ const Offers = () => {
                 const offers = await fetchListingsByIds(listingIds);
                 setAcceptedListings(offers);
             }
-            
             setLoading(false);
         };
 
@@ -81,10 +80,13 @@ const Offers = () => {
     };
 
     const loadInstaUsernames = async (offers) => {
-        const usernames = {};
+        const usernames = { ...instaUsernames }; // Preserve existing usernames
         for (const offer of offers) {
             if (!usernames[offer.owner]) {
                 usernames[offer.owner] = await fetchInstaById(offer.owner);
+            }
+            if (!usernames[offer.sender]) {
+                usernames[offer.sender] = await fetchInstaById(offer.sender);
             }
         }
         setInstaUsernames(usernames);
@@ -94,8 +96,10 @@ const Offers = () => {
         if (acceptedListings.length > 0) {
             loadInstaUsernames(acceptedListings);
         }
-    }, [acceptedListings]);
-
+        if (activeOffers.length > 0) {
+            loadInstaUsernames(activeOffers);
+        }
+    }, [acceptedListings, activeOffers]);
 
     const formatDateRange = (start, end) => {
         const startDate = start.toDate();
@@ -125,6 +129,8 @@ const Offers = () => {
                 ):
                     <Text style={styles.text}>Buy ${item.price}</Text>
                 }
+                {/* Display the sender's Instagram username */}
+                <Text style={styles.text}>From: @{instaUsernames[item.sender] || 'N/A'}</Text>
             </View>
             {(item.isAccepted) ? 
                 <TouchableOpacity 
@@ -153,78 +159,69 @@ const Offers = () => {
                         <Entypo name="check" size={22} color="black" />
                     </TouchableOpacity>
                 </>
-            
             }
-            
         </View>
     );
 
     return (
-        loading ? (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" />
+        <SafeAreaView>
+            <View style={styles.description}>
+                <Text style={[styles.header, {color: "white"}]}>How do offers work?</Text>
+                <SwiperFlatList index={0} showPagination>
+                    <View style={styles.viewContainer}>
+                        <Text style={styles.p}>
+                            1. Send an offer{'\n'} 
+                            2. The seller will accept/reject your offer. If accepted it will show up here in "Accepted Offers"{'\n'}
+                            3. Direct message the username displayed via Instagram to arrange for pickup and payment{'\n'}
+                        </Text>
+                    </View>
+                    <View style={styles.viewContainer}>
+                        <Text style={styles.p}>
+                            1. Received offers display under "Received Offers" to be accepted or rejected.{'\n'}
+                            2. If you accept, the buyer/renter is notified and you can finalize the offer. If you reject, the offer disappears.{'\n'}
+                            3. Once the sale is final and the exchange has been made, you can mark the item as rented/sold. If purchased, the listing will be deleted.
+                        </Text>
+                    </View>
+                </SwiperFlatList>
             </View>
-        ) : (
-            <SafeAreaView>
-                <View style={styles.description}>
-                    <Text style={[styles.header, {color: "white"}]}>How do offers work?</Text>
-                    <SwiperFlatList index={0} showPagination>
-                        <View style={styles.viewContainer}>
-                            <Text style={styles.p}>
-                                1. Send an offer{'\n'} 
-                                2. The seller will accept/reject your offer. If accepted it will show up here in "Accepted Offers"{'\n'}
-                                3. Direct message the username displayed via Instagram to arrange for pickup and payment{'\n'}
-                            </Text>
-                        </View>
-                        <View style={styles.viewContainer}>
-                            <Text style={styles.p}>
-                                1. Received offers display under "Received Offers"to be accepted or rejected.{'\n'}
-                                2. If you accept, the buyer/renter is notified and you can finalize the offer. If you reject, the offer disappears.{'\n'}
-                                3. Once the sale is final and the exchange has been made, you can mark the item as rented/sold. If purchased, the listing will be deleted.
-                            </Text>
-                        </View>
-                    </SwiperFlatList>
-                    
-                </View>
-                <Text style={styles.header}>Accepted Offers</Text>
-                <ScrollView
-                    horizontal={true}
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.scrollViewStyle}
-                    contentContainerStyle={styles.scrollContainer}
-                >
-                    {acceptedListings.length === 0 ?
-                        <View style={styles.listingImagePlaceholder}></View>
-                        :
-                        acceptedListings.map((listing) => (
-                            <TouchableOpacity 
-                                key={listing.id} 
-                                onPress={() => navigation.navigate('ListingScreen', { listing })}
-                                style={styles.imgContainer}
-                            >
-                                <Image
-                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
-                                    style={styles.listingImage}
-                                />
-                                <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
-                            </TouchableOpacity>
-                        ))}
-                </ScrollView>
+            <Text style={styles.header}>Accepted Offers</Text>
+            <ScrollView
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                style={styles.scrollViewStyle}
+                contentContainerStyle={styles.scrollContainer}
+            >
+                {acceptedListings.length === 0 ?
+                    <View style={styles.listingImagePlaceholder}></View>
+                    :
+                    acceptedListings.map((listing) => (
+                        <TouchableOpacity 
+                            key={listing.id} 
+                            onPress={() => navigation.navigate('ListingScreen', { listing })}
+                            style={styles.imgContainer}
+                        >
+                            <Image
+                                source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                style={styles.listingImage}
+                            />
+                            <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
+                        </TouchableOpacity>
+                    ))}
+            </ScrollView>
 
-                <Text style={styles.header}>Received Offers</Text>
-                {(activeOffers.length === 0) ? 
-                    <View style={styles.offerPlaceholder} />
-                :
-                    <FlatList
-                        data={activeOffers}
-                        renderItem={renderOffer}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContainer}
-                    />
-                }
-            </SafeAreaView>
-        )
-    );
+            <Text style={styles.header}>Received Offers</Text>
+            {(activeOffers.length === 0) ? 
+                <View style={styles.offerPlaceholder} />
+            :
+                <FlatList
+                    data={activeOffers}
+                    renderItem={renderOffer}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContainer}
+                />
+            }
+        </SafeAreaView>
+    )
 };
 
 const styles = StyleSheet.create({

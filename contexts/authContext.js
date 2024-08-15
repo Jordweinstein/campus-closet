@@ -16,11 +16,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authenticatedUser) => {
       let unsubscribeUserDoc;
-
+  
       if (authenticatedUser) {
         setUser(authenticatedUser);
         const userDocRef = doc(db, 'users', authenticatedUser.uid);
-
+        
         unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {
             const userDetails = userDocSnap.data();
@@ -35,17 +35,20 @@ export const AuthProvider = ({ children }) => {
           setNullData();
         });
       } else {
-        setNullData(); 
-      }
-      return () => {
-        if (unsubscribeUserDoc) unsubscribeUserDoc();
         setNullData();
+      }
+  
+      return () => {
+        if (unsubscribeUserDoc) unsubscribeUserDoc(); 
       };
     });
-    return () => unsubscribeAuth();
+  
+    return () => {
+      unsubscribeAuth(); 
+    };
   }, [auth]);
+  
 
-  // Fetch listings data for liked listings
   useEffect(() => {
     if (!likedListings.length) {
       setLikedListingsData([]);
@@ -133,21 +136,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-// Function to remove listing reference to user's listing
-const removeListingReferenceFromUser = async (listingId) => {
-  try {
-      const user = getAuth().currentUser;
-      const userRef = doc(db, "users", user.uid);
+  // Function to remove listing reference to user's listing
+  const removeListingReferenceFromUser = async (listingId) => {
+    try {
+        const user = getAuth().currentUser;
+        const userRef = doc(db, "users", user.uid);
 
-      await updateDoc(userRef, {
-          listings: arrayRemove(listingId)
-      });
+        await updateDoc(userRef, {
+            listings: arrayRemove(listingId)
+        });
 
-      console.log("Successfully removed listing reference to user document");
-  } catch (error) {
-      console.error("Error updating user document: ", error);
-  }
-};
+        console.log("Successfully removed listing reference to user document");
+    } catch (error) {
+        console.error("Error updating user document: ", error);
+    }
+  };
 
   return (
     <AuthContext.Provider

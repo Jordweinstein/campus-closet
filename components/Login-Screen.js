@@ -193,7 +193,7 @@ const Login = () => {
         :
         <>
         <View style={styles.titleView}>
-            <Text style={styles.title}>Campus Closet</Text>
+            <Text style={styles.title}>Campus Closets</Text>
         </View>
         
         <View
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontFamily: "BebasNeue",
-        fontSize: 64,
+        fontSize: 60,
         paddingBottom: 10
     }
     

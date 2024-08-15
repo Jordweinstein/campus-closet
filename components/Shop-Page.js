@@ -61,8 +61,12 @@ const ShopMain = ({ navigation }) => {
   useEffect(() => {
     const filtered = filterListings(listings, selectedSize, minPrice, maxPrice, searchQuery);
     setFilteredListings(filtered);
-    setFiltersActive(filtered.length !== listings.length || isAvailable);
+
+    // Only activate filters if any filter criteria is set
+    const areFiltersActive = selectedSize || minPrice || maxPrice || searchQuery || isAvailable;
+    setFiltersActive(areFiltersActive);
   }, [selectedSize, isAvailable, minPrice, maxPrice, listings, searchQuery]);
+
 
   const filterListings = (listings, selectedSize, minPrice, maxPrice, searchQuery) => {
     const currDate = new Date();
@@ -79,7 +83,6 @@ const ShopMain = ({ navigation }) => {
         ? listing.itemName.includes(searchQuery) || listing.brand.includes(searchQuery)
         : true;
   
-      // Check availability -- add logic for sold items
       let matchesAvailability = true;
 
       if (listing.unavailableStartDates && listing.unavailableEndDates) {
