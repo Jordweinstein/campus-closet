@@ -24,7 +24,7 @@ const { width } = Dimensions.get('window');
 
 const Offers = () => {
     const [loading, setLoading] = useState(true);  
-    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer } = useContext(OffersContext);
+    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer, inactiveOffers } = useContext(OffersContext);
     const { fetchListingsByIds } = useContext(ListingsContext);
     const { user } = useContext(AuthContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
@@ -80,7 +80,7 @@ const Offers = () => {
     };
 
     const loadInstaUsernames = async (offers) => {
-        const usernames = { ...instaUsernames }; // Preserve existing usernames
+        const usernames = { ...instaUsernames }; 
         for (const offer of offers) {
             if (!usernames[offer.owner]) {
                 usernames[offer.owner] = await fetchInstaById(offer.owner);
@@ -129,7 +129,6 @@ const Offers = () => {
                 ):
                     <Text style={styles.text}>Buy ${item.price}</Text>
                 }
-                {/* Display the sender's Instagram username */}
                 <Text style={styles.text}>From: @{instaUsernames[item.sender] || 'N/A'}</Text>
             </View>
             {(item.isAccepted) ? 
@@ -164,7 +163,7 @@ const Offers = () => {
     );
 
     return (
-        <SafeAreaView>
+        <SafeAreaView style={{flex: 1}}>
             <View style={styles.description}>
                 <Text style={[styles.header, {color: "white"}]}>How do offers work?</Text>
                 <SwiperFlatList index={0} showPagination>
@@ -184,42 +183,57 @@ const Offers = () => {
                     </View>
                 </SwiperFlatList>
             </View>
-            <Text style={styles.header}>Accepted Offers</Text>
-            <ScrollView
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                style={styles.scrollViewStyle}
-                contentContainerStyle={styles.scrollContainer}
-            >
-                {acceptedListings.length === 0 ?
-                    <View style={styles.listingImagePlaceholder}></View>
-                    :
-                    acceptedListings.map((listing) => (
-                        <TouchableOpacity 
-                            key={listing.id} 
-                            onPress={() => navigation.navigate('ListingScreen', { listing })}
-                            style={styles.imgContainer}
-                        >
-                            <Image
-                                source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
-                                style={styles.listingImage}
-                            />
-                            <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
-                        </TouchableOpacity>
-                    ))}
-            </ScrollView>
+            <View style={styles.acceptedDisplay}>   
+                <Text style={styles.header}>Accepted Offers</Text>
+                <ScrollView
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.scrollViewStyle}
+                    contentContainerStyle={styles.scrollContainer}
+                >
+                    {acceptedListings.length === 0 ?
+                        <View style={styles.listingImagePlaceholder}></View>
+                        :
+                        acceptedListings.map((listing) => (
+                            <TouchableOpacity 
+                                key={listing.id} 
+                                onPress={() => navigation.navigate('ListingScreen', { listing })}
+                                style={styles.imgContainer}
+                            >
+                                <Image
+                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                    style={styles.listingImage}
+                                />
+                                <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
+                            </TouchableOpacity>
+                        ))}
+                </ScrollView>
+            </View>
+            
+            <View style={styles.receivedDisplay}>
+                <Text style={styles.header}>Received Offers</Text>
+                {(activeOffers.length === 0) ? 
+                    <View style={styles.offerPlaceholder} />
+                :
+                    <FlatList
+                        data={activeOffers}
+                        renderItem={renderOffer}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContainer}
+                    />
+                }
+            </View>
+            
 
-            <Text style={styles.header}>Received Offers</Text>
-            {(activeOffers.length === 0) ? 
-                <View style={styles.offerPlaceholder} />
-            :
-                <FlatList
-                    data={activeOffers}
-                    renderItem={renderOffer}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContainer}
-                />
-            }
+            {/* Button to navigate to another screen */}
+            <TouchableOpacity 
+                style={styles.navigationButton} 
+                onPress={() => {
+                    navigation.navigate('Archived');
+                }}
+            >
+                <Text style={styles.navigationButtonText}>View Archived Offers</Text>
+            </TouchableOpacity>
         </SafeAreaView>
     )
 };
@@ -246,6 +260,10 @@ const styles = StyleSheet.create({
         shadowRadius: 1,
         elevation: 2,
     },
+    acceptedDisplay: {
+        height: '25%'
+    },
+    
     offerPlaceholder: {
         backgroundColor: '#ddd',
         borderRadius: 5,
@@ -334,5 +352,20 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: "optima",
         padding: 5,
+    },
+    navigationButton: {
+        backgroundColor: '#000747',
+        padding: 10,
+        alignItems: 'center',
+        borderRadius: 10,
+        position: 'absolute',
+        bottom: 10, 
+        left: 15,
+        right: 15,
+    },
+    navigationButtonText: {
+        color: 'white',
+        fontSize: 18,
+        fontFamily: 'optima',
     },
 });

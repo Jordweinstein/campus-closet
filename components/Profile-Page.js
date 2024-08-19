@@ -20,6 +20,7 @@ import '../firebase/firebase-config';
 import CreateListing from './Create-Listing-Screen';
 import EditProfile from './Edit-Profile-Screen';
 import Offers from './Offers-Screen';
+import Archived from './Archived-Offers-Screen';
 import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
@@ -48,6 +49,11 @@ export default function Profile() {
           <Stack.Screen
             name="Offers"
             component={Offers}
+            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
+          />
+          <Stack.Screen
+            name="Archived"
+            component={Archived}
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
          
@@ -127,7 +133,7 @@ export default function Profile() {
             }
   
           </ScrollView>
-  
+            
           <View style={styles.textContainer}>
             <Text style={styles.h2}>My favorites</Text>
           </View>

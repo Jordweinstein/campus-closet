@@ -7,25 +7,24 @@ export const OffersContext = createContext();
 
 export const OffersProvider = ({ children }) => {
     const { user } = useContext(AuthContext);
-    const userDocRef = doc(db, "users", user.uid);
-    const offersRef = collection(db, "offers");
     const [sentOffers, setSentOffers] = useState([]);
     const [activeOffers, setActiveOffers] = useState([]);
+    const [inactiveOffers, setInactiveOffers] = useState([]);
+    const [inactiveSentOffers, setInactiveSentOffers] = useState([]);
     const [acceptedOffers, setAcceptedOffers] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const calculateNumRentalIntervals = (startDate, endDate) => {
         const start = new Date(startDate);
         const end = new Date(endDate);
-
         const difference = end - start;
-
         const days = difference / (1000 * 60 * 60 * 24);
+        return Math.ceil(days / 3);
+    };
 
-        return Math.ceil(days/3);
-    }
-    // Function to send rental offer
     const sendRentalOffer = async (listing, range) => {
+        if (!user) return; // Guard clause
+        const userDocRef = doc(db, "users", user.uid);
         const price = calculateNumRentalIntervals(range[0], range[1]) * listing.price[0];
         const offerData = {
             isAccepted: false,
@@ -39,12 +38,13 @@ export const OffersProvider = ({ children }) => {
             offerItem: listing.itemName,
             isFinalized: false
         };
-        const docRef = await addDoc(offersRef, offerData);
-        await updateDoc(userDocRef, {offeredListings: arrayUnion(docRef.id)});
+        const docRef = await addDoc(collection(db, "offers"), offerData);
+        await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
     };
 
-    // Function to send buy offer
     const sendBuyOffer = async (listing) => {
+        if (!user) return; // Guard clause
+        const userDocRef = doc(db, "users", user.uid);
         const offerData = {
             isAccepted: false,
             isRejected: false,
@@ -58,19 +58,19 @@ export const OffersProvider = ({ children }) => {
             offerItem: listing.itemName,
             isFinalized: false
         };
-        const docRef = await addDoc(offersRef, offerData);
-        await updateDoc(userDocRef, {offeredListings: arrayUnion(docRef.id)});
+        const docRef = await addDoc(collection(db, "offers"), offerData);
+        await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
     };
 
-    // Function to respond to offers
     const respondOffer = async (offerId, response) => {
+        if (!user) return; // Guard clause
         const offerDocRef = doc(db, "offers", offerId);
         const updateObject = (response.toLowerCase() === "accept") ? { isAccepted: true } : { isRejected: true, receiver: null };
         await updateDoc(offerDocRef, updateObject);
     };
 
-    // Function to finalize offers
     const finalizeOffer = async (offerId) => {
+        if (!user) return; // Guard clause
         const offerDocRef = doc(db, "offers", offerId);
         const offerSnapshot = await getDoc(offerDocRef);
         if (!offerSnapshot.exists()) return;
@@ -87,34 +87,64 @@ export const OffersProvider = ({ children }) => {
 
     // Effect to fetch received offers
     useEffect(() => {
-        if (!user) return;
+        if (!user) return; // Guard clause
         setLoading(true);
-        const userOffersQuery = query(offersRef, where("receiver", "==", user.uid), where("isFinalized", "==", false));
-        const unsubscribe = onSnapshot(userOffersQuery, querySnapshot => {
+    
+        // Query for both active and inactive offers
+        const userActiveOffersQuery = query(offersRef, where("receiver", "==", user.uid), where("isFinalized", "==", false));
+        const userInactiveOffersQuery = query(offersRef, where("receiver", "==", user.uid), where("isFinalized", "==", true));
+    
+        // Subscribe to active offers
+        const unsubscribeActive = onSnapshot(userActiveOffersQuery, querySnapshot => {
             const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setActiveOffers(offers);
             setLoading(false);
-        }, error => console.error('Error fetching received offers:', error));
-        return () => unsubscribe();
+        }, error => console.error('Error fetching active offers:', error));
+    
+        // Subscribe to inactive offers
+        const unsubscribeInactive = onSnapshot(userInactiveOffersQuery, querySnapshot => {
+            const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setInactiveOffers(offers);
+        }, error => console.error('Error fetching inactive offers:', error));
+    
+        // Cleanup function
+        return () => {
+            unsubscribeActive();
+            unsubscribeInactive();
+        };
     }, [user]);
 
-    // Effect to fetch sent offers
+    // Effect to fetch sent offers and inactive sent offers
     useEffect(() => {
-        if (!user) return;
-        const userOffersQuery = query(offersRef, where("sender", "==", user.uid));
-        const unsubscribe = onSnapshot(userOffersQuery, querySnapshot => {
+        if (!user) return; // Guard clause
+        const userSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", false));
+        const userFinalizedSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", true));
+    
+        // Subscribe to sent offers
+        const unsubscribeSentOffers = onSnapshot(userSentOffersQuery, querySnapshot => {
             const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setSentOffers(offers);
             setAcceptedOffers(offers.filter(offer => offer.isAccepted));
         }, error => console.error('Error fetching sent offers:', error));
-        return () => unsubscribe();
+    
+        // Subscribe to finalized sent offers
+        const unsubscribeFinalizedSentOffers = onSnapshot(userFinalizedSentOffersQuery, querySnapshot => {
+            const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setInactiveSentOffers(offers);
+        }, error => console.error('Error fetching finalized sent offers:', error));
+    
+        // Cleanup function
+        return () => {
+            unsubscribeSentOffers();
+            unsubscribeFinalizedSentOffers();
+        };
     }, [user]);
 
     return (
         <OffersContext.Provider
             value={{
                 sendRentalOffer, sendBuyOffer, respondOffer, finalizeOffer,
-                sentOffers, activeOffers, acceptedOffers, loading
+                sentOffers, activeOffers, inactiveOffers, acceptedOffers, inactiveSentOffers, loading
             }}
         >
             {children}

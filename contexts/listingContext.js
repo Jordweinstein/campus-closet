@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { collection, query, where, getDocs, deleteDoc, doc, writeBatch, onSnapshot, orderBy, limit, getDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit, getDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import db from "../firebase/db";
 import { AuthContext } from "./authContext";
@@ -54,10 +54,20 @@ export const ListingsProvider = ({ children }) => {
     return listings;
   };
 
+  // Unsubscribe all listeners
+  const unsubscribeAllListeners = () => {
+    Object.values(unsubscribeFunctions).forEach((unsubscribe) => unsubscribe && unsubscribe());
+    setUnsubscribeFunctions({});
+  };
+
   useEffect(() => {
     if (!user) {
+      // Unsubscribe from all listeners and clear data when the user logs out
+      unsubscribeAllListeners();
       setListings([]);
-      if (unsubscribeFunctions["allListings"]) unsubscribeFunctions["allListings"]();
+      setUserListings([]);
+      setTrendingListings([]);
+      setRecentListings([]);
       return;
     }
 
@@ -89,7 +99,6 @@ export const ListingsProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user) {
-      setUserListings([]);
       if (unsubscribeFunctions["userListings"]) unsubscribeFunctions["userListings"]();
       return;
     }
