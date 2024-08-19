@@ -16,11 +16,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authenticatedUser) => {
       let unsubscribeUserDoc;
-  
+
       if (authenticatedUser) {
         setUser(authenticatedUser);
         const userDocRef = doc(db, 'users', authenticatedUser.uid);
-        
+
         unsubscribeUserDoc = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {
             const userDetails = userDocSnap.data();
@@ -28,29 +28,28 @@ export const AuthProvider = ({ children }) => {
             setIsProfileComplete(userDetails.isProfileComplete || false);
             setLikedListings(userDetails.likedListings || []);
           } else {
-            setNullData(); 
+            setNullData();
           }
         }, (error) => {
           console.error("Error fetching user data: ", error);
           setNullData();
         });
       } else {
-        setNullData();
+        setNullData(); // Clear user data and unsubscribe listeners
       }
-  
+
       return () => {
-        if (unsubscribeUserDoc) unsubscribeUserDoc(); 
+        if (unsubscribeUserDoc) unsubscribeUserDoc(); // Unsubscribe from user document listener
       };
     });
-  
+
     return () => {
-      unsubscribeAuth(); 
+      unsubscribeAuth(); // Unsubscribe from auth state listener
     };
   }, [auth]);
-  
 
   useEffect(() => {
-    if (!likedListings.length) {
+    if (!likedListings.length || !user) {
       setLikedListingsData([]);
       return;
     }
@@ -70,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     fetchLikedListings();
-  }, [likedListings]);
+  }, [likedListings, user]); // Depend on user state
 
   const fetchInstaById = async (userId) => {
     const docRef = doc(db, "users", userId);
@@ -94,27 +93,29 @@ export const AuthProvider = ({ children }) => {
 
   // Function to add liked listing
   const addLikedListing = async (listingId) => {
-    if (!likedListings.includes(listingId)) {
-      const listingRef = doc(db, 'listings', listingId);
-      await updateDoc(doc(db, 'users', user.uid), {
-        likedListings: arrayUnion(listingId),
-      });
-      await updateDoc(listingRef, {
-        likes: increment(1),
-      });
+    if (!user || likedListings.includes(listingId)) return; // Check if user is null
 
-      setLikedListings(prev => [...prev, listingId]);
-    }
+    const listingRef = doc(db, 'listings', listingId);
+    await updateDoc(doc(db, 'users', user.uid), {
+      likedListings: arrayUnion(listingId),
+    });
+    await updateDoc(listingRef, {
+      likes: increment(1),
+    });
+
+    setLikedListings(prev => [...prev, listingId]);
   };
 
   // Function to remove liked listing
   const removeLikedListing = async (listingId) => {
+    if (!user) return; // Check if user is null
+
     const listingRef = doc(db, 'listings', listingId);
     await updateDoc(doc(db, 'users', user.uid), {
       likedListings: arrayRemove(listingId),
     });
     await updateDoc(listingRef, {
-        likes: increment(-1),
+      likes: increment(-1),
     });
 
     setLikedListings(prev => prev.filter(id => id !== listingId));
@@ -123,32 +124,36 @@ export const AuthProvider = ({ children }) => {
   // Function to add listing reference to user's listing
   const addListingReferenceToUser = async (listingId) => {
     try {
-        const user = getAuth().currentUser;
-        const userRef = doc(db, "users", user.uid);
+      const currentUser = getAuth().currentUser;
+      if (!currentUser) return; // Check if user is null
 
-        await updateDoc(userRef, {
-            listings: arrayUnion(listingId)
-        });
+      const userRef = doc(db, "users", currentUser.uid);
 
-        console.log("Successfully added listing reference to user document");
+      await updateDoc(userRef, {
+        listings: arrayUnion(listingId)
+      });
+
+      console.log("Successfully added listing reference to user document");
     } catch (error) {
-        console.error("Error updating user document: ", error);
+      console.error("Error updating user document: ", error);
     }
   };
 
   // Function to remove listing reference to user's listing
   const removeListingReferenceFromUser = async (listingId) => {
     try {
-        const user = getAuth().currentUser;
-        const userRef = doc(db, "users", user.uid);
+      const currentUser = getAuth().currentUser;
+      if (!currentUser) return; // Check if user is null
 
-        await updateDoc(userRef, {
-            listings: arrayRemove(listingId)
-        });
+      const userRef = doc(db, "users", currentUser.uid);
 
-        console.log("Successfully removed listing reference to user document");
+      await updateDoc(userRef, {
+        listings: arrayRemove(listingId)
+      });
+
+      console.log("Successfully removed listing reference to user document");
     } catch (error) {
-        console.error("Error updating user document: ", error);
+      console.error("Error updating user document: ", error);
     }
   };
 
