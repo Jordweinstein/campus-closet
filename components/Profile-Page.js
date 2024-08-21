@@ -256,6 +256,7 @@ export default function Profile() {
       fontWeight: "200",
       fontFamily: 'optima',
       fontSize: 15,
+      lineHeight: 22,
     },
     bioContainer: {
       backgroundColor: '#f0f0f0',

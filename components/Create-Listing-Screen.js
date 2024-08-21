@@ -403,12 +403,35 @@ export default function CreateListing() {
             </TouchableOpacity>
               
             {(isRentFocused) ?
-              <View style={styles.icon}><AntDesign name="questioncircle" size={24} color="gray" /></View>
+            <TouchableOpacity onPress={() => setIsHelpVisible(true)}>
+              <AntDesign name="questioncircle" size={24} color="gray" />
+            </TouchableOpacity>
+              
             
               :
               <></>
 
           }
+          <Modal
+              animationType="slide"
+              transparent={true}
+              visible={isHelpVisible}
+              onRequestClose={() => setIsHelpVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>How does pricing work?</Text>
+                  <Text style={styles.modalItemText}>The price you enter for a rental will be the price for a three-day rental interval. You can set the price to be whatever you think is fair!</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setIsHelpVisible(false)}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+                
+              </View>
+            </Modal>
 
             <TouchableOpacity
               style={isBuyFocused ? styles.activeButton : styles.disabledButton}

@@ -54,15 +54,6 @@ export const chooseFromGallery = async () => {
 export const pickImage = async (index, image, setImage) => {
   Alert.alert("Select Photo", "Choose an option:", [
     {
-      text: "Take Photo",
-      onPress: async () => {
-        const result = await takePhoto();
-        if (result && !result.canceled) {
-          setImage(result.uri);
-        }
-      },
-    },
-    {
       text: "Choose From Gallery",
       onPress: async () => {
         const result = await chooseFromGallery();

@@ -1,18 +1,22 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, onSnapshot, query, where, arrayUnion } from "firebase/firestore";
 import { AuthContext } from "./authContext";
+import { ListingsContext } from "./listingContext"; // Import ListingsContext
 import db from "../firebase/db";
 
 export const OffersContext = createContext();
 
 export const OffersProvider = ({ children }) => {
     const { user } = useContext(AuthContext);
+    const { removeListing } = useContext(ListingsContext); // Access removeListing function
     const [sentOffers, setSentOffers] = useState([]);
     const [activeOffers, setActiveOffers] = useState([]);
     const [inactiveOffers, setInactiveOffers] = useState([]);
     const [inactiveSentOffers, setInactiveSentOffers] = useState([]);
     const [acceptedOffers, setAcceptedOffers] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const offersRef = collection(db, "offers");
 
     const calculateNumRentalIntervals = (startDate, endDate) => {
         const start = new Date(startDate);
@@ -43,7 +47,7 @@ export const OffersProvider = ({ children }) => {
     };
 
     const sendBuyOffer = async (listing) => {
-        if (!user) return; // Guard clause
+        if (!user) return; 
         const userDocRef = doc(db, "users", user.uid);
         const offerData = {
             isAccepted: false,
@@ -63,14 +67,14 @@ export const OffersProvider = ({ children }) => {
     };
 
     const respondOffer = async (offerId, response) => {
-        if (!user) return; // Guard clause
+        if (!user) return; 
         const offerDocRef = doc(db, "offers", offerId);
         const updateObject = (response.toLowerCase() === "accept") ? { isAccepted: true } : { isRejected: true, receiver: null };
         await updateDoc(offerDocRef, updateObject);
     };
 
     const finalizeOffer = async (offerId) => {
-        if (!user) return; // Guard clause
+        if (!user) return; 
         const offerDocRef = doc(db, "offers", offerId);
         const offerSnapshot = await getDoc(offerDocRef);
         if (!offerSnapshot.exists()) return;
@@ -81,13 +85,20 @@ export const OffersProvider = ({ children }) => {
                 unavailableStartDates: arrayUnion(offerData.rentalPeriod[0]),
                 unavailableEndDates: arrayUnion(offerData.rentalPeriod[1]),
             });
+        } else {
+            // If the offer is not rental, remove the listing
+            const listing = {
+                id: offerData.listing,
+                images: [], // You will need to fetch the images of the listing here or pass them through another way
+            };
+            await removeListing(listing); // Call removeListing function
         }
         await updateDoc(offerDocRef, { isFinalized: true });
     };
 
     // Effect to fetch received offers
     useEffect(() => {
-        if (!user) return; // Guard clause
+        if (!user) return; 
         setLoading(true);
     
         // Query for both active and inactive offers
@@ -114,9 +125,8 @@ export const OffersProvider = ({ children }) => {
         };
     }, [user]);
 
-    // Effect to fetch sent offers and inactive sent offers
     useEffect(() => {
-        if (!user) return; // Guard clause
+        if (!user) return;
         const userSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", false));
         const userFinalizedSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", true));
     
