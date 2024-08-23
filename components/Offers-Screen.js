@@ -30,6 +30,7 @@ const Offers = () => {
     const [acceptedListings, setAcceptedListings] = useState([]);
     const [instaUsernames, setInstaUsernames] = useState({});
     const navigation = useNavigation();
+
     
     useEffect(() => {
         const fetchAcceptedOffers = async () => {
