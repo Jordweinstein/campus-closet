@@ -15,6 +15,7 @@ export const OffersProvider = ({ children }) => {
     const [inactiveSentOffers, setInactiveSentOffers] = useState([]);
     const [acceptedOffers, setAcceptedOffers] = useState([]);
     const [loading, setLoading] = useState(false);
+    const offersRef = collection(db, "offers");
 
     const offersRef = collection(db, "offers");
 
