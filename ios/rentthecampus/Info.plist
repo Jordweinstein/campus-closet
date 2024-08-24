@@ -71,7 +71,6 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Bebas Neue.ttf</string>
-		<string>Cabin.ttf</string>
 	</array>
 </dict>
 </plist>

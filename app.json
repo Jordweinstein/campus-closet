@@ -2,6 +2,7 @@
   "expo": {
     "name": "rent-the-campus",
     "slug": "rent-the-campus",
+    "privacy": "unlisted",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +14,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jordanweinstein.rent-the-campus"
+      "bundleIdentifier": "com.jordanweinstein.rent-the-campus",
+      "deploymentTarget": "12.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +28,11 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "13a454cc-3b0a-4780-81ff-852c96835e54"
+      }
+    }
   }
 }
