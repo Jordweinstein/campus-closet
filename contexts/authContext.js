@@ -55,6 +55,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     const fetchLikedListings = async () => {
+      if (likedListings.length === 0) {
+        setLikedListingsData([]);
+        return;
+      }
       const likedListingsDocs = await Promise.all(
         likedListings.map(async (listingId) => {
           const docSnap = await getDoc(doc(db, 'listings', listingId));

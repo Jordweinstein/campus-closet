@@ -81,6 +81,10 @@ const Offers = () => {
     };
 
     const loadInstaUsernames = async (offers) => {
+        if (!instaUsernames) {
+            setInstaUsernames([]);
+            return;
+        }
         const usernames = { ...instaUsernames }; 
         for (const offer of offers) {
             if (!usernames[offer.owner]) {

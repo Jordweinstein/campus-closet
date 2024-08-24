@@ -1,14 +1,14 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, onSnapshot, query, where, arrayUnion } from "firebase/firestore";
+import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, onSnapshot, query, where, arrayUnion, arrayRemove } from "firebase/firestore";
 import { AuthContext } from "./authContext";
-import { ListingsContext } from "./listingContext"; // Import ListingsContext
+import { ListingsContext } from "./listingContext"; 
 import db from "../firebase/db";
 
 export const OffersContext = createContext();
 
 export const OffersProvider = ({ children }) => {
     const { user } = useContext(AuthContext);
-    const { removeListing } = useContext(ListingsContext); // Access removeListing function
+    const { removeListing } = useContext(ListingsContext); 
     const [sentOffers, setSentOffers] = useState([]);
     const [activeOffers, setActiveOffers] = useState([]);
     const [inactiveOffers, setInactiveOffers] = useState([]);
@@ -68,7 +68,16 @@ export const OffersProvider = ({ children }) => {
     const respondOffer = async (offerId, response) => {
         if (!user) return; 
         const offerDocRef = doc(db, "offers", offerId);
+        const userDocRef = doc(db, "users", user.uid);
+
         const updateObject = (response.toLowerCase() === "accept") ? { isAccepted: true } : { isRejected: true, receiver: null };
+        if (response.toLowerCase() !== "accept") {
+            await updateDoc(userDocRef, { offeredListings: arrayRemove(offerId) });
+            console.log("successfully removed offer from user's offered listings becuaes receiver rejected it.")
+
+            await deleteDoc(offerDocRef);
+            console.log("successfully deleted offer document because it was rejected")
+        }
         await updateDoc(offerDocRef, updateObject);
     };
 

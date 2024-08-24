@@ -22,6 +22,11 @@ const ArchivedOffers = () => {
 
     useEffect(() => {
         const fetchUsernames = async () => {
+            if ((!inactiveOffers || inactiveOffers.length === 0) && 
+                (!inactiveSentOffers || inactiveSentOffers.length === 0)) {
+                return;
+            }
+
             const allUserIds = [
                 ...inactiveOffers.map(offer => offer.sender),
                 ...inactiveOffers.map(offer => offer.receiver),
@@ -60,31 +65,35 @@ const ArchivedOffers = () => {
         return `${sMonth}/${sDay} to ${eMonth}/${eDay}`;
     };
 
-    const renderOffer = ({ item }) => (
-        <View style={styles.offerContainer}>
-            <Image
-                source={{ uri: item.offerImg }}
-                style={styles.image}
-            />
-            <View style={styles.textContainer}>
-                <Text style={styles.text}>{item.offerItem}</Text>
-                {(item.isRental) ? (
-                    <>
-                        <Text style={styles.text}>Rent ${item.price}</Text>
-                        <Text style={styles.text}>{formatDateRange(item.rentalPeriod[0], item.rentalPeriod[1])}</Text>
-                    </>
-                ) : (
-                    <Text style={styles.text}>Buy ${item.price}</Text>
-                )}
-                <Text style={styles.text}>
-                    {(item.sender === user.uid) ? 
-                        `To: @${usernames[item.receiver] || 'N/A'}` : 
-                        `From: @${usernames[item.sender] || 'N/A'}`
-                    }
-                </Text>
+    const renderOffer = ({ item }) => {
+        if (!item) return null;  // Null check to ensure item exists
+
+        return (
+            <View style={styles.offerContainer}>
+                <Image
+                    source={{ uri: item.offerImg }}
+                    style={styles.image}
+                />
+                <View style={styles.textContainer}>
+                    <Text style={styles.text}>{item.offerItem}</Text>
+                    {(item.isRental) ? (
+                        <>
+                            <Text style={styles.text}>Rent ${item.price}</Text>
+                            <Text style={styles.text}>{formatDateRange(item.rentalPeriod[0], item.rentalPeriod[1])}</Text>
+                        </>
+                    ) : (
+                        <Text style={styles.text}>Buy ${item.price}</Text>
+                    )}
+                    <Text style={styles.text}>
+                        {(item.sender === user.uid) ? 
+                            `To: @${usernames[item.receiver] || 'N/A'}` : 
+                            `From: @${usernames[item.sender] || 'N/A'}`
+                        }
+                    </Text>
+                </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -93,21 +102,29 @@ const ArchivedOffers = () => {
             </View>
             <View style={styles.display}>
                 <Text style={{ fontFamily: 'optima', fontSize: 18 }}>Received Offers</Text>
-                <FlatList
-                    data={inactiveOffers}
-                    renderItem={renderOffer}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContainer}
-                />
+                {inactiveOffers && inactiveOffers.length > 0 ? (
+                    <FlatList
+                        data={inactiveOffers}
+                        renderItem={renderOffer}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContainer}
+                    />
+                ) : (
+                    <Text style={styles.text}>No received offers</Text>
+                )}
             </View>
             <View style={styles.display}>
                 <Text style={{ fontFamily: 'optima', fontSize: 18 }}>Sent Offers</Text>
-                <FlatList
-                    data={inactiveSentOffers}
-                    renderItem={renderOffer}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContainer}
-                />
+                {inactiveSentOffers && inactiveSentOffers.length > 0 ? (
+                    <FlatList
+                        data={inactiveSentOffers}
+                        renderItem={renderOffer}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContainer}
+                    />
+                ) : (
+                    <Text style={styles.text}>No sent offers</Text>
+                )}
             </View>
         </SafeAreaView>
     );
