@@ -153,7 +153,6 @@ export const ListingsProvider = ({ children }) => {
       });
 
       await batch.commit();
-      console.log(`All offers with listingId ${listingId} have been deleted.`);
     } catch (error) {
       console.error("Error deleting offers:", error);
     }
@@ -174,7 +173,6 @@ export const ListingsProvider = ({ children }) => {
 
     try {
       await Promise.all(promises);
-      console.log("All files deleted successfully.");
 
       await removeListingReferenceFromUser(listing.id);
       await deleteListingOffers(listing.id);

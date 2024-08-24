@@ -181,7 +181,11 @@ const Login = () => {
                 Alert.alert("Email sent", "Please check your email and proceed to reset your password.")
             })
             .catch((error) => {
-                console.log(error.message);
+                if (error.code === 'auth/missing-email') {
+                    Alert.alert('Error', 'Please enter an email address.');
+                  } else {
+                    console.log(error.message);
+                  }
             });
     }
 

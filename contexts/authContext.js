@@ -133,7 +133,6 @@ export const AuthProvider = ({ children }) => {
         listings: arrayUnion(listingId)
       });
 
-      console.log("Successfully added listing reference to user document");
     } catch (error) {
       console.error("Error updating user document: ", error);
     }
@@ -151,7 +150,6 @@ export const AuthProvider = ({ children }) => {
         listings: arrayRemove(listingId)
       });
 
-      console.log("Successfully removed listing reference to user document");
     } catch (error) {
       console.error("Error updating user document: ", error);
     }

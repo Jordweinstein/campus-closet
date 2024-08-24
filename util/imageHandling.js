@@ -59,10 +59,6 @@ export const pickImage = async (index, image, setImage) => {
         const result = await chooseFromGallery();
         if (result && !result.canceled) {
           setImage(result.assets ? result.assets[0].uri : result.uri);
-          console.log(
-            "Set new image from gallery: " +
-              (result.assets ? result.assets[0].uri : result.uri)
-          );
         }
       },
     },
@@ -80,11 +76,9 @@ const uploadImageBlob = async (blob, path) => {
       ? ref(storage, `${path}/${auth.currentUser.uid}`)
       : ref(storage, `${path}/${auth.currentUser.uid}/${Date.now()}`);
   const uploadTask = uploadBytesResumable(storageRef, blob);
-  console.log("Successfully uploaded bytes resumable in blob");
 
   await uploadTask;
   const downloadURL = await getDownloadURL(storageRef);
-  console.log("Download URL after getDownloadUrl: " + downloadURL);
   return downloadURL;
 };
 
@@ -94,15 +88,12 @@ export const uploadImageAsync = async (uri, path) => {
     return null;
   }
 
-  console.log("Uploading image with URI:", uri); // Log the URI
-
   const blob = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.onload = () => {
       resolve(xhr.response);
     };
     xhr.onerror = function(e) {
-      console.log(e);
       reject(e);
     };
     xhr.responseType = "blob";
@@ -111,7 +102,6 @@ export const uploadImageAsync = async (uri, path) => {
   });
 
   try {
-    console.log("About to try uploadImageBlob");
     const downloadURL = await uploadImageBlob(blob, path);
     return downloadURL;
   } catch (error) {
@@ -131,6 +121,5 @@ export const uploadImagesAsync = async (uris, path) => {
 
   const uploadPromises = uris.map(uri => uploadImageAsync(uri, path));
   const downloadUrls = await Promise.all(uploadPromises);
-  console.log("Successfully uploaded images");
   return downloadUrls.filter(url => url !== null);
 };

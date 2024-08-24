@@ -62,7 +62,6 @@ const ShopMain = ({ navigation }) => {
     const filtered = filterListings(listings, selectedSize, minPrice, maxPrice, searchQuery);
     setFilteredListings(filtered);
 
-    // Only activate filters if any filter criteria is set
     const areFiltersActive = selectedSize || minPrice || maxPrice || searchQuery || isAvailable;
     setFiltersActive(areFiltersActive);
   }, [selectedSize, isAvailable, minPrice, maxPrice, listings, searchQuery]);

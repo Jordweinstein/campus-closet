@@ -25,7 +25,7 @@ export default function ListingContainer({ route }){
   )
 }
 const Listing = ({ route }) => {
-  const { listing } = route.params;
+  const { listing} = route.params;
   const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
   const { addLikedListing, removeLikedListing, likedListings, user } = useContext(
     AuthContext

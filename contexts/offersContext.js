@@ -17,8 +17,6 @@ export const OffersProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const offersRef = collection(db, "offers");
 
-    const offersRef = collection(db, "offers");
-
     const calculateNumRentalIntervals = (startDate, endDate) => {
         const start = new Date(startDate);
         const end = new Date(endDate);
@@ -87,12 +85,11 @@ export const OffersProvider = ({ children }) => {
                 unavailableEndDates: arrayUnion(offerData.rentalPeriod[1]),
             });
         } else {
-            // If the offer is not rental, remove the listing
             const listing = {
                 id: offerData.listing,
-                images: [], // You will need to fetch the images of the listing here or pass them through another way
+                images: [], 
             };
-            await removeListing(listing); // Call removeListing function
+            await removeListing(listing); 
         }
         await updateDoc(offerDocRef, { isFinalized: true });
     };

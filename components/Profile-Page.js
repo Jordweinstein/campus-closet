@@ -25,6 +25,7 @@ import { AuthContext } from '../contexts/authContext';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import Login from './Login-Screen';
+import ListingContainer from './Listing-Screen';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -35,6 +36,11 @@ export default function Profile() {
             name="ProfileMain"
             component={ProfileMain}
             options={{ headerShown: false, headerTitle: "Back" }}
+          />
+          <Stack.Screen
+              name="ListingScreen"
+              component={ListingContainer}
+              options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
           <Stack.Screen
             name="CreateListing"
