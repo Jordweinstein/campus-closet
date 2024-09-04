@@ -32,7 +32,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>1.5</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -44,6 +44,8 @@
 	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Campus Closets requires permission to your photo library to access images of the clothes you would like to list for rent or sale.</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
