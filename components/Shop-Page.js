@@ -141,23 +141,13 @@ const ShopMain = ({ navigation }) => {
               fontFamily: "optima"
             }}
           >
-            {item.brand} ‣
+            {item.brand.substring(0, 17)} ‣
           </Text>
           <Text style={{ fontFamily: "optima" }}>
-            {item.category}
+            {item.size}
           </Text>
         </View>
 
-        <Text
-          style={{
-            fontSize: 12,
-            marginRight: 10,
-            fontWeight: 500,
-            fontFamily: "optima"
-          }}
-        >
-          {item.size}
-        </Text>
       </View>
     </View>;
 

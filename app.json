@@ -1,8 +1,7 @@
 {
   "expo": {
-    "name": "rent-the-campus",
-    "slug": "rent-the-campus",
-    "privacy": "unlisted",
+    "name": "campus-closets",
+    "slug": "campus-closets",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,8 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jordanweinstein.rent-the-campus",
-      "deploymentTarget": "12.0"
+      "bundleIdentifier": "com.jordanweinstein.rent-the-campus"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,12 +24,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font"
-    ],
     "extra": {
       "eas": {
-        "projectId": "13a454cc-3b0a-4780-81ff-852c96835e54"
+        "projectId": "54d161f4-834a-4e14-a7f4-abf236ff9843"
       }
     }
   }

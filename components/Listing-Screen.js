@@ -256,7 +256,7 @@ const Listing = ({ route }) => {
             {(listing.brand || "No brand") + "   ‣"}
           </Text>
           <Text style={{ fontSize: 20, fontFamily: 'optima' }}>
-            {listing.itemName || "No item name"}
+            {listing.itemName && listing.itemName.length > 20 ? `${listing.itemName.substring(0, 19)}...` : listing.itemName || "No item name"}
           </Text>
         </View>
         <View style={styles.hContainer}>
