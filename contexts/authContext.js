@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import auth from '../firebase/auth';
 import { doc, onSnapshot, getDoc, arrayRemove, arrayUnion, updateDoc, increment } from 'firebase/firestore';
 import db from '../firebase/db';
 
@@ -11,7 +12,6 @@ export const AuthProvider = ({ children }) => {
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [likedListings, setLikedListings] = useState([]);
   const [likedListingsData, setLikedListingsData] = useState([]);
-  const auth = getAuth();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authenticatedUser) => {
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
   // Function to add listing reference to user's listing
   const addListingReferenceToUser = async (listingId) => {
     try {
-      const currentUser = getAuth().currentUser;
+      const currentUser = auth.currentUser;
       if (!currentUser) return; // Check if user is null
 
       const userRef = doc(db, "users", currentUser.uid);
@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }) => {
   // Function to remove listing reference to user's listing
   const removeListingReferenceFromUser = async (listingId) => {
     try {
-      const currentUser = getAuth().currentUser;
+      const currentUser = auth.currentUser;
       if (!currentUser) return; // Check if user is null
 
       const userRef = doc(db, "users", currentUser.uid);

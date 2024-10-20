@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, Keyboard } from 'react-native';
-import { getAuth, 
-        createUserWithEmailAndPassword, 
+import { createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, 
         onAuthStateChanged,
         sendEmailVerification, 
@@ -10,6 +9,7 @@ import { getAuth,
 import { doc, getDoc, setDoc } from "firebase/firestore"; 
 import '../firebase/firebase-config';
 import db from '../firebase/db';
+import auth from "../firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../contexts/authContext";
 
@@ -17,7 +17,6 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const auth = getAuth();
     const emailInputRef = useRef(null);
     const navigation = useNavigation();
     const { setIsProfileComplete, isProfileComplete } = useContext(AuthContext);

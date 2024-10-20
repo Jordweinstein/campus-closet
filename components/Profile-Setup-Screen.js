@@ -7,6 +7,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import { uploadImageAsync, pickImage } from '../util/imageHandling';
 import { AuthContext } from '../contexts/authContext';
+import { getAuth } from 'firebase/auth';
 
 export default function ProfileSetup() {
     const [displayName, setDisplayName] = useState('');
@@ -20,6 +21,7 @@ export default function ProfileSetup() {
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
     const { user, setIsProfileComplete } = useContext(AuthContext);
+    const auth = getAuth();
 
     const handleSubmit = async () => {
         console.log("handleSubmit called");
@@ -61,8 +63,8 @@ export default function ProfileSetup() {
         }
     
         try {
-            console.log("Updating Firestore with user data...");
-            const userRef = doc(db, "users", user.uid);
+            console.log("Updating Firestore with user data..." + auth.currentUser);
+            const userRef = doc(db, "users", auth.currentUser.uid);
     
             await updateDoc(userRef, {
                 displayName: displayName,
