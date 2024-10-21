@@ -14,11 +14,6 @@ export default function EditProfile() {
     const [phoneNumber, setPhoneNumber] = useState(null);
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [nFocus, setNFocus] = useState(false);
-    const [bFocus, setBFocus] = useState(false);
-    const [eFocus, setEFocus] = useState(false);
-    const [pFocus, setPFocus] = useState(false);
-    const [ppFocus, setPpFocus] = useState(false);
 
     const navigation = useNavigation();
 
@@ -70,92 +65,69 @@ export default function EditProfile() {
             <Text style={styles.title}>Edit Profile</Text>
             <Text style={{fontFamily: 'optima', marginBottom: 10}}>Select a field to edit your profile</Text>
             
-            <TouchableOpacity 
-                onPress = {() => setNFocus(!nFocus)}
-                style={[styles.inputView, (nFocus) ? styles.activeInput : styles.inactiveInput]}
-            >
-                <Text style={[{fontFamily: 'optima'}, (nFocus) ? styles.activeText : styles.inactiveText]}>Name:  </Text>
+            <View style={styles.inputView}>
+                <Text style={styles.label}>Name:  </Text>
                 <TextInput
                     placeholder="Jane Doe"
                     value={name}
-                    onChangeText={setName} 
-                    editable={nFocus}
+                    onChangeText={setName}
+                    style={styles.textInput}
                     returnKeyType="done"
-                    onSubmitEditing={Keyboard.dismiss()}
                 />
-            </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity 
-                onPress = {() => setBFocus(!bFocus)}
-                style={[styles.inputView, (bFocus) ? styles.activeInput : styles.inactiveInput]}
-            >
-                <Text style={[{fontFamily: 'optima', marginTop: 5}, (bFocus) ? styles.activeText : styles.inactiveText]}>Bio:  </Text>
+            <View style={styles.inputView}>
+                <Text style={styles.label}>Bio:  </Text>
                 <TextInput
                     placeholder="A fun fact about me is..."
                     value={bio}
                     onChangeText={setBio}
-                    multiline={true}
                     style={styles.textInput}
                     maxLength={100}
-                    editable={bFocus}
                     returnKeyType="done"
-                    onSubmitEditing={Keyboard.dismiss()}
                 />
-            </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity 
-                onPress = {() => setEFocus(!eFocus)}
-                style={[styles.inputView, (eFocus) ? styles.activeInput : styles.inactiveInput]}
-            >
-                <Text style={[{fontFamily: 'optima'}, (eFocus) ? styles.activeText : styles.inactiveText]}>Email:  </Text>
+            <View style={styles.inputView}>
+                <Text style={styles.label}>Email:  </Text>
                 <TextInput
                     placeholder="example@unc.edu"
                     value={email}
-                    keyboardType='email-address'
                     onChangeText={setEmail}
-                    editable={eFocus}
+                    keyboardType="email-address"
+                    style={styles.textInput}
                     returnKeyType="done"
-                    onSubmitEditing={Keyboard.dismiss()}
                 />
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-                onPress = {() => setPFocus(!pFocus)}
-                style={[styles.inputView, (pFocus) ? styles.activeInput : styles.inactiveInput]}
-            >
-                <Text style={[{fontFamily: 'optima'}, (pFocus) ? styles.activeText : styles.inactiveText]}>Phone Number:  </Text>
+            </View>
+
+            <View style={styles.inputView}>
+                <Text style={styles.label}>Phone Number:  </Text>
                 <TextInput
                     placeholder="123 456 7890"
-                    keyboardType="phone-pad"
-                    textContentType="telephoneNumber"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                    style={styles.textInput}
                     maxLength={10}
-                    editable={pFocus}
                     returnKeyType="done"
-                    onSubmitEditing={() => Keyboard.dismiss()}
+                />
+            </View>
 
-                /> 
-            </TouchableOpacity>
-            <TouchableOpacity 
-                onPress = {() => setPpFocus(!ppFocus)}
-                style={[styles.inputView, (ppFocus) ? styles.activeInput : styles.inactiveInput]}
-            >
-                <Text style={[{fontFamily: 'optima', marginRight: '29%'}, (ppFocus) ? styles.activeText : styles.inactiveText]}>Profile Picture:  </Text>
+            <View style={styles.inputView}>
+                <Text style={styles.label}>Profile Picture:  </Text>
                 <TouchableOpacity 
                     style={ styles.uploadImageButton }
                     onPress={() => pickImage(0, [], setImage) }
                 >
                     <Text style={{fontFamily: 'optima'}}>Upload Image</Text>
                 </TouchableOpacity>
-            </TouchableOpacity>
+            </View>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                 <Text style={{ color: 'white', fontWeight: '500', fontFamily: 'optima' }}>Submit Changes</Text>
             </TouchableOpacity>
         </View>
-        
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -175,40 +147,22 @@ const styles = StyleSheet.create({
         minWidth: '90%',
         margin: 5,
         borderRadius: 10,
-    },
-    activeInput: {
-        backgroundColor: 'white',
-    },
-    inactiveInput: {
-        backgroundColor: 'darkgrey',
-    },
-    activeText: {
-        color: 'black'
-    },
-    inactiveText: {
-        color: 'grey'
+        alignItems: 'center',
     },
     textInput: {
         flex: 1,
         height: 45,
         color: '#000',
-        textAlignVertical: 'top',
     },
-    pictureInputView: {
-        flexDirection: 'row',
-        padding: 10,
-        backgroundColor: 'white',
-        width: '95%',
-        margin: 5,
-        borderRadius: 10,
-        justifyContent: 'space-between',
+    label: {
+        fontFamily: 'optima',
+        marginRight: 10,
     },
     uploadImageButton: {
         marginHorizontal: 20,
         backgroundColor: '#e3e3e3',
         padding: 5,
         borderRadius: 7,
-        alignSelf: "flex-end"
     },
     submitButton: {
         marginTop: '25%',
@@ -216,4 +170,4 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
     }
-})
+});
