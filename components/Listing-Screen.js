@@ -16,6 +16,7 @@ import { AuthContext } from "../contexts/authContext";
 import { useNavigation } from "@react-navigation/core";
 import { ListingsContext } from "../contexts/listingContext";
 import { OffersProvider, OffersContext } from "../contexts/offersContext";
+import { CardField, useStripe } from '@stripe/stripe-react-native'; // stripe import
 
 export default function ListingContainer({ route }){
   return (
@@ -24,6 +25,7 @@ export default function ListingContainer({ route }){
     </OffersProvider>
   )
 }
+
 const Listing = ({ route }) => {
   const { listing} = route.params;
   const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
@@ -34,6 +36,9 @@ const Listing = ({ route }) => {
 
   const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
   const [likeCount, setLikeCount] = useState(listing.likes);
+
+  const { confirmPayment } = useStripe(); // Initialize Stripe hook
+  const [showPayment, setShowPayment] = useState(false);  // to show the payment screen
 
   const [range, setRange] = useState({ startDate: undefined, endDate: undefined });
   const [open, setOpen] = useState(false);
@@ -77,8 +82,32 @@ const Listing = ({ route }) => {
     setOpen(false);
   }, [setOpen]);
 
+
+  const handlePayment = async (clientSecret) => {
+    const { error, paymentIntent } = await confirmPayment(clientSecret, {
+      type: 'Card',
+      billingDetails: {
+        name: user?.displayName || "Unknown User", // i think this is wrong 
+      },
+    });
+
+    if (error) {
+      Alert.alert("Payment Failed", error.message);
+    } else {
+      Alert.alert("Payment Successful", "Your payment was successful.");
+      // After payment success, send the rental offer
+      sendRentalOffer(listing, [range.startDate, range.endDate]);
+    }
+  };
+
+  //  function to fetch client secret
+  const fetchClientSecretForPayment = async () => {
+    return 'pk_test_51PYWIIGHG7sBmfFvOTTTz9pntdVU7L7ylkWbAyZDFVNfmGME5iGJyEihfDyCpYc37kNVVDpiMqRVyn9f2LhnNNVb00iFbMsf0v'; 
+  };
+
+  // Updated onConfirm function with Stripe payment
   const onConfirm = useCallback(
-    ({ startDate, endDate }) => {
+    async ({ startDate, endDate }) => {
       if (startDate && endDate) {
         const dayInMillis = 24 * 60 * 60 * 1000;
         const differenceInDays = Math.round((new Date(endDate) - new Date(startDate)) / dayInMillis);
@@ -93,12 +122,13 @@ const Listing = ({ route }) => {
   
         Alert.alert(
           "Send Rental Offer",
-          "By sending this rental offer, you agree to the Terms and Conditions which includes an agreement to uphold the payment for your selected dates. If accepted, you will receive contact information to arrange pickup and payment.",
+          "By sending this rental offer, you agree to the Terms and Conditions. After confirmation, you'll be redirected to payment.",
           [
             { text: "Cancel", style: "cancel" },
-            { text: "Send Offer", onPress: () => {
-              sendRentalOffer(listing, [startDate, endDate]);
-            }}
+            { text: "Proceed to Payment", onPress: () => {
+                setShowPayment(true); // Show payment screen
+              }
+            }
           ]
         );
   

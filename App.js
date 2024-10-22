@@ -9,9 +9,11 @@ import { registerTranslation } from "react-native-paper-dates";
 import { AuthContext, AuthProvider } from "./contexts/authContext";
 import auth from "./firebase/auth";
 import { ListingsProvider } from "./contexts/listingContext";
+import { StripeProvider } from '@stripe/stripe-react-native'; 
 
 function AppContainer() {
   return (
+  <StripeProvider publishableKey= "pk_test_51PYWIIGHG7sBmfFvOTTTz9pntdVU7L7ylkWbAyZDFVNfmGME5iGJyEihfDyCpYc37kNVVDpiMqRVyn9f2LhnNNVb00iFbMsf0v"> 
     <NavigationContainer>
       <AuthProvider>
         <ListingsProvider>
@@ -19,6 +21,8 @@ function AppContainer() {
         </ListingsProvider>
       </AuthProvider>
     </NavigationContainer>
+  </StripeProvider>
+
   );
 }
 
