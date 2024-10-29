@@ -248,7 +248,7 @@ export default function Profile() {
     },
     buttonContainer: {
       flexDirection: 'row',
-      justifyContent: 'space-evenly',
+      justifyContent: 'space-around',
       alignItems: 'center',
       backgroundColor: '#fff',
       width: '100%',

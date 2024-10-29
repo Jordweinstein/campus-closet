@@ -63,7 +63,6 @@ export default function EditProfile() {
          :
         <View style={styles.editProfileView}>
             <Text style={styles.title}>Edit Profile</Text>
-            <Text style={{fontFamily: 'optima', marginBottom: 10}}>Select a field to edit your profile</Text>
             
             <View style={styles.inputView}>
                 <Text style={styles.label}>Name:  </Text>
@@ -124,7 +123,7 @@ export default function EditProfile() {
             </View>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                <Text style={{ color: 'white', fontWeight: '500', fontFamily: 'optima' }}>Submit Changes</Text>
+                <Text style={{ color: 'white', fontWeight: '450', fontFamily: 'optima' }}>Submit Changes</Text>
             </TouchableOpacity>
         </View>
     );
@@ -165,7 +164,7 @@ const styles = StyleSheet.create({
         borderRadius: 7,
     },
     submitButton: {
-        marginTop: '25%',
+        marginTop: '15%',
         backgroundColor: '#0e165c',
         padding: 15,
         borderRadius: 10,
