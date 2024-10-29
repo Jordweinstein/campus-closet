@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { collection, query, where, onSnapshot, orderBy, limit, getDoc, deleteDoc, writeBatch, doc, getDocs } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit, getDoc, deleteDoc, writeBatch, doc, getDocs, startAfter } from "firebase/firestore";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import db from "../firebase/db";
 import { AuthContext } from "./authContext";
@@ -13,13 +13,78 @@ export const ListingsProvider = ({ children }) => {
   const [trendingListings, setTrendingListings] = useState([]);
   const [recentListings, setRecentListings] = useState([]);
   const [acceptedOffers, setAcceptedOffers] = useState([]);
+
   const [lastDoc, setLastDoc] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const { user, removeListingReferenceFromUser } = useContext(AuthContext);
   const navigation = useNavigation();
   const listingsRef = collection(db, "listings");
 
   const [unsubscribeFunctions, setUnsubscribeFunctions] = useState({});
+
+  // fetch initial listings with real time listener to detect updates
+  const fetchInitialListings = () => {
+    setLoading(true);
+  
+    const listingsQuery = query(
+      collection(db, "listings"),
+      orderBy("timestamp", "desc"),
+      limit(10)
+    );
+  
+    const unsubscribe = onSnapshot(listingsQuery, (querySnapshot) => {
+      const fetchedListings = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      setListings(fetchedListings);
+      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);  // store last document for pagination
+      setLoading(false);
+    });
+  
+    setUnsubscribeFunctions((prev) => ({ ...prev, initialLoad: unsubscribe }));
+  };
+  
+  useEffect(() => {
+    fetchInitialListings();
+  
+    return () => {
+      if (unsubscribeFunctions.initialLoad) unsubscribeFunctions.initialLoad();
+    };
+  }, [user]);
+
+  // fetch more paginated listings
+  const fetchMoreListings = async () => {
+    if (loadingMore || !lastDoc) return;
+  
+    setLoadingMore(true);
+    const listingsQuery = query(
+      collection(db, "listings"),
+      orderBy("timestamp", "desc"),
+      startAfter(lastDoc),  // fetch after the last document
+      limit(6)
+    );
+  
+    const querySnapshot = await getDocs(listingsQuery);
+
+    if (querySnapshot.empty) {
+      console.log("No more listings to fetch.");
+      setLoadingMore(false);
+      return;  // Stop fetching if no more documents
+    }
+    
+    const moreListings = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  
+    setListings((prevListings) => [...prevListings, ...moreListings]);  // append new listings
+    setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);  // update last document for pagination
+    setLoadingMore(false);
+  };
 
   // Function to fetch data with real-time updates
   const fetchData = (queryKey, setData, queryRef) => {
@@ -40,6 +105,7 @@ export const ListingsProvider = ({ children }) => {
     setUnsubscribeFunctions((prev) => ({ ...prev, [queryKey]: unsubscribe }));
   };
 
+  // fetch listings by listingIds
   const fetchListingsByIds = async (listingIds) => {
     if (!user) return [];
 
@@ -54,15 +120,14 @@ export const ListingsProvider = ({ children }) => {
     return listings;
   };
 
-  // Unsubscribe all listeners
   const unsubscribeAllListeners = () => {
     Object.values(unsubscribeFunctions).forEach((unsubscribe) => unsubscribe && unsubscribe());
     setUnsubscribeFunctions({});
   };
 
   useEffect(() => {
+    // Unsubscribe from all listeners and clear data when the user logs out
     if (!user) {
-      // Unsubscribe from all listeners and clear data when the user logs out
       unsubscribeAllListeners();
       setListings([]);
       setUserListings([]);
@@ -71,32 +136,34 @@ export const ListingsProvider = ({ children }) => {
       return;
     }
 
-    const fetchAllListings = () => {
-      setLoading(true);
-      const listingsQuery = query(collection(db, "listings"));
+    // fetch all listings
+    // const fetchAllListings = () => {
+    //   setLoading(true);
+    //   const listingsQuery = query(collection(db, "listings"));
 
-      const unsubscribe = onSnapshot(listingsQuery, (querySnapshot) => {
-        const allListings = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setListings(allListings);
-        setLoading(false);
-      }, (error) => {
-        console.error("Error fetching listings: ", error);
-        setLoading(false);
-      });
+    //   const unsubscribe = onSnapshot(listingsQuery, (querySnapshot) => {
+    //     const allListings = querySnapshot.docs.map(doc => ({
+    //       id: doc.id,
+    //       ...doc.data(),
+    //     }));
+    //     setListings(allListings);
+    //     setLoading(false);
+    //   }, (error) => {
+    //     console.error("Error fetching listings: ", error);
+    //     setLoading(false);
+    //   });
 
-      setUnsubscribeFunctions((prev) => ({ ...prev, allListings: unsubscribe }));
-    };
+    //   setUnsubscribeFunctions((prev) => ({ ...prev, allListings: unsubscribe }));
+    // };
 
-    fetchAllListings();
+    // fetchAllListings();
 
-    return () => {
-      if (unsubscribeFunctions["allListings"]) unsubscribeFunctions["allListings"]();
-    };
+    // return () => {
+    //   if (unsubscribeFunctions["allListings"]) unsubscribeFunctions["allListings"]();
+    // };
   }, [user]);
 
+  // fetch user listings
   useEffect(() => {
     if (!user) {
       if (unsubscribeFunctions["userListings"]) unsubscribeFunctions["userListings"]();
@@ -110,6 +177,7 @@ export const ListingsProvider = ({ children }) => {
     };
   }, [user]);
 
+  // fetch trending listings (descending order in number of likes)
   useEffect(() => {
     if (!user) {
       if (unsubscribeFunctions["trendingListings"]) unsubscribeFunctions["trendingListings"]();
@@ -123,6 +191,7 @@ export const ListingsProvider = ({ children }) => {
     };
   }, [user]);
 
+  // fetch recent listings (descending order by timestamp posted)
   useEffect(() => {
     if (!user) {
       if (unsubscribeFunctions["recentListings"]) unsubscribeFunctions["recentListings"]();
@@ -136,6 +205,7 @@ export const ListingsProvider = ({ children }) => {
     };
   }, [user]);
 
+  // deletes offers associated with a listing
   const deleteListingOffers = async (listingId) => {
     const offersRef = collection(db, "offers");
     const q = query(offersRef, where("listing", "==", listingId));
@@ -158,6 +228,7 @@ export const ListingsProvider = ({ children }) => {
     }
   };
 
+  // deletes listing
   const removeListing = async (listing) => {
     setLoading(true);
     const storage = getStorage();
@@ -189,7 +260,7 @@ export const ListingsProvider = ({ children }) => {
 
   return (
     <ListingsContext.Provider
-      value={{ listings, removeListing, userListings, trendingListings, recentListings, fetchListingsByIds, acceptedOffers, setLastDoc, setLoading, loading }}
+      value={{ listings, removeListing, userListings, trendingListings, recentListings, fetchMoreListings, loadingMore, fetchListingsByIds, acceptedOffers, setLastDoc, setLoading, loading }}
     >
       {children}
     </ListingsContext.Provider>

@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import {
   SafeAreaView,
   ScrollView,
-  Image,
   Text,
   View,
   StyleSheet,
@@ -14,7 +13,7 @@ import ListingScreen from "./Listing-Screen";
 import GameDay from "../assets/images/gameday.jpeg";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 import { AuthContext } from "../contexts/authContext";
-
+import { Image as ExpoImage } from 'expo-image';
 const Stack = createStackNavigator();
 
 export default function Home() {
@@ -51,7 +50,7 @@ const HomeMain = ({ navigation }) => {
       >
         <Text style={styles.title}>Campus Closets</Text>
 
-        <Image source={GameDay} style={styles.image} />
+        <ExpoImage source={GameDay} style={styles.image} contentFit="cover" /> 
 
         <View style={styles.textContainer}>
           <Text style={styles.h2}>Trending</Text>
@@ -67,10 +66,10 @@ const HomeMain = ({ navigation }) => {
               key={listing.id}
               onPress={() => navigation.navigate("ListingScreen", { listing })}
             >
-              <Image
-                source={{ 
-                  uri: listing.images[0], 
-                }}
+              <ExpoImage
+                source={{ uri: listing.images[0] }}
+                cachePolicy="memory-disk" 
+                contentFit="cover" 
                 style={{ width: 125, height: 125, margin: 5, borderRadius: 10 }}
               />
 
@@ -92,8 +91,10 @@ const HomeMain = ({ navigation }) => {
               key={listing.id}
               onPress={() => navigation.navigate("ListingScreen", { listing })}
             >
-              <Image
+              <ExpoImage
                 source={{ uri: listing.images[0] }}
+                cachePolicy="memory-disk" 
+                contentFit="cover" 
                 style={{ width: 125, height: 125, margin: 5, borderRadius: 10 }}
               />
             </TouchableOpacity>

@@ -9,7 +9,7 @@ import {
     Alert,
     Modal,
 } from 'react-native';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +26,7 @@ import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import Login from './Login-Screen';
 import ListingContainer from './Listing-Screen';
+import { Image as ExpoImage } from 'expo-image';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -73,6 +74,12 @@ export default function Profile() {
     const { userListings } = useContext(ListingsContext);
     const [helpModalVisible, setHelpModalVisible] = useState(false);
   
+    useEffect(() => {
+      if (userData?.profilePic) {
+        Image.prefetch(userData.profilePic);
+      }
+    }, [userData]);
+
     const handleSignOut = () => {
       signOut(auth).then(() => {
         navigation.navigate(Login);
@@ -94,9 +101,12 @@ export default function Profile() {
               <Text style={styles.title}>{userData.displayName}</Text>
               <View style={styles.profileContainer}>
                 <View style={{ flexDirection: 'row' }}>
-                  <Image
-                    source={{ uri: userData.profilePic || "https://picsum.photos/200" }}
-                    style={styles.profileImage} />
+                <ExpoImage
+                  source={{ uri: userData.profilePic || "https://picsum.photos/200" }}
+                  cachePolicy="memory-disk" 
+                  contentFit="cover"
+                  style={styles.profileImage}
+                />
                   <View style={styles.bioContainer}>
                     <Text style={styles.bioText}>{userData.bio || ''}</Text>
                   </View>
@@ -130,10 +140,12 @@ export default function Profile() {
               :
               userListings.map((listing) => (
                 <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
-                  <Image
-                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
-                    style={styles.listingImage}
-                  />
+                  <ExpoImage
+                  source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                  cachePolicy="memory-disk"
+                  contentFit="cover"
+                  style={styles.listingImage}
+                />
                 </TouchableOpacity>
               ))
             }
@@ -154,10 +166,12 @@ export default function Profile() {
               :
               likedListingsData.map((listing) => (
                 <TouchableOpacity key={listing.id} onPress={() => navigation.navigate('ListingScreen', { listing })}>
-                  <Image
-                    source={{ uri: listing.images?.[0] || 'https://picsum.photos/200/300' }}
-                    style={styles.listingImage}
-                  />
+                  <ExpoImage
+                  source={{ uri: listing.images?.[0] || 'https://picsum.photos/200/300' }}
+                  cachePolicy="memory-disk"
+                  contentFit="cover"
+                  style={styles.listingImage}
+                />
                 </TouchableOpacity>
               ))
             }

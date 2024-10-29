@@ -1,14 +1,15 @@
-import React, { useContext, useState, useEffect, useCallback } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   SafeAreaView,
   FlatList,
-  Image,
   Text,
   View,
   StyleSheet,
+  Image,
   Keyboard,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
   Modal,
   Switch
 } from "react-native";
@@ -17,8 +18,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { FontAwesome } from "@expo/vector-icons";
 import { createStackNavigator } from "@react-navigation/stack";
 import ListingScreen from "./Listing-Screen";
-import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
+import { ListingsContext } from "../contexts/listingContext";
 import sizes from "../util/sizes";
+import { Image as ExpoImage } from 'expo-image';
+
 
 export default function ShopContent() {
   const Stack = createStackNavigator();
@@ -56,8 +59,9 @@ const ShopMain = ({ navigation }) => {
   const [filteredListings, setFilteredListings] = useState(listings);
   const [filtersActive, setFiltersActive] = useState(false);
 
-  const { listings } = useContext(ListingsContext);
+  const { listings, fetchMoreListings, loadingMore } = useContext(ListingsContext);
 
+  // get filtered listings based on user selection
   useEffect(() => {
     const filtered = filterListings(listings, selectedSize, minPrice, maxPrice, searchQuery);
     setFilteredListings(filtered);
@@ -66,7 +70,28 @@ const ShopMain = ({ navigation }) => {
     setFiltersActive(areFiltersActive);
   }, [selectedSize, isAvailable, minPrice, maxPrice, listings, searchQuery]);
 
+  // prefetch images to optimize display times
+  useEffect(() => {
+    if (filteredListings) {
+      const prefetchImages = async () => {
+        const prefetchPromises = filteredListings.map((listing) => 
+          Image.prefetch(listing.images[0])
+        );
+        
+        try {
+          await Promise.all(prefetchPromises);
+        } catch (error) {
+          console.error("Image prefetch failed:", error);
+        }
+      };
+  
+    if (filteredListings.length > 0) {
+      prefetchImages();
+    }
+  }
+}, [filteredListings, listings]);
 
+  // method to filter listings based on queries
   const filterListings = (listings, selectedSize, minPrice, maxPrice, searchQuery) => {
     const currDate = new Date();
   
@@ -103,6 +128,7 @@ const ShopMain = ({ navigation }) => {
     });
   };
 
+  // method to reset filters
   const resetFilters = () => {
     setFilteredListings(listings);
     setSearchQuery('');
@@ -113,15 +139,28 @@ const ShopMain = ({ navigation }) => {
     setFiltersActive(false);
   }
 
+  // render single listing item
   const renderItem = ({ item, index }) =>
     <View style={{ width: "48%" }}>
       <TouchableOpacity
         onPress={() => navigation.navigate("ListingScreen", { listing: item })}
         style={styles.gridItem}
       >
-        <Image source={{ 
-          uri: item.images[0] }} 
-          style={styles.image} 
+        <ExpoImage
+          source={{ uri: item.images[0] }}
+          cachePolicy="memory-disk" 
+          placeholderContent={(
+            <ActivityIndicator
+              color="#000"
+              size="small"
+              style={{
+                flex: 1,
+                justifyContent: "center",
+              }}
+            />
+          )}
+          contentFit="cover" 
+          style={styles.image}
         />
       </TouchableOpacity>
 
@@ -217,6 +256,15 @@ const ShopMain = ({ navigation }) => {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
+        onEndReached={fetchMoreListings}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore && filteredListings.length > 6 ? (
+            <View style={{ marginVertical: 25 }}>
+                <ActivityIndicator />
+            </View>
+          ) : null
+          }
       />
 
       {/* Size filter modal */}
