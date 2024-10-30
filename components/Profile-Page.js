@@ -167,11 +167,18 @@ export default function Profile() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
+            onPress={() => navigation.navigate(EditProfile)}
+          >
+            <Text style={{fontFamily: 'optima'}}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
             onPress={handleSignOut}
           >
             <Text style={{fontFamily: 'optima'}}>Sign out</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.button}
             onPress={() => setHelpModalVisible(true)}
@@ -241,7 +248,7 @@ export default function Profile() {
     },
     buttonContainer: {
       flexDirection: 'row',
-      justifyContent: 'space-evenly',
+      justifyContent: 'space-around',
       alignItems: 'center',
       backgroundColor: '#fff',
       width: '100%',
@@ -334,8 +341,11 @@ export default function Profile() {
       color: "white",
       marginTop: 10,
       marginBottom: 10,
+      borderRadius: 5,
+      marginLeft: 20,
+      marginRight: 20,
       borderRadius: 10,
-      width: '35%',
+      width: '27%',
       alignItems: 'center',
     },
     modalContainer: {
