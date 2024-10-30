@@ -9,6 +9,7 @@ import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { AuthContext } from "../contexts/authContext";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
+import { Image as ExpoImage } from 'expo-image';
 
 export default function OffersContainer() {
     return (
@@ -120,8 +121,10 @@ const Offers = () => {
 
     const renderOffer = ({ item }) => (
         <View style={styles.offerContainer}>
-            <Image
-                source={{ uri: item.offerImg }}
+            <ExpoImage
+                source={{ uri: item.offerImg || "https://picsum.photos/200" }}
+                cachePolicy="memory-disk" 
+                contentFit="cover"
                 style={styles.image}
             />
             <View style={styles.textContainer}>
@@ -205,8 +208,10 @@ const Offers = () => {
                                 onPress={() => navigation.navigate('ListingScreen', { listing })}
                                 style={styles.imgContainer}
                             >
-                                <Image
-                                    source={{ uri: listing.images[0] || 'https://picsum.photos/200/300' }}
+                                <ExpoImage
+                                    source={{ uri: listing.images[0] || "https://picsum.photos/200" }}
+                                    cachePolicy="memory-disk" 
+                                    contentFit="cover"
                                     style={styles.listingImage}
                                 />
                                 <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>

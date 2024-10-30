@@ -4,6 +4,7 @@ import { OffersContext, OffersProvider } from "../contexts/offersContext";
 import { AuthContext } from "../contexts/authContext";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
+import { Image as ExpoImage } from 'expo-image';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -70,8 +71,10 @@ const ArchivedOffers = () => {
 
         return (
             <View style={styles.offerContainer}>
-                <Image
-                    source={{ uri: item.offerImg }}
+                <ExpoImage
+                    source={{ uri: item.offerImg || "https://picsum.photos/200" }}
+                    cachePolicy="memory-disk" 
+                    contentFit="cover"
                     style={styles.image}
                 />
                 <View style={styles.textContainer}>
