@@ -13,7 +13,7 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { AuthContext } from "../contexts/authContext";
-import { useNavigation } from "@react-navigation/core";
+import { Image as ExpoImage } from 'expo-image';
 import { ListingsContext } from "../contexts/listingContext";
 import { OffersProvider, OffersContext } from "../contexts/offersContext";
 
@@ -132,7 +132,12 @@ const Listing = ({ route }) => {
         <SwiperFlatList index={0} showPagination>
           {listing.images.map((image, index) =>
             <View key={index}>
-              <Image source={{ uri: image }} style={styles.image} />
+              <ExpoImage
+                  source={{ uri: image || "https://picsum.photos/200" }}
+                  cachePolicy="memory-disk" 
+                  contentFit="cover"
+                  style={styles.image}
+                />
             </View>
           )}
         </SwiperFlatList>
