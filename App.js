@@ -31,8 +31,6 @@ function MainNavigator() {
   const [initialRoute, setInitialRoute] = useState(null); // Start with null to indicate loading
   const [isProfileComplete, setIsProfileComplete] = useState(false); // Fetch this directly
 
-  console.log("Initial Route:", initialRoute);
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async user => {
       if (user) {

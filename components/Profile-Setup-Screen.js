@@ -24,37 +24,29 @@ export default function ProfileSetup() {
     const auth = getAuth();
 
     const handleSubmit = async () => {
-        console.log("handleSubmit called");
         
         if (!auth.currentUser || !auth.currentUser.uid) {
-            console.error("No logged-in user available.");
             return;
         }
         
         if (!displayName || !insta || !graduationYear || !profilePic || profilePic === defaultProfPic) {
             Alert.alert("Error", "Please fill in all required fields.");
-            console.log("Required fields missing. displayName:", displayName, "insta:", insta, "graduationYear:", graduationYear, "profilePic:", profilePic);
             return;
         }
         
         if (phoneNumber.length !== 10) {
             Alert.alert("Error", "Please enter a valid 10-digit phone number");
-            console.log("Invalid phone number:", phoneNumber);
             return;
         }
     
         setLoading(true);
-        console.log("Loading set to true");
     
         let profilePicUrl;
     
         if (profilePic && profilePic !== defaultProfPic) {
             try {
-                console.log("Uploading profile picture...");
                 profilePicUrl = await uploadImageAsync(profilePic, 'profilePictures');
-                console.log("Profile picture uploaded, URL:", profilePicUrl);
             } catch (error) {
-                console.log("Error uploading profile picture:", error);
                 setLoading(false); 
                 return; 
             }
@@ -63,7 +55,6 @@ export default function ProfileSetup() {
         }
     
         try {
-            console.log("Updating Firestore with user data..." + auth.currentUser);
             const userRef = doc(db, "users", auth.currentUser.uid);
     
             await updateDoc(userRef, {
@@ -75,16 +66,13 @@ export default function ProfileSetup() {
                 isProfileComplete: true,
                 insta: insta
             });
-            console.log("Profile updated successfully in Firestore");
     
             Alert.alert("Success", "Profile updated successfully.");
             setIsProfileComplete(true);
-            console.log("Navigating to Home...");
             navigation.navigate('Home');
         } catch (error) {
             console.log("Error updating profile in Firestore:", error);
         } finally {
-            console.log("Setting loading to false");
             setLoading(false); 
         }
     };
