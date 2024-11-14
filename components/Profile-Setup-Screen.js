@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { uploadImageAsync, pickImage } from '../util/imageHandling';
 import { AuthContext } from '../contexts/authContext';
 import { getAuth } from 'firebase/auth';
+import { Image as ExpoImage } from 'expo-image';
 
 export default function ProfileSetup() {
     const [displayName, setDisplayName] = useState('');
@@ -40,7 +41,6 @@ export default function ProfileSetup() {
         }
     
         setLoading(true);
-    
         let profilePicUrl;
     
         if (profilePic && profilePic !== defaultProfPic) {
@@ -191,11 +191,15 @@ export default function ProfileSetup() {
                 </View>
 
                 <View style={styles.imageView}>
-                    <Image
-                        source={typeof profilePic === 'string' ?
-                            { uri: profilePic } :
-                            profilePic}
-                        style={styles.profilePic} />
+                    <ExpoImage
+                        source={typeof profilePic === 'string' 
+                            ? { uri: profilePic } 
+                            : profilePic 
+                        }
+                        cachePolicy="memory-disk" 
+                        contentFit="cover"
+                        style={styles.profilePic}
+                    />
                     <TouchableOpacity style={styles.button} onPress={() => pickImage(0, profilePic, setProfilePic)}>
                         <Text style={styles.buttonText}>Upload Profile Picture</Text>
                     </TouchableOpacity>

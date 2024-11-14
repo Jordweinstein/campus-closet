@@ -10,6 +10,7 @@ import { AuthContext } from "../contexts/authContext";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { Image as ExpoImage } from 'expo-image';
+import * as Sentry from '@sentry/react-native';
 
 export default function OffersContainer() {
     return (
@@ -77,6 +78,7 @@ const Offers = () => {
             }
         } catch (error) {
             console.log("error fetching insta by id in screen" + error);
+            Sentry.captureException(error);
             return 'N/A';
         }
     };
@@ -137,7 +139,7 @@ const Offers = () => {
                 ):
                     <Text style={styles.text}>Buy ${item.price}</Text>
                 }
-                <Text style={styles.text}>From: @{instaUsernames[item.sender] || 'N/A'}</Text>
+                <Text style={styles.text}>From: @{'Loading...' || instaUsernames[item.sender]}</Text>
             </View>
             {(item.isAccepted) ? 
                 <TouchableOpacity 
