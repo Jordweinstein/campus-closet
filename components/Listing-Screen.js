@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
-  Image,
 } from "react-native";
 import { DatePickerModal } from 'react-native-paper-dates';
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
@@ -25,7 +24,7 @@ export default function ListingContainer({ route }){
   )
 }
 const Listing = ({ route }) => {
-  const { listing} = route.params;
+  const { listing } = route.params;
   const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
   const { addLikedListing, removeLikedListing, likedListings, user } = useContext(
     AuthContext
@@ -59,17 +58,20 @@ const Listing = ({ route }) => {
   );
 
   const disabledDates = [];
-  for (let i = 0; i < listing.unavailableStartDates.length; i++) {
-    const start = listing.unavailableStartDates[i].toDate();
-    const end = listing.unavailableEndDates[i].toDate();
 
-    let currentDate = new Date(start);
-    while (currentDate <= end) {
-      disabledDates.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    if (disabledDates[disabledDates.length - 1].getTime() !== end.getTime()) {
-      disabledDates.push(new Date(end));
+  if(listing.isRental){
+    for (let i = 0; i < listing.unavailableStartDates.length; i++) {
+      const start = listing.unavailableStartDates[i].toDate();
+      const end = listing.unavailableEndDates[i].toDate();
+
+      let currentDate = new Date(start);
+      while (currentDate <= end) {
+        disabledDates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      if (disabledDates[disabledDates.length - 1].getTime() !== end.getTime()) {
+        disabledDates.push(new Date(end));
+      }
     }
   }
 

@@ -12,6 +12,14 @@ import db from './firebase/db'; // Firestore database
 import { doc, getDoc } from "firebase/firestore"; // Firestore methods
 import { ListingsProvider } from "./contexts/listingContext";
 import { View, ActivityIndicator } from "react-native";
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://50250a0766474fa2bf40f0b142289f2e@o4508294796214272.ingest.us.sentry.io/4508294798311424',
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // enableSpotlight: __DEV__,
+});
 
 function AppContainer() {
   return (

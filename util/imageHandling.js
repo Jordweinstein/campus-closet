@@ -8,6 +8,13 @@ import {
 } from "firebase/storage";
 import auth from "../firebase/auth";
 
+if (auth.currentUser) {
+  Sentry.setUser({
+    id: auth.currentUser.uid,
+    email: auth.currentUser.email,
+  });
+}
+
 export const requestCameraPermissions = async () => {
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
   return status === "granted";
@@ -75,25 +82,52 @@ const uploadImageBlob = async (blob, path) => {
     path === "profilePictures"
       ? ref(storage, `${path}/${auth.currentUser.uid}`)
       : ref(storage, `${path}/${auth.currentUser.uid}/${Date.now()}`);
-  const uploadTask = uploadBytesResumable(storageRef, blob);
 
-  await uploadTask;
-  const downloadURL = await getDownloadURL(storageRef);
-  return downloadURL;
+  Sentry.addBreadcrumb({
+    category: 'upload',
+    message: 'Starting image upload',
+    data: { path, userId: auth.currentUser.uid },
+    level: "info",
+  });
+
+  try {
+    const uploadTask = uploadBytesResumable(storageRef, blob);
+
+    await uploadTask;
+    const downloadURL = await getDownloadURL(storageRef);
+    Sentry.addBreadcrumb({
+      category: 'upload',
+      message: 'Image uploaded successfully',
+      data: { downloadURL },
+      level: "info",
+    });
+    return downloadURL;
+  } catch (error) {
+    Sentry.captureException(error);
+    console.error("Error uploading image blob:", error);
+    throw error;
+  }
 };
 
+import * as Sentry from '@sentry/react-native';
+
+// asynchronous method for uploading an image to a path
 export const uploadImageAsync = async (uri, path) => {
+  // check for null URI
   if (!uri) {
     console.error("No image URI available for upload.");
     return null;
   }
 
+  // create blob from the URI using XMLHttpRequest, Sentry error logging
   const blob = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.onload = () => {
       resolve(xhr.response);
     };
-    xhr.onerror = function(e) {
+    xhr.onerror = function (e) {
+      console.error("Failed to fetch image blob:", e);
+      Sentry.captureException(e); 
       reject(e);
     };
     xhr.responseType = "blob";
@@ -101,11 +135,13 @@ export const uploadImageAsync = async (uri, path) => {
     xhr.send(null);
   });
 
+  // upload blob with error handling
   try {
     const downloadURL = await uploadImageBlob(blob, path);
     return downloadURL;
   } catch (error) {
-    console.error("Upload failed or URL retrieval failed:", error);
+    console.error("Image upload failed or URL retrieval failed:", error);
+    Sentry.captureException(error); 
     return null;
   } finally {
     if (blob.close) {
@@ -113,6 +149,7 @@ export const uploadImageAsync = async (uri, path) => {
     }
   }
 };
+
 
 export const uploadImagesAsync = async (uris, path) => {
   if (!Array.isArray(uris)) {

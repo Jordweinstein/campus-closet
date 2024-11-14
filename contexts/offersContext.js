@@ -3,6 +3,7 @@ import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, onSnapshot, quer
 import { AuthContext } from "./authContext";
 import { ListingsContext } from "./listingContext"; 
 import db from "../firebase/db";
+import * as Sentry from '@sentry/react-native';
 
 export const OffersContext = createContext();
 
@@ -26,10 +27,11 @@ export const OffersProvider = ({ children }) => {
     };
 
     const sendRentalOffer = async (listing, range) => {
-        if (!user) return; // Guard clause
-        const userDocRef = doc(db, "users", user.uid);
-        const price = calculateNumRentalIntervals(range[0], range[1]) * listing.price[0];
-        const offerData = {
+        if (!user) return;
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          const price = calculateNumRentalIntervals(range[0], range[1]) * listing.price[0];
+          const offerData = {
             isAccepted: false,
             listing: listing.id,
             isRental: true,
@@ -39,123 +41,148 @@ export const OffersProvider = ({ children }) => {
             sender: user.uid,
             offerImg: listing.images[0],
             offerItem: listing.itemName,
-            isFinalized: false
-        };
-        const docRef = await addDoc(collection(db, "offers"), offerData);
-        await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
-    };
+            isFinalized: false,
+          };
+          const docRef = await addDoc(collection(db, "offers"), offerData);
+          await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
+        } catch (error) {
+          console.error("Error sending rental offer:", error);
+          Sentry.captureException(error);
+        }
+      };
 
     const sendBuyOffer = async (listing) => {
-        if (!user) return; 
+    if (!user) return;
+    try {
         const userDocRef = doc(db, "users", user.uid);
         const offerData = {
-            isAccepted: false,
-            isRejected: false,
-            isRental: false,
-            listing: listing.id,
-            price: (listing.purchaseMethod[1]) ? listing.price[1] : listing.price[0],
-            receiver: listing.owner,
-            rentalPeriod: null,
-            sender: user.uid,
-            offerImg: listing.images[0],
-            offerItem: listing.itemName,
-            isFinalized: false
+        isAccepted: false,
+        isRejected: false,
+        isRental: false,
+        listing: listing.id,
+        price: listing.purchaseMethod[1] ? listing.price[1] : listing.price[0],
+        receiver: listing.owner,
+        rentalPeriod: null,
+        sender: user.uid,
+        offerImg: listing.images[0],
+        offerItem: listing.itemName,
+        isFinalized: false,
         };
         const docRef = await addDoc(collection(db, "offers"), offerData);
         await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
+    } catch (error) {
+        console.error("Error sending buy offer:", error);
+        Sentry.captureException(error);
+    }
     };
-
+    
+    // Respond to offer with error logging
     const respondOffer = async (offerId, response) => {
-        if (!user) return; 
+    if (!user) return;
+    try {
         const offerDocRef = doc(db, "offers", offerId);
         const userDocRef = doc(db, "users", user.uid);
-
-        const updateObject = (response.toLowerCase() === "accept") ? { isAccepted: true } : { isRejected: true, receiver: null };
+    
+        const updateObject = response.toLowerCase() === "accept" ? { isAccepted: true } : { isRejected: true, receiver: null };
         if (response.toLowerCase() !== "accept") {
-            await updateDoc(userDocRef, { offeredListings: arrayRemove(offerId) });
-            console.log("successfully removed offer from user's offered listings becuaes receiver rejected it.")
-
-            await deleteDoc(offerDocRef);
-            console.log("successfully deleted offer document because it was rejected")
+        await updateDoc(userDocRef, { offeredListings: arrayRemove(offerId) });
+        await deleteDoc(offerDocRef);
         }
         await updateDoc(offerDocRef, updateObject);
+    } catch (error) {
+        console.error("Error responding to offer:", error);
+        Sentry.captureException(error);
+    }
     };
-
+    
+    // Finalize offer with error logging
     const finalizeOffer = async (offerId) => {
-        if (!user) return; 
+    if (!user) return;
+    try {
         const offerDocRef = doc(db, "offers", offerId);
         const offerSnapshot = await getDoc(offerDocRef);
         if (!offerSnapshot.exists()) return;
         const offerData = offerSnapshot.data();
         if (offerData.isRental) {
-            const listingRef = doc(db, "listings", offerData.listing);
-            await updateDoc(listingRef, {
-                unavailableStartDates: arrayUnion(offerData.rentalPeriod[0]),
-                unavailableEndDates: arrayUnion(offerData.rentalPeriod[1]),
-            });
+        const listingRef = doc(db, "listings", offerData.listing);
+        await updateDoc(listingRef, {
+            unavailableStartDates: arrayUnion(offerData.rentalPeriod[0]),
+            unavailableEndDates: arrayUnion(offerData.rentalPeriod[1]),
+        });
         } else {
-            const listing = {
-                id: offerData.listing,
-                images: [], 
-            };
-            await removeListing(listing); 
+        const listing = {
+            id: offerData.listing,
+            images: [],
+        };
+        await removeListing(listing);
         }
         await updateDoc(offerDocRef, { isFinalized: true });
+    } catch (error) {
+        console.error("Error finalizing offer:", error);
+        Sentry.captureException(error);
+    }
     };
 
-    // Effect to fetch received offers
+    // Effect to fetch received offers with error logging
     useEffect(() => {
-        if (!user) return; 
+        if (!user) return;
         setLoading(true);
-    
-        // Query for both active and inactive offers
+  
         const userActiveOffersQuery = query(offersRef, where("receiver", "==", user.uid), where("isFinalized", "==", false));
         const userInactiveOffersQuery = query(offersRef, where("receiver", "==", user.uid), where("isFinalized", "==", true));
-    
-        // Subscribe to active offers
+  
         const unsubscribeActive = onSnapshot(userActiveOffersQuery, querySnapshot => {
             const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setActiveOffers(offers);
             setLoading(false);
-        }, error => console.error('Error fetching active offers:', error));
-    
-        // Subscribe to inactive offers
+        }, error => {
+            console.error('Error fetching active offers:', error);
+            Sentry.captureException(error);
+        });
+  
         const unsubscribeInactive = onSnapshot(userInactiveOffersQuery, querySnapshot => {
-            const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setInactiveOffers(offers);
-        }, error => console.error('Error fetching inactive offers:', error));
-    
-        // Cleanup function
+        const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setInactiveOffers(offers);
+        }, error => {
+        console.error('Error fetching inactive offers:', error);
+        Sentry.captureException(error);
+        });
+  
         return () => {
-            unsubscribeActive();
-            unsubscribeInactive();
+        unsubscribeActive();
+        unsubscribeInactive();
         };
-    }, [user]);
-
-    useEffect(() => {
-        if (!user) return;
-        const userSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", false));
-        const userFinalizedSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", true));
-    
-        // Subscribe to sent offers
-        const unsubscribeSentOffers = onSnapshot(userSentOffersQuery, querySnapshot => {
-            const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setSentOffers(offers);
-            setAcceptedOffers(offers.filter(offer => offer.isAccepted));
-        }, error => console.error('Error fetching sent offers:', error));
-    
-        // Subscribe to finalized sent offers
-        const unsubscribeFinalizedSentOffers = onSnapshot(userFinalizedSentOffersQuery, querySnapshot => {
-            const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setInactiveSentOffers(offers);
-        }, error => console.error('Error fetching finalized sent offers:', error));
-    
-        // Cleanup function
-        return () => {
-            unsubscribeSentOffers();
-            unsubscribeFinalizedSentOffers();
-        };
-    }, [user]);
+  }, [user]);
+  
+  // Effect to fetch sent offers with error logging
+  useEffect(() => {
+    if (!user) return;
+  
+    const userSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", false));
+    const userFinalizedSentOffersQuery = query(offersRef, where("sender", "==", user.uid), where("isFinalized", "==", true));
+  
+    const unsubscribeSentOffers = onSnapshot(userSentOffersQuery, querySnapshot => {
+      const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSentOffers(offers);
+      setAcceptedOffers(offers.filter(offer => offer.isAccepted));
+    }, error => {
+      console.error('Error fetching sent offers:', error);
+      Sentry.captureException(error);
+    });
+  
+    const unsubscribeFinalizedSentOffers = onSnapshot(userFinalizedSentOffersQuery, querySnapshot => {
+      const offers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setInactiveSentOffers(offers);
+    }, error => {
+      console.error('Error fetching finalized sent offers:', error);
+      Sentry.captureException(error);
+    });
+  
+    return () => {
+      unsubscribeSentOffers();
+      unsubscribeFinalizedSentOffers();
+    };
+  }, [user]);
 
     return (
         <OffersContext.Provider
