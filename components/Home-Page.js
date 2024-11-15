@@ -103,7 +103,6 @@ const HomeMain = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </ScrollView>
-        {/* <Button title='Try!' onPress={ () => { Sentry.captureException(new Error('First error')) }}/> */}
       </ScrollView>
     </SafeAreaView>
   );
