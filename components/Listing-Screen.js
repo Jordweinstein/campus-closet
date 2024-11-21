@@ -16,6 +16,9 @@ import { AuthContext } from "../contexts/authContext";
 import { Image as ExpoImage } from 'expo-image';
 import { ListingsContext } from "../contexts/listingContext";
 import { OffersProvider, OffersContext } from "../contexts/offersContext";
+import { useNavigation } from "@react-navigation/native";
+import { getDoc, doc } from "firebase/firestore";
+import db from "../firebase/db";
 
 export default function ListingContainer({ route }){
   return (
@@ -25,21 +28,20 @@ export default function ListingContainer({ route }){
   )
 }
 const Listing = ({ route }) => {
-  const { listing} = route.params;
+  const { listing } = route.params;
+  const navigation = useNavigation();
   const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
-  const { addLikedListing, removeLikedListing, likedListings, user } = useContext(
-    AuthContext
-  );
+  const { addLikedListing, removeLikedListing, likedListings, user } = useContext(AuthContext);
   const { removeListing } = useContext(ListingsContext);
 
   const [isLiked, setIsLiked] = useState(likedListings.includes(listing.id));
   const [likeCount, setLikeCount] = useState(listing.likes);
-
+  const [ownerProfile, setOwnerProfile] = useState(null); // State to store owner profile data
   const [range, setRange] = useState({ startDate: undefined, endDate: undefined });
   const [open, setOpen] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [hasOffered, setHasOffered] = useState(false);
+
 
   useEffect(
     () => {
@@ -57,6 +59,25 @@ const Listing = ({ route }) => {
       }
     }, [sentOffers, listing.id]
   );
+  // Function to fetch the owner's profile data
+  const fetchOwnerProfile = async () => {
+    try {
+      const userRef = doc(db, "users", listing.owner); // Access owner ID from listing
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        setOwnerProfile(userSnap.data()); // Set profile data to state
+      } else {
+        console.log("No such user document! ID:", listing.owner);
+      }
+    } catch (error) {
+      console.error("Error fetching owner profile:", error);
+    }
+  };
+
+  // Fetch the owner's profile data when the component mounts
+  useEffect(() => {
+    fetchOwnerProfile();
+  }, [listing.owner]);
 
   const disabledDates = [];
   for (let i = 0; i < listing.unavailableStartDates.length; i++) {
@@ -133,7 +154,7 @@ const Listing = ({ route }) => {
           {listing.images.map((image, index) =>
             <View key={index}>
               <ExpoImage
-                  source={{ uri: image || "https://picsum.photos/200" }}
+                  source={{ uri: image }}
                   cachePolicy="memory-disk" 
                   contentFit="cover"
                   style={styles.image}
@@ -255,6 +276,22 @@ const Listing = ({ route }) => {
             
           </View>
         </View>
+        {ownerProfile && (
+          <TouchableOpacity
+            style={styles.profileContainer}
+            onPress={() => {
+              console.log("Navigating to profile:", {
+              ownerId: listing.owner,
+              profilePic: ownerProfile.profilePic,
+              displayName: ownerProfile.displayName,
+              });
+            navigation.navigate("Profile", { ownerId: listing.owner });
+            }}
+          >
+          <Image source={{ uri: ownerProfile.profilePic }} style={styles.profileImage} />
+          <Text style={styles.profileName}>{ownerProfile.displayName}</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.hContainer}>
           <Text style={{ paddingRight: 15, fontSize: 20, fontWeight: "bold", fontFamily: 'optima' }}>
@@ -366,4 +403,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'optima',
   },
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  profileName: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  
 });
