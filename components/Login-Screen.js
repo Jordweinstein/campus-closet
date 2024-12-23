@@ -77,7 +77,9 @@ const Login = () => {
                     offeredListings: [],
                     profilePicUrl: "",
                     insta: "",
-                    isProfileComplete: false
+                    isProfileComplete: false,
+                    customerId: "",
+                    accountId: "",
                 });
 
                 setEmail('');

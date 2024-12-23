@@ -1,4 +1,8 @@
+// https://docs.stripe.com/api/
+
 const {onRequest} = require("firebase-functions/v2/https");
+const pk = "pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0u" +
+  "qoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX";
 
 /*
   Cloud function to create a new Stripe customer
@@ -73,6 +77,29 @@ exports.getCustomer =
   });
 
 /*
+  Cloud function to create an account object
+  Parameters: email
+  Returns:
+    Returns an account object.
+*/
+exports.createAccount =
+  onRequest({secrets: ["STRIPE_SECRET"]}, async (req, res) => {
+    const stripe = require("stripe")(process.env.STRIPE_SECRET);
+    const {email} = req.body;
+
+    try {
+      const account = await stripe.accounts.create({
+        country: "US",
+        email: email,
+      });
+      res.send(account);
+    } catch (error) {
+      res.status(400).send({error: error.message});
+      console.error("Error creating account: " + error.message);
+    }
+  });
+
+/*
   Cloud function to create a PaymentIntent object
   Parameters: customer ID, amount, targetId (account receiving payment)
   Returns:
@@ -81,31 +108,39 @@ exports.getCustomer =
 exports.createPaymentIntent =
   onRequest({secrets: ["STRIPE_SECRET"]}, async (req, res) => {
     const stripe = require("stripe")(process.env.STRIPE_SECRET);
-    const {customerId, amount, targetId} = req.body;
+    const {customerId, amount, currency, targetId} = req.body;
+
+    if (!customerId || !amount || !currency || !targetId) {
+      res.status(400).json({error: "Missing required parameter"});
+      return;
+    }
 
     try {
+      // Create ephemeral key for the customer
       const ephemeralKey = await stripe.ephemeralKeys.create(
-        {customer: customerId},
-        {apiVersion: '2024-06-20'}
+          {customer: customerId},
+          {apiVersion: "2024-06-20"},
       );
 
+      // Create payment intent as a destination charge
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'usd',
+        currency: currency,
         customer: customerId,
         automatic_payment_methods: {
           enabled: true,
         },
-        application_fee_amount: .09 * amount,
-      }, {
-        stripeAccount: targetId,
+        application_fee_amount: Math.floor(amount * 0.09),
+        transfer_data: {
+          destination: targetId,
+        },
       });
-    
+
       res.json({
         paymentIntent: paymentIntent.client_secret,
         ephemeralKey: ephemeralKey.secret,
         customer: customerId,
-        publishableKey: 'pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0uqoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX'
+        publishableKey: pk,
       });
     } catch (error) {
       console.error("Error creating payment intent: " + error.message);

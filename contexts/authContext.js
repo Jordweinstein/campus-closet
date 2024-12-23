@@ -159,6 +159,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const getAccountId = async (userId) => {
+    try {
+      const userRef = doc(db, "users", userId);
+      const userRefSnapshot = await getDoc(userRef);
+
+      if (userRefSnapshot.exists()) {
+        return userRefSnapshot.data().accountId; 
+      } else {
+        throw new Error('Account ID not found'); 
+      }
+    } catch (error) {
+      console.error("Error fetching accountID: " + error.message);
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -166,6 +181,7 @@ export const AuthProvider = ({ children }) => {
         userData,
         setUser,
         fetchInstaById,
+        getAccountId,
         isProfileComplete,
         setIsProfileComplete,
         likedListings,

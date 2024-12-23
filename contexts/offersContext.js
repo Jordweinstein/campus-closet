@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, onSnapshot, query, where, arrayUnion, arrayRemove } from "firebase/firestore";
+import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, getDocs, onSnapshot, query, where, arrayUnion, arrayRemove } from "firebase/firestore";
 import { AuthContext } from "./authContext";
 import { ListingsContext } from "./listingContext"; 
 import db from "../firebase/db";
@@ -123,6 +123,34 @@ export const OffersProvider = ({ children }) => {
     }
     };
 
+    // retrieve the authenticated user's offer object based on the listingID
+    const getOfferByListingId = async (listingId) => {
+      if (!user || !listingId) return;
+      setLoading(true);
+  
+      const offerQuery = query(offersRef, 
+        where("listing", "==", listingId),
+        where("sender", "==", user.uid),
+      );
+  
+      try {
+        const querySnapshot = await getDocs(offerQuery);
+        if (!querySnapshot.empty) {
+            const offerData = querySnapshot.docs[0].data();
+            setLoading(false);
+            return offerData;  // Return the isRental property of the offer
+        } else {
+            setLoading(false);
+            return null;  
+        }
+      } catch (error) {
+        console.error('Error fetching offer by listing ID:', error);
+        Sentry.captureException(error);
+        setLoading(false);
+        return null;
+      }
+    };
+
     // Effect to fetch received offers with error logging
     useEffect(() => {
         if (!user) return;
@@ -187,7 +215,7 @@ export const OffersProvider = ({ children }) => {
     return (
         <OffersContext.Provider
             value={{
-                sendRentalOffer, sendBuyOffer, respondOffer, finalizeOffer,
+                sendRentalOffer, sendBuyOffer, respondOffer, finalizeOffer, getOfferByListingId,
                 sentOffers, activeOffers, inactiveOffers, acceptedOffers, inactiveSentOffers, loading
             }}
         >

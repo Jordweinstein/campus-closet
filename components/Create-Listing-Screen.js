@@ -23,7 +23,7 @@ import {
 import db from "../firebase/db";
 import { Image as ExpoImage } from 'expo-image';
 import { useNavigation } from "@react-navigation/native";
-import { uploadImageAsync, pickImage } from "../util/imageHandling";
+import { uploadImageAsync, pickImage } from "../util/imageService";
 import { AuthContext } from "../contexts/authContext";
 import * as Sentry from '@sentry/react-native';
 

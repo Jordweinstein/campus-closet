@@ -148,46 +148,46 @@ const Listing = ({ route }) => {
 
         {/* price display for different purchase methods */}
         <View
-  style={{
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  }}
->
-  {hasOffered ? (
-    <Text>Offer Sent</Text>
-  ) : user && listing.owner !== user.uid ? ( // Check if current user is not the owner
-    <View style={{ flexDirection: "row", alignItems: "center" }}>
-      {listing.purchaseMethod.map((mode, index) => {
-        return mode === "Rent" ? (
-          <TouchableOpacity key={index} onPress={() => setOpen(true)} style={styles.purchaseButton}>
-            <Text style={styles.buttonText}>
-              {mode} ${listing.price[index]}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            key={index}
-            style={styles.purchaseButton}
-            onPress={() => {
-              Alert.alert(
-                "Send Purchase Offer",
-                "By sending this purchase offer, you agree to the Terms and Conditions which includes an agreement to uphold the payment for your purchase. If your offer is accepted, you will receive contact information to arrange pickup and payment.",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  { text: "Send Offer", onPress: () => sendBuyOffer(listing) }
-                ]
-              );
-            }}
-          >
-            <Text style={styles.buttonText}>
-              {mode} ${listing.price[index]}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  ) : null } 
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+        {hasOffered ? (
+          <Text>Offer Sent</Text>
+          ) : user && listing.owner !== user.uid ? ( // Check if current user is not the owner
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {listing.purchaseMethod.map((mode, index) => {
+                return mode === "Rent" ? (
+                  <TouchableOpacity key={index} onPress={() => setOpen(true)} style={styles.purchaseButton}>
+                    <Text style={styles.buttonText}>
+                      {mode} ${listing.price[index]}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.purchaseButton}
+                    onPress={() => {
+                      Alert.alert(
+                        "Send Purchase Offer",
+                        "By sending this purchase offer, you agree to the Terms and Conditions which includes an agreement to uphold the payment for your purchase. If your offer is accepted, you will receive contact information to arrange pickup and payment.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Send Offer", onPress: () => sendBuyOffer(listing) }
+                        ]
+                      );
+                    }}
+                  >
+                    <Text style={styles.buttonText}>
+                      {mode} ${listing.price[index]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : null } 
           <DatePickerModal
             locale="en"
             mode="range"

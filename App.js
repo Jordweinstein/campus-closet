@@ -25,10 +25,12 @@ Sentry.init({
 function AppContainer() {
   return (
     <NavigationContainer>
-      <StripeProvider>
-        <AuthProvider 
-          publishableKey="pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0uqoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX"
-        >
+      <StripeProvider
+        publishableKey="pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0uqoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX"
+        merchantIdentifier="com.jordanweinstein.rent-the-campus"
+        urlScheme="campus-closets"
+      >
+        <AuthProvider>
           <ListingsProvider>
             <MainNavigator />
           </ListingsProvider>

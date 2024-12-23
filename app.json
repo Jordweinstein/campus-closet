@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "campus-closets",
     "name": "campus-closets",
     "slug": "campus-closets",
     "version": "1.0.0",

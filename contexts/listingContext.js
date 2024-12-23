@@ -71,9 +71,8 @@ export const ListingsProvider = ({ children }) => {
     const querySnapshot = await getDocs(listingsQuery);
 
     if (querySnapshot.empty) {
-      console.log("No more listings to fetch.");
       setLoadingMore(false);
-      return;  // Stop fetching if no more documents
+      return;  
     }
     
     const moreListings = querySnapshot.docs.map(doc => ({

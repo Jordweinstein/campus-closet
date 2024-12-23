@@ -6,9 +6,9 @@ import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import { ScrollView } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
-import { AuthContext } from "../contexts/authContext";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
+import CheckoutScreen from "./Checkout-Screen";
 import { Image as ExpoImage } from 'expo-image';
 import * as Sentry from '@sentry/react-native';
 
@@ -26,9 +26,8 @@ const { width } = Dimensions.get('window');
 
 const Offers = () => {
     const [loading, setLoading] = useState(true);  
-    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer, inactiveOffers } = useContext(OffersContext);
+    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer, getOfferByListingId } = useContext(OffersContext);
     const { fetchListingsByIds } = useContext(ListingsContext);
-    const { user } = useContext(AuthContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
     const [instaUsernames, setInstaUsernames] = useState({});
     const navigation = useNavigation();
@@ -100,6 +99,31 @@ const Offers = () => {
         setInstaUsernames(usernames);
     };
 
+    const handlePurchase = async (listing) => {
+
+        const offer = getOfferByListingId(listing.id);
+
+        if (offer.isRental) {
+            Alert.alert(
+                `Rent Item from ${formatDateRange(item.rentalPeriod[0], item.rentalPeriod[1])}`,
+                `Proceed to payment page.`,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Proceed", onPress: () => navigation.navigate('CheckoutScreen', { listing })} // is this right
+                ]
+            );
+        } else if (!offer.isRental) {
+            Alert.alert(
+                `Purchase Item`,
+                `Proceed to payment page.`,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Proceed", onPress: () => navigation.navigate('CheckoutScreen', { listing })} //is this right
+                ]
+            );
+        }
+    }
+
     useEffect(() => {
         if (acceptedListings.length > 0) {
             loadInstaUsernames(acceptedListings);
@@ -150,7 +174,7 @@ const Offers = () => {
                             `Are you sure you would like to mark this item as ${(item.isRental) ? "Rented" : "Sold"}? \n\n If sold, this will delete your listing from Campus Closet, and if rented the requested dates will be blocked off from other rentals.`,
                             [
                                 {text: "Cancel", style: "cancel"},
-                                {text: "Confirm", onPress: ()=> finalizeOffer(item.id)}
+                                {text: "Confirm", onPress: () => finalizeOffer(item.id)}
                             ]
                         );
                     }}
@@ -205,19 +229,28 @@ const Offers = () => {
                         <View style={styles.listingImagePlaceholder}></View>
                         :
                         acceptedListings.map((listing) => (
-                            <TouchableOpacity 
-                                key={listing.id} 
-                                onPress={() => navigation.navigate('ListingScreen', { listing })}
-                                style={styles.imgContainer}
-                            >
-                                <ExpoImage
-                                    source={{ uri: listing.images[0] || "https://picsum.photos/200" }}
-                                    cachePolicy="memory-disk" 
-                                    contentFit="cover"
-                                    style={styles.listingImage}
-                                />
-                                <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
-                            </TouchableOpacity>
+                            <React.Fragment key={listing.id}> 
+                                <TouchableOpacity 
+                                    onPress={() => navigation.navigate('ListingScreen', { listing })}
+                                    style={styles.imgContainer}
+                                >
+                                    <ExpoImage
+                                        source={{ uri: listing.images[0] || "https://picsum.photos/200" }}
+                                        cachePolicy="memory-disk" 
+                                        contentFit="cover"
+                                        style={styles.listingImage}
+                                    />
+                                    <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => handlePurchase(listing)}
+                                    style = {styles.shopButton}
+                                >
+                                    <Entypo name="shop" size={24} color="black" />
+                                </TouchableOpacity>
+                                
+                            </React.Fragment>
+
                         ))}
                 </ScrollView>
             </View>
@@ -380,4 +413,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontFamily: 'optima',
     },
+    shopButton: {
+        position: 'absolute',
+        right: 15, 
+        bottom: 15, 
+        backgroundColor: 'white',
+        padding: 5,
+        borderRadius: '50%'
+    }
 });

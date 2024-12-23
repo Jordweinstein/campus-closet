@@ -26,6 +26,7 @@ import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import Login from './Login-Screen';
 import ListingContainer from './Listing-Screen';
+import CheckoutScreen from './Checkout-Screen'
 import { Image as ExpoImage } from 'expo-image';
 
 export default function Profile() {
@@ -56,6 +57,11 @@ export default function Profile() {
           <Stack.Screen
             name="Offers"
             component={Offers}
+            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
+          />
+          <Stack.Screen
+            name="CheckoutScreen"
+            component={CheckoutScreen}
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
           <Stack.Screen

@@ -2,13 +2,13 @@ import React, { useState, useContext } from 'react';
 import { View, StyleSheet, Keyboard, Text, TouchableOpacity, Modal, TextInput, SafeAreaView, KeyboardAvoidingView, Image, Alert, ActivityIndicator } from 'react-native';
 import { updateDoc, doc } from "firebase/firestore"; 
 import db from '../firebase/db';
-import auth from '../firebase/auth';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
-import { uploadImageAsync, pickImage } from '../util/imageHandling';
+import { uploadImageAsync, pickImage } from '../util/imageService';
 import { AuthContext } from '../contexts/authContext';
 import { getAuth } from 'firebase/auth';
 import { Image as ExpoImage } from 'expo-image';
+import stripeService from '../util/stripeService';
 
 export default function ProfileSetup() {
     const [displayName, setDisplayName] = useState('');
@@ -54,16 +54,9 @@ export default function ProfileSetup() {
             console.log("No profile picture to upload");
         }
 
-        const customerId;
         try {
-            customerId = createStripeCustomer(displayName, auth.currentUser.email, "");
-        } catch (error) {
-            console.error("Error creating Stripe customer: " + error.message);
-        } finally {
-            setLoading(false); 
-        }
+            res = await stripeService.createStripeData(displayName, auth.currentUser.email, "");
 
-        try {
             const userRef = doc(db, "users", auth.currentUser.uid);
     
             await updateDoc(userRef, {
@@ -74,38 +67,20 @@ export default function ProfileSetup() {
                 phoneNumber: phoneNumber,
                 isProfileComplete: true,
                 insta: insta,
-                stripeCustomer: customerId
+                customerId: res.custId,
+                accountId: res.accId,
             });
     
             Alert.alert("Success", "Profile updated successfully.");
             setIsProfileComplete(true);
             navigation.navigate('Home');
         } catch (error) {
-            console.log("Error updating profile in Firestore:", error);
-        } 
-
-    };
-
-    const createStripeCustomer = async (name, email, address) => {
-        const url = "https://createcustomer-iv3cs34agq-uc.a.run.app";
-        const data = { name, email, address }
-
-        const response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            console.error("Error creating Stripe customer/account: " + error.message);
+        } finally {
+            setLoading(false); 
         }
 
-        const customerData = await response.json();
-        return customerData.id;
-        console.log('Customer created:', customerData);
-    }
+    };
 
     if (loading) {
         return (
