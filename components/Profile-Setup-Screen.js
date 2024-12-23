@@ -53,7 +53,16 @@ export default function ProfileSetup() {
         } else {
             console.log("No profile picture to upload");
         }
-    
+
+        const customerId;
+        try {
+            customerId = createStripeCustomer(displayName, auth.currentUser.email, "");
+        } catch (error) {
+            console.error("Error creating Stripe customer: " + error.message);
+        } finally {
+            setLoading(false); 
+        }
+
         try {
             const userRef = doc(db, "users", auth.currentUser.uid);
     
@@ -64,7 +73,8 @@ export default function ProfileSetup() {
                 profilePic: profilePicUrl,
                 phoneNumber: phoneNumber,
                 isProfileComplete: true,
-                insta: insta
+                insta: insta,
+                stripeCustomer: customerId
             });
     
             Alert.alert("Success", "Profile updated successfully.");
@@ -72,10 +82,30 @@ export default function ProfileSetup() {
             navigation.navigate('Home');
         } catch (error) {
             console.log("Error updating profile in Firestore:", error);
-        } finally {
-            setLoading(false); 
-        }
+        } 
+
     };
+
+    const createStripeCustomer = async (name, email, address) => {
+        const url = "https://createcustomer-iv3cs34agq-uc.a.run.app";
+        const data = { name, email, address }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const customerData = await response.json();
+        return customerData.id;
+        console.log('Customer created:', customerData);
+    }
 
     if (loading) {
         return (

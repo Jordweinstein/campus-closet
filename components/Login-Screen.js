@@ -56,9 +56,19 @@ const Login = () => {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 await sendEmailVerification(user);
+
+                // Create user document in Firestore Database
                 const userRef = doc(db, "users", user.uid);
                 await setDoc(userRef, {
                     email: email,
+                    address: {
+                        line1: "",
+                        line2: "",
+                        city: "",
+                        state: "",
+                        postal_code: "",
+                        country: ""
+                    },
                     displayName: "",
                     bio: "",
                     graduationYear: "",
@@ -69,7 +79,6 @@ const Login = () => {
                     insta: "",
                     isProfileComplete: false
                 });
-                
 
                 setEmail('');
                 setPassword('');

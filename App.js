@@ -13,6 +13,7 @@ import { doc, getDoc } from "firebase/firestore"; // Firestore methods
 import { ListingsProvider } from "./contexts/listingContext";
 import { View, ActivityIndicator } from "react-native";
 import * as Sentry from '@sentry/react-native';
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 Sentry.init({
   dsn: 'https://50250a0766474fa2bf40f0b142289f2e@o4508294796214272.ingest.us.sentry.io/4508294798311424',
@@ -24,11 +25,15 @@ Sentry.init({
 function AppContainer() {
   return (
     <NavigationContainer>
-      <AuthProvider>
-        <ListingsProvider>
-          <MainNavigator />
-        </ListingsProvider>
-      </AuthProvider>
+      <StripeProvider>
+        <AuthProvider 
+          publishableKey="pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0uqoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX"
+        >
+          <ListingsProvider>
+            <MainNavigator />
+          </ListingsProvider>
+        </AuthProvider>
+      </StripeProvider>
     </NavigationContainer>
   );
 }
@@ -38,6 +43,7 @@ function MainNavigator() {
   const { setUser } = useContext(AuthContext);
   const [initialRoute, setInitialRoute] = useState(null); // Start with null to indicate loading
   const [isProfileComplete, setIsProfileComplete] = useState(false); // Fetch this directly
+  const STRIPE_PUBLISHABLE_KEY='pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0uqoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async user => {
