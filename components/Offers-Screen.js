@@ -10,6 +10,8 @@ import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { Image as ExpoImage } from 'expo-image';
 import * as Sentry from '@sentry/react-native';
+import stripeService from "../util/stripeService";
+import { AuthContext } from "../contexts/authContext";
 
 export default function OffersContainer() {
     return (
@@ -25,6 +27,7 @@ const { width } = Dimensions.get('window');
 
 const Offers = () => {
     const [loading, setLoading] = useState(true);  
+    const { userData } = useContext(AuthContext);
     const { respondOffer, activeOffers, acceptedOffers, finalizeOffer } = useContext(OffersContext);
     const { fetchListingsByIds } = useContext(ListingsContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
@@ -233,13 +236,12 @@ const Offers = () => {
                                         contentFit="cover"
                                         style={styles.listingImage}
                                     />
-                                    <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => handlePurchase(listing)}
                                     style = {styles.shopButton}
                                 >
-                                    <Entypo name="shop" size={24} color="black" />
+                                    <Entypo name="shop" size={20} color="black" />
                                 </TouchableOpacity>
                                 
                             </React.Fragment>
@@ -408,8 +410,8 @@ const styles = StyleSheet.create({
     },
     shopButton: {
         position: 'absolute',
-        right: 15, 
-        bottom: 15, 
+        right: 22, 
+        bottom: 7, 
         backgroundColor: 'white',
         padding: 5,
         borderRadius: '50%'

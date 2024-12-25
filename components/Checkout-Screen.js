@@ -6,6 +6,7 @@ import stripeService from '../util/stripeService';
 import { Image as ExpoImage } from 'expo-image';
 import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { OffersContext, OffersProvider } from '../contexts/offersContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Checkout({ route }) {
     return (
@@ -22,9 +23,11 @@ const CheckoutScreen = ({ route }) => {
     const { getOfferByListingId } = useContext(OffersContext);
     const [loading, setLoading] = useState(false);
     const [offer, setOffer] = useState(null);
+    const navigation = useNavigation();
 
     useEffect(() => {
         initializePaymentSheet();
+        console.log("Called initPaymentSheet")
 
         const fetchOffer = async () => {
             const fetchedOffer = await getOfferByListingId(listing.id);
@@ -32,18 +35,6 @@ const CheckoutScreen = ({ route }) => {
         };
 
         fetchOffer();
-
-        const handleDeepLink = (event) => {
-            let { url } = event;
-            if (url.includes('stripe-redirect')) {
-                Alert.alert('Stripe Redirect', 'Returned from Stripe!');
-            }
-        };
-
-        const subscription = Linking.addEventListener('url', handleDeepLink);
-        return () => {
-            subscription.remove();
-        };
     }, []);
 
     const formatDateRange = (start, end) => {
@@ -57,12 +48,12 @@ const CheckoutScreen = ({ route }) => {
     };
 
     const initializePaymentSheet = async () => {
-        if (!offer) return; // Ensure offer is available
+        if (!offer) return; 
 
         setLoading(true);
         const targetId = await getAccountId(listing.owner);
         const customerId = userData.customerId;
-        const amount = offer.price * 100; // Assuming offer.price is the final price
+        const amount = offer.price * 100;
         const currency = "usd";
         const data = { customerId, amount, currency, targetId };
 
@@ -98,11 +89,11 @@ const CheckoutScreen = ({ route }) => {
     };
 
     const openPaymentSheet = async () => {
+        console.log("about to call present");
         const { error } = await presentPaymentSheet();
-        if (error) {
-            Alert.alert(`Payment Error: ${error.code}`, error.message);
-        } else {
+        if (!error) {
             Alert.alert('Success', 'Your order is confirmed!');
+            navigation.navigate('ProfileMain');
         }
     };
 
