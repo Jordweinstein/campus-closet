@@ -55,8 +55,15 @@ export default function ProfileSetup() {
         }
 
         try {
-            res = await stripeService.createStripeData(displayName, auth.currentUser.email, "");
+            // Connect user to connected Stripe customer and account
+            const res = await stripeService.createStripeData(displayName, auth.currentUser.email, insta, phoneNumber, "");
 
+            console.log("RES in setup: " + JSON.stringify(res));
+            console.log(res.accId);
+            // Direct user to Stripe account onboarding
+            await stripeService.createAccountLink(res.accId, "account_onboarding", "https://redirecttoapp-iv3cs34agq-uc.a.run.app", "https://redirecttoapp-iv3cs34agq-uc.a.run.app");
+
+            // Update user document in firestore database
             const userRef = doc(db, "users", auth.currentUser.uid);
     
             await updateDoc(userRef, {
@@ -98,7 +105,7 @@ export default function ProfileSetup() {
                 behavior="padding"
                 keyboardVerticalOffset={0}
             >
-                <Text style={styles.title}>Welcome to Campus Closet</Text>
+                <Text style={styles.title}>Welcome to Campus Closets</Text>
                 <Text style={{ fontSize: 21, paddingVertical: 10, fontFamily: 'optima' }}>Enter your information below:</Text>
                 <View style={styles.inputContainer}>
                     <View style={styles.singleInputContainer}>

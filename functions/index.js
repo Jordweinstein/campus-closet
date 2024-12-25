@@ -3,6 +3,7 @@
 const {onRequest} = require("firebase-functions/v2/https");
 const pk = "pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0u" +
   "qoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX";
+const functions = require("firebase-functions");
 
 /*
   Cloud function to create a new Stripe customer
@@ -85,17 +86,91 @@ exports.getCustomer =
 exports.createAccount =
   onRequest({secrets: ["STRIPE_SECRET"]}, async (req, res) => {
     const stripe = require("stripe")(process.env.STRIPE_SECRET);
-    const {email} = req.body;
+    const {name, email, phone, url} = req.body;
+    let username = email.split("@")[0];
+
+    if (username.length < 5) {
+      const paddingLength = 5 - username.length;
+      username = username + "x".repeat(paddingLength);
+    }
 
     try {
       const account = await stripe.accounts.create({
         country: "US",
         email: email,
+        business_type: "individual",
+        business_profile: {
+          name: name,
+          url: url,
+          support_email: email,
+          product_description: "Individual seller on Campus Closets",
+          support_address: {
+            city: "Chapel Hill",
+            country: "US",
+            line1: "136 E Rosemary St",
+            postal_code: "27514",
+            state: "NC",
+          },
+          support_url: url,
+          support_phone: phone,
+        },
+        company: {
+          name: name,
+        },
+        settings: {
+          payments: {
+            statement_descriptor: username,
+          },
+        },
       });
       res.send(account);
     } catch (error) {
       res.status(400).send({error: error.message});
       console.error("Error creating account: " + error.message);
+    }
+  });
+
+/*
+  Cloud function to retrieve an account
+  Parameters: account id
+  Returns:
+    Returns an account object if the call succeeded.
+*/
+exports.getAccount =
+  onRequest({secrets: ["STRIPE_SECRET"]}, async (req, res) => {
+    const stripe = require("stripe")(process.env.STRIPE_SECRET);
+    const {accountId} = req.body;
+
+    try {
+      const account = await stripe.accounts.retrieve(accountId);
+      res.send(account);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({error: error});
+    }
+  });
+
+/*
+  Cloud function to create an account link
+  Parameters: account, type, refresh url, return url
+  Returns:
+    Returns an account link object if the call succeeded.
+*/
+exports.createAccountLink =
+  onRequest({secrets: ["STRIPE_SECRET"]}, async (req, res) => {
+    const stripe = require("stripe")(process.env.STRIPE_SECRET);
+    const {account, type, refreshUrl, returnUrl} = req.body;
+
+    try {
+      const accountLink = await stripe.accountLinks.create({
+        account: account,
+        refresh_url: refreshUrl,
+        return_url: returnUrl,
+        type: type,
+      });
+      res.json(accountLink);
+    } catch (error) {
+      res.status(500).send({error: error.message});
     }
   });
 
@@ -174,3 +249,20 @@ exports.createSession =
       res.status(500).send({error: error.message});
     }
   });
+
+/*
+  Cloud function to redirect the user back to application
+  after Stripe account onboarding
+  Parameters: none
+  Returns:
+    Redirects the user to appScheme
+*/
+exports.redirectToApp = functions.https.onRequest((req, res) => {
+  try {
+    const appScheme = "exp://192.168.10.25:8081"; // CHANGE WHEN SWITCHING TO LIVE CAMPUS-CLOSETS
+    res.redirect(302, appScheme);
+  } catch (error) {
+    console.error("Error redirecting: " + error);
+    res.status(500).send(error);
+  }
+});

@@ -11,7 +11,7 @@ import auth from "./firebase/auth";
 import db from './firebase/db'; // Firestore database
 import { doc, getDoc } from "firebase/firestore"; // Firestore methods
 import { ListingsProvider } from "./contexts/listingContext";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Linking } from "react-native";
 import * as Sentry from '@sentry/react-native';
 import { StripeProvider } from '@stripe/stripe-react-native';
 
@@ -43,9 +43,19 @@ function AppContainer() {
 const Stack = createStackNavigator();
 function MainNavigator() {
   const { setUser } = useContext(AuthContext);
-  const [initialRoute, setInitialRoute] = useState(null); // Start with null to indicate loading
-  const [isProfileComplete, setIsProfileComplete] = useState(false); // Fetch this directly
-  const STRIPE_PUBLISHABLE_KEY='pk_test_51PfoXHACs9AoCw0TjLTyuwHrc2A8LIcSjxz0AXyOpbu0uqoaPwdv4hq1uVvUj297gjHsgC4jQxP8Mm5ZguQCljSt00NrWtttYX';
+  const [initialRoute, setInitialRoute] = useState(null); 
+  const [isProfileComplete, setIsProfileComplete] = useState(false); 
+
+  const config = {
+    screens: {
+      Home: 'home',
+    }
+  };
+  
+  const linking = {
+    prefixes: ['my-app://'],
+    config
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async user => {
@@ -109,7 +119,7 @@ function MainNavigator() {
 
   // Once the initial route is determined, render the navigator
   return (
-    <Stack.Navigator initialRouteName={initialRoute}>
+    <Stack.Navigator initialRouteName={initialRoute} linking={linking}>
       <Stack.Screen
         name="Login"
         component={Login}

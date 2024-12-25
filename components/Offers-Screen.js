@@ -8,7 +8,6 @@ import { useNavigation } from "@react-navigation/native";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
-import CheckoutScreen from "./Checkout-Screen";
 import { Image as ExpoImage } from 'expo-image';
 import * as Sentry from '@sentry/react-native';
 
@@ -26,7 +25,7 @@ const { width } = Dimensions.get('window');
 
 const Offers = () => {
     const [loading, setLoading] = useState(true);  
-    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer, getOfferByListingId } = useContext(OffersContext);
+    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer } = useContext(OffersContext);
     const { fetchListingsByIds } = useContext(ListingsContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
     const [instaUsernames, setInstaUsernames] = useState({});
@@ -99,31 +98,6 @@ const Offers = () => {
         setInstaUsernames(usernames);
     };
 
-    const handlePurchase = async (listing) => {
-
-        const offer = getOfferByListingId(listing.id);
-
-        if (offer.isRental) {
-            Alert.alert(
-                `Rent Item from ${formatDateRange(item.rentalPeriod[0], item.rentalPeriod[1])}`,
-                `Proceed to payment page.`,
-                [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Proceed", onPress: () => navigation.navigate('CheckoutScreen', { listing })} // is this right
-                ]
-            );
-        } else if (!offer.isRental) {
-            Alert.alert(
-                `Purchase Item`,
-                `Proceed to payment page.`,
-                [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Proceed", onPress: () => navigation.navigate('CheckoutScreen', { listing })} //is this right
-                ]
-            );
-        }
-    }
-
     useEffect(() => {
         if (acceptedListings.length > 0) {
             loadInstaUsernames(acceptedListings);
@@ -144,6 +118,25 @@ const Offers = () => {
 
         return `${sMonth}/${sDay} to ${eMonth}/${eDay}`;
     };
+
+    const handlePurchase = async (listing) => {
+        const userAccount = await stripeService.fetchAccount(userData.accountId);
+  
+        navigation.navigate('CheckoutScreen', { listing })
+
+        if (Object.keys(userAccount.capabilities).length === 0) {
+          Alert.alert(
+            "Account Registration Incomplete",
+            "Please complete your Stripe account onboarding in order to make a purchase. \n\nCampus Closets partners with Stripe for secure financial transactions.",
+            [
+              { text: "Complete Onboarding", onPress: () => {
+                stripeService.createAccountLink(userAccount.id, "account_onboarding", "https://redirecttoapp-iv3cs34agq-uc.a.run.app", "https://redirecttoapp-iv3cs34agq-uc.a.run.app");
+              }},
+            ]
+          )
+          navigation.navigate('Offers');
+        } 
+      }
 
     const renderOffer = ({ item }) => (
         <View style={styles.offerContainer}>

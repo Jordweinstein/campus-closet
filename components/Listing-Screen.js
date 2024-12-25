@@ -125,9 +125,9 @@ const Listing = ({ route }) => {
 
   return (
     (loading) ?
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <ActivityIndicator size="large" />
-        </View>
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" />
+      </View>
     :
     <SafeAreaView style={styles.container}>
       <View style={styles.imageContainer}>

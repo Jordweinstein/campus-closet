@@ -39,7 +39,7 @@ const Login = () => {
                 setEmail('');
                 setPassword('');
             } else if (user && !user.emailVerified) {
-                Alert.alert("Email Verification Required", "Please verify your email before logging in.");
+                Alert.alert("Email Verification Required", "Please verify your email before logging in.\n\nIf you do not receive an email within a few minutes, try again.");
             }
         });
         return () => unsubscribe();
