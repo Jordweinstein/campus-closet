@@ -97,30 +97,31 @@ export const OffersProvider = ({ children }) => {
     
     // Finalize offer with error logging
     const finalizeOffer = async (offerId) => {
-    if (!user) return;
-    try {
+      console.log(offerId);
+      if (!user) return;
+      try {
         const offerDocRef = doc(db, "offers", offerId);
         const offerSnapshot = await getDoc(offerDocRef);
-        if (!offerSnapshot.exists()) return;
-        const offerData = offerSnapshot.data();
-        if (offerData.isRental) {
-        const listingRef = doc(db, "listings", offerData.listing);
-        await updateDoc(listingRef, {
-            unavailableStartDates: arrayUnion(offerData.rentalPeriod[0]),
-            unavailableEndDates: arrayUnion(offerData.rentalPeriod[1]),
-        });
-        } else {
-        const listing = {
-            id: offerData.listing,
-            images: [],
+        if (!offerSnapshot.exists()) {
+          return
         };
-        await removeListing(listing);
-        }
-        await updateDoc(offerDocRef, { isFinalized: true });
-    } catch (error) {
-        console.error("Error finalizing offer:", error);
-        Sentry.captureException(error);
-    }
+        const offerData = offerSnapshot.data();
+        const listingRef = doc(db, "listings", offerData.listing);
+        if (offerData.isRental) {
+            await updateDoc(listingRef, {
+              unavailableStartDates: arrayUnion(offerData.rentalPeriod[0]),
+              unavailableEndDates: arrayUnion(offerData.rentalPeriod[1]),
+            });
+          } else {
+            await updateDoc(listingRef, {
+              isAvailable: false,
+            });
+          }
+          await updateDoc(offerDocRef, { isFinalized: true });
+      } catch (error) {
+          console.error("Error finalizing offer:", error);
+          Sentry.captureException(error);
+      }
     };
 
     // retrieve the authenticated user's offer object based on the listingID
@@ -136,10 +137,13 @@ export const OffersProvider = ({ children }) => {
       try {
         const querySnapshot = await getDocs(offerQuery);
         if (!querySnapshot.empty) {
-            const offerData = querySnapshot.docs[0].data();
-            setLoading(false);
-            return offerData;  // Return the isRental property of the offer
-        } else {
+          const offerDoc = querySnapshot.docs[0]; 
+          const offerData = offerDoc.data(); 
+          offerData.id = offerDoc.id; 
+          console.log(offerData);
+          setLoading(false);
+          return offerData; 
+      } else {
             setLoading(false);
             return null;  
         }

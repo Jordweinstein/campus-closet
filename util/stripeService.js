@@ -9,6 +9,7 @@ import { Linking, Alert } from "react-native";
 */
 const fetchPaymentParams = async (data) => {
     try {
+        console.log("IN FETCH PAY: " + JSON.stringify(data));
         const response = await fetch("https://createpaymentintent-iv3cs34agq-uc.a.run.app", {
             method: 'POST',
             body: JSON.stringify(data),
@@ -17,11 +18,13 @@ const fetchPaymentParams = async (data) => {
             }
         })
 
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const res = await response.json();
+        console.log("RESPONSE IN FETCh" + res);
 
         return {
             paymentIntent: res.paymentIntent,
@@ -43,6 +46,7 @@ const fetchPaymentParams = async (data) => {
 const createStripeData = async (name, email, insta, phoneNumber, address) => {
     // Create connected Stripe customer
     const customerUrl = "https://createcustomer-iv3cs34agq-uc.a.run.app";
+    console.log("EMAIL IN CREATING: " + email);
     const data = { name, email, address }
 
     const response = await fetch(customerUrl, {
@@ -61,9 +65,9 @@ const createStripeData = async (name, email, insta, phoneNumber, address) => {
     const custId = customerData.id;
 
     // Create connected Stripe Account
-    accountUrl = "https://createaccount-iv3cs34agq-uc.a.run.app";
-    userSite = `https://www.instagram.com/${insta}/`;
-    tempPhone = "1" + phoneNumber;
+    const accountUrl = "https://createaccount-iv3cs34agq-uc.a.run.app";
+    const userSite = `https://www.instagram.com/${insta}/`;
+    const tempPhone = "1" + phoneNumber;
     
     const secData = { name, email, tempPhone, userSite}
     const accResponse = await fetch(accountUrl, {

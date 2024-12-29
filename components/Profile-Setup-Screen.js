@@ -93,7 +93,7 @@ export default function ProfileSetup() {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#50668a" />
-                <Text>Updating Profile...</Text>
+                <Text style={{ fontSize: 21, paddingVertical: 10, fontFamily: 'optima' }}>Updating Profile...</Text>
             </View>
         );
     }

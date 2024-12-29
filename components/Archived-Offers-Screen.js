@@ -34,7 +34,7 @@ const ArchivedOffers = () => {
                 ...inactiveSentOffers.map(offer => offer.sender),
                 ...inactiveSentOffers.map(offer => offer.receiver)
             ];
-            const uniqueIds = [...new Set(allUserIds)]; // Remove duplicates
+            const uniqueIds = [...new Set(allUserIds)];
 
             const usernamePromises = uniqueIds.map(async id => {
                 const docRef = doc(db, "users", id);
@@ -67,7 +67,7 @@ const ArchivedOffers = () => {
     };
 
     const renderOffer = ({ item }) => {
-        if (!item) return null;  // Null check to ensure item exists
+        if (!item) return null; 
 
         return (
             <View style={styles.offerContainer}>
@@ -102,19 +102,6 @@ const ArchivedOffers = () => {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Completed Transactions</Text>
-            </View>
-            <View style={styles.display}>
-                <Text style={{ fontFamily: 'optima', fontSize: 18 }}>Received Offers</Text>
-                {inactiveOffers && inactiveOffers.length > 0 ? (
-                    <FlatList
-                        data={inactiveOffers}
-                        renderItem={renderOffer}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContainer}
-                    />
-                ) : (
-                    <Text style={styles.text}>No received offers</Text>
-                )}
             </View>
             <View style={styles.display}>
                 <Text style={{ fontFamily: 'optima', fontSize: 18 }}>Sent Offers</Text>

@@ -20,22 +20,28 @@ const CheckoutScreen = ({ route }) => {
     const { listing } = route.params;
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const { userData, getAccountId } = useContext(AuthContext);
-    const { getOfferByListingId } = useContext(OffersContext);
-    const [loading, setLoading] = useState(false);
+    const { getOfferByListingId, finalizeOffer } = useContext(OffersContext);
     const [offer, setOffer] = useState(null);
+    const [paymentSheetReady, setPaymentSheetReady] = useState(false);
     const navigation = useNavigation();
+    console.log(paymentSheetReady);
 
     useEffect(() => {
-        initializePaymentSheet();
-        console.log("Called initPaymentSheet")
-
         const fetchOffer = async () => {
             const fetchedOffer = await getOfferByListingId(listing.id);
-            setOffer(fetchedOffer);
+            setOffer(fetchedOffer);  // This triggers a re-render
+            console.log("FETCHED " + JSON.stringify(fetchedOffer));
         };
-
+    
         fetchOffer();
     }, []);
+    
+    useEffect(() => {
+        if (offer) { 
+            console.log("OFF IN EFF: " + JSON.stringify(offer));
+            initializePaymentSheet();
+        }
+    }, [offer]);
 
     const formatDateRange = (start, end) => {
         const startDate = new Date(start.seconds * 1000);
@@ -48,9 +54,9 @@ const CheckoutScreen = ({ route }) => {
     };
 
     const initializePaymentSheet = async () => {
+        console.log("OFFER IN INIT: " + offer);
         if (!offer) return; 
 
-        setLoading(true);
         const targetId = await getAccountId(listing.owner);
         const customerId = userData.customerId;
         const amount = offer.price * 100;
@@ -75,11 +81,15 @@ const CheckoutScreen = ({ route }) => {
                 },
                 returnURL: "campus-closets://redirect"
             });
+            console.log("ERROR:" + error);
+            console.log("successfully initialized payment sheet");
 
             if (error) {
                 console.error('Error initializing payment sheet:', error);
                 Alert.alert('Payment initialization failed', error.message);
             }
+            setPaymentSheetReady(true);
+
         } catch (error) {
             console.error('Error initializing payment sheet:', error);
             Alert.alert('Payment initialization failed', error.message);
@@ -89,56 +99,52 @@ const CheckoutScreen = ({ route }) => {
     };
 
     const openPaymentSheet = async () => {
-        console.log("about to call present");
         const { error } = await presentPaymentSheet();
         if (!error) {
-            Alert.alert('Success', 'Your order is confirmed!');
+            finalizeOffer(offer.id); 
+            Alert.alert('Success', 'Your order is confirmed!\n\nVisit the Previous Transactions page to contact your seller.');
             navigation.navigate('ProfileMain');
+        } else {
+            console.log("ERROR opening payment sheet: " + JSON.stringify(error));
         }
     };
 
     return (
-        loading ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" />
+        <SafeAreaView style={[styles.screen, styles.dates]}>
+            <View style={styles.imageContainer}>
+                <SwiperFlatList index={0} showPagination>
+                    {listing.images.map((image, index) => (
+                        <View key={index}>
+                            <ExpoImage
+                                source={{ uri: image || "https://picsum.photos/200" }}
+                                cachePolicy="memory-disk"
+                                contentFit="cover"
+                                style={styles.image}
+                            />
+                        </View>
+                    ))}
+                </SwiperFlatList>
             </View>
-        ) : (
-            <SafeAreaView style={[styles.screen, styles.dates]}>
-                <View style={styles.imageContainer}>
-                    <SwiperFlatList index={0} showPagination>
-                        {listing.images.map((image, index) => (
-                            <View key={index}>
-                                <ExpoImage
-                                    source={{ uri: image || "https://picsum.photos/200" }}
-                                    cachePolicy="memory-disk"
-                                    contentFit="cover"
-                                    style={styles.image}
-                                />
-                            </View>
-                        ))}
-                    </SwiperFlatList>
-                </View>
-                <View style={styles.textView}>
-                    {offer && (
-                        offer.isRental ? (
-                            <View style={styles.dates}>
-                                <Text style={styles.header}>Confirm Rental: ${offer.price}</Text>
-                                <Text style={styles.subHeader}>{formatDateRange(offer.rentalPeriod[0], offer.rentalPeriod[1])}</Text>
-                            </View>
-                        ) : (
-                            <Text>Confirm Purchase: ${offer.price}</Text>
-                        )
-                    )}
-                </View>
-                <TouchableOpacity
-                    onPress={openPaymentSheet}
-                    style={styles.checkoutButton}
-                    disabled={loading}
-                >
-                    <Text style={styles.checkoutText}>Checkout</Text>
-                </TouchableOpacity>
-            </SafeAreaView>
-        )
+            <View style={styles.textView}>
+                {offer && (
+                    offer.isRental ? (
+                        <View style={styles.dates}>
+                            <Text style={styles.header}>Confirm Rental: ${offer.price}</Text>
+                            <Text style={styles.subHeader}>{formatDateRange(offer.rentalPeriod[0], offer.rentalPeriod[1])}</Text>
+                        </View>
+                    ) : (
+                        <Text style={styles.header}>Confirm Purchase: ${offer.price}</Text>
+                    )
+                )}
+            </View>
+            <TouchableOpacity
+                onPress={openPaymentSheet}
+                style={!paymentSheetReady ? styles.checkoutButtonDisabled : styles.checkoutButton}
+                disabled={!paymentSheetReady}
+            >
+                <Text style={styles.checkoutText}>Checkout</Text>
+            </TouchableOpacity>
+        </SafeAreaView>
     );
 };
 
@@ -164,6 +170,16 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         position: 'absolute',
         bottom: 10, 
+        left: 15,
+        right: 15,
+    },
+    checkoutButtonDisabled: {
+        backgroundColor: '#e2e2e2', 
+        padding: 10,
+        alignItems: 'center',
+        borderRadius: 10,
+        position: 'absolute',
+        bottom: 10,
         left: 15,
         right: 15,
     },

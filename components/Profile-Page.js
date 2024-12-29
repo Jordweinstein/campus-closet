@@ -105,6 +105,7 @@ export default function Profile() {
           "Account Registration Incomplete",
           "Please complete your Stripe account onboarding in order to create your first listing. Campus Closets partners with Stripe for secure financial transactions.",
           [
+            { text: "Cancel", style: "cancel"},
             { text: "Complete Onboarding", onPress: () => {
               stripeService.createAccountLink(userAccount.id, "account_onboarding", "https://redirecttoapp-iv3cs34agq-uc.a.run.app", "https://redirecttoapp-iv3cs34agq-uc.a.run.app");
             }},
