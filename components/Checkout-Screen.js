@@ -93,9 +93,7 @@ const CheckoutScreen = ({ route }) => {
         } catch (error) {
             console.error('Error initializing payment sheet:', error);
             Alert.alert('Payment initialization failed', error.message);
-        } finally {
-            setLoading(false);
-        }
+        } 
     };
 
     const openPaymentSheet = async () => {

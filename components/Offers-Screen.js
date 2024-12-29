@@ -32,11 +32,10 @@ const Offers = () => {
     const { fetchListingsByIds } = useContext(ListingsContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
     const navigation = useNavigation();
-
     
     useEffect(() => {
         const fetchAcceptedOffers = async () => {
-            listingIds = [];
+            let listingIds = [];
             if (acceptedOffers.length > 0) {
                 for (let i = 0; i < acceptedOffers.length; i++) {
                     listingIds.push(acceptedOffers[i].listing);
