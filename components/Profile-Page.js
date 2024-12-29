@@ -26,7 +26,9 @@ import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import Login from './Login-Screen';
 import ListingContainer from './Listing-Screen';
+import Checkout from './Checkout-Screen'
 import { Image as ExpoImage } from 'expo-image';
+import stripeService from '../util/stripeService';
 
 export default function Profile() {
     const Stack = createStackNavigator();
@@ -59,6 +61,11 @@ export default function Profile() {
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
           />
           <Stack.Screen
+            name="CheckoutScreen"
+            component={Checkout}
+            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
+          />
+          <Stack.Screen
             name="Archived"
             component={Archived}
             options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
@@ -88,6 +95,25 @@ export default function Profile() {
         Alert.alert("Error", "Sign out unsuccessful.");
       });
     };
+
+    const handleCreate = async () => {
+      const userAccount = await stripeService.fetchAccount(userData.accountId);
+
+      navigation.navigate('CreateListing');
+      if (userAccount.tos_acceptance.date == null) {
+        Alert.alert(
+          "Account Registration Incomplete",
+          "Please complete your Stripe account onboarding in order to create your first listing. Campus Closets partners with Stripe for secure financial transactions.",
+          [
+            { text: "Cancel", style: "cancel"},
+            { text: "Complete Onboarding", onPress: () => {
+              stripeService.createAccountLink(userAccount.id, "account_onboarding", "https://redirecttoapp-iv3cs34agq-uc.a.run.app", "https://redirecttoapp-iv3cs34agq-uc.a.run.app");
+            }},
+          ]
+        )
+        navigation.navigate('ProfileMain');
+      } 
+    }
   
     return (
       <SafeAreaView style={styles.container}>
@@ -125,7 +151,7 @@ export default function Profile() {
             <TouchableOpacity style={[styles.offerButton, {marginLeft: '30%'}]} onPress={() => navigation.navigate('Offers')}>
               <Text style={styles.closeButtonText}>View Offers</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('CreateListing')}>
+            <TouchableOpacity style={styles.addListingButton} onPress={() => handleCreate()}>
               <Ionicons name="add-circle-outline" size={24} color="black" />
             </TouchableOpacity>
           </View>

@@ -5,7 +5,7 @@ import db from '../firebase/db';
 import { useNavigation } from "@react-navigation/core";
 import auth from '../firebase/auth';
 import { updateDoc, doc } from "firebase/firestore"; 
-import { pickImage, uploadImageAsync } from "../util/imageHandling";
+import { pickImage, uploadImageAsync } from "../util/imageService";
 
 export default function EditProfile() {
     const [name, setName] = useState(null);

@@ -1,11 +1,13 @@
 {
   "expo": {
+    "scheme": "campus-closets",
     "name": "campus-closets",
     "slug": "campus-closets",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": "true",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",

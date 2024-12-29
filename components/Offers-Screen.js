@@ -6,11 +6,12 @@ import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
 import { ScrollView } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
-import { AuthContext } from "../contexts/authContext";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { Image as ExpoImage } from 'expo-image';
 import * as Sentry from '@sentry/react-native';
+import stripeService from "../util/stripeService";
+import { AuthContext } from "../contexts/authContext";
 
 export default function OffersContainer() {
     return (
@@ -26,20 +27,19 @@ const { width } = Dimensions.get('window');
 
 const Offers = () => {
     const [loading, setLoading] = useState(true);  
-    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer, inactiveOffers } = useContext(OffersContext);
+    const { userData } = useContext(AuthContext);
+    const { respondOffer, activeOffers, acceptedOffers, finalizeOffer } = useContext(OffersContext);
     const { fetchListingsByIds } = useContext(ListingsContext);
-    const { user } = useContext(AuthContext);
     const [acceptedListings, setAcceptedListings] = useState([]);
-    const [instaUsernames, setInstaUsernames] = useState({});
     const navigation = useNavigation();
-
     
     useEffect(() => {
         const fetchAcceptedOffers = async () => {
-            listingIds = [];
+            let listingIds = [];
             if (acceptedOffers.length > 0) {
                 for (let i = 0; i < acceptedOffers.length; i++) {
                     listingIds.push(acceptedOffers[i].listing);
+                    console.log(acceptedOffers[i]);
                 }
                 const offers = await fetchListingsByIds(listingIds);
                 setAcceptedListings(offers);
@@ -65,50 +65,6 @@ const Offers = () => {
         );
     };
 
-    const fetchInstaById = async (userId) => {
-        try {
-            const docRef = doc(db, "users", userId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                return data.insta || 'N/A';
-            } else {
-                console.log("No such document!");
-                return 'N/A';
-            }
-        } catch (error) {
-            console.log("error fetching insta by id in screen" + error);
-            Sentry.captureException(error);
-            return 'N/A';
-        }
-    };
-
-    const loadInstaUsernames = async (offers) => {
-        if (!instaUsernames) {
-            setInstaUsernames([]);
-            return;
-        }
-        const usernames = { ...instaUsernames }; 
-        for (const offer of offers) {
-            if (!usernames[offer.owner]) {
-                usernames[offer.owner] = await fetchInstaById(offer.owner);
-            }
-            if (!usernames[offer.sender]) {
-                usernames[offer.sender] = await fetchInstaById(offer.sender);
-            }
-        }
-        setInstaUsernames(usernames);
-    };
-
-    useEffect(() => {
-        if (acceptedListings.length > 0) {
-            loadInstaUsernames(acceptedListings);
-        }
-        if (activeOffers.length > 0) {
-            loadInstaUsernames(activeOffers);
-        }
-    }, [acceptedListings, activeOffers]);
-
     const formatDateRange = (start, end) => {
         const startDate = start.toDate();
         const endDate = end.toDate();
@@ -120,6 +76,26 @@ const Offers = () => {
 
         return `${sMonth}/${sDay} to ${eMonth}/${eDay}`;
     };
+
+    const handlePurchase = async (listing) => {
+        const userAccount = await stripeService.fetchAccount(userData.accountId);
+  
+        navigation.navigate('CheckoutScreen', { listing })
+
+        if (Object.keys(userAccount.capabilities).length === 0) {
+            Alert.alert(
+                "Account Registration Incomplete",
+                "Please complete your Stripe account onboarding in order to make a purchase. \n\nCampus Closets partners with Stripe for secure financial transactions.",
+                [
+                    { text: "Cancel", style: "cancel"},
+                    { text: "Complete Onboarding", onPress: () => {
+                    stripeService.createAccountLink(userAccount.id, "account_onboarding", "https://redirecttoapp-iv3cs34agq-uc.a.run.app", "https://redirecttoapp-iv3cs34agq-uc.a.run.app");
+                    }},
+                ]
+            )
+            navigation.navigate('Offers');
+        } 
+      }
 
     const renderOffer = ({ item }) => (
         <View style={styles.offerContainer}>
@@ -139,7 +115,6 @@ const Offers = () => {
                 ):
                     <Text style={styles.text}>Buy ${item.price}</Text>
                 }
-                <Text style={styles.text}>From: @{'Loading...' || instaUsernames[item.sender]}</Text>
             </View>
             {(item.isAccepted) ? 
                 <TouchableOpacity 
@@ -150,7 +125,7 @@ const Offers = () => {
                             `Are you sure you would like to mark this item as ${(item.isRental) ? "Rented" : "Sold"}? \n\n If sold, this will delete your listing from Campus Closet, and if rented the requested dates will be blocked off from other rentals.`,
                             [
                                 {text: "Cancel", style: "cancel"},
-                                {text: "Confirm", onPress: ()=> finalizeOffer(item.id)}
+                                {text: "Confirm", onPress: () => finalizeOffer(item.id)}
                             ]
                         );
                     }}
@@ -205,19 +180,27 @@ const Offers = () => {
                         <View style={styles.listingImagePlaceholder}></View>
                         :
                         acceptedListings.map((listing) => (
-                            <TouchableOpacity 
-                                key={listing.id} 
-                                onPress={() => navigation.navigate('ListingScreen', { listing })}
-                                style={styles.imgContainer}
-                            >
-                                <ExpoImage
-                                    source={{ uri: listing.images[0] || "https://picsum.photos/200" }}
-                                    cachePolicy="memory-disk" 
-                                    contentFit="cover"
-                                    style={styles.listingImage}
-                                />
-                                <Text style={styles.username}>@{instaUsernames[listing.owner]}</Text>
-                            </TouchableOpacity>
+                            <React.Fragment key={listing.id}> 
+                                <TouchableOpacity 
+                                    onPress={() => navigation.navigate('ListingScreen', { listing })}
+                                    style={styles.imgContainer}
+                                >
+                                    <ExpoImage
+                                        source={{ uri: listing.images[0] || "https://picsum.photos/200" }}
+                                        cachePolicy="memory-disk" 
+                                        contentFit="cover"
+                                        style={styles.listingImage}
+                                    />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => handlePurchase(listing)}
+                                    style = {styles.shopButton}
+                                >
+                                    <Entypo name="shop" size={20} color="black" />
+                                </TouchableOpacity>
+                                
+                            </React.Fragment>
+
                         ))}
                 </ScrollView>
             </View>
@@ -244,7 +227,7 @@ const Offers = () => {
                     navigation.navigate('Archived');
                 }}
             >
-                <Text style={styles.navigationButtonText}>View Archived Offers</Text>
+                <Text style={styles.navigationButtonText}>View Past Transactions</Text>
             </TouchableOpacity>
         </SafeAreaView>
     )
@@ -380,4 +363,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontFamily: 'optima',
     },
+    shopButton: {
+        position: 'absolute',
+        right: 22, 
+        bottom: 7, 
+        backgroundColor: 'white',
+        padding: 5,
+        borderRadius: '50%'
+    }
 });

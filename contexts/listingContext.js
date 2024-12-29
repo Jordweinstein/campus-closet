@@ -31,6 +31,7 @@ export const ListingsProvider = ({ children }) => {
     const listingsQuery = query(
       collection(db, "listings"),
       orderBy("timestamp", "desc"),
+      where("isAvailable", "==", true),
       limit(10)
     );
   
@@ -64,6 +65,7 @@ export const ListingsProvider = ({ children }) => {
     const listingsQuery = query(
       collection(db, "listings"),
       orderBy("timestamp", "desc"),
+      where("isAvailable", "==", true),
       startAfter(lastDoc),  // fetch after the last document
       limit(6)
     );
@@ -71,9 +73,8 @@ export const ListingsProvider = ({ children }) => {
     const querySnapshot = await getDocs(listingsQuery);
 
     if (querySnapshot.empty) {
-      console.log("No more listings to fetch.");
       setLoadingMore(false);
-      return;  // Stop fetching if no more documents
+      return;  
     }
     
     const moreListings = querySnapshot.docs.map(doc => ({
@@ -183,7 +184,7 @@ export const ListingsProvider = ({ children }) => {
       if (unsubscribeFunctions["trendingListings"]) unsubscribeFunctions["trendingListings"]();
       return;
     }
-    const trendingQuery = query(listingsRef, orderBy("likes", "desc"), limit(10));
+    const trendingQuery = query(listingsRef, orderBy("likes", "desc"), where("isAvailable", "==", true), limit(10));
     fetchData("trendingListings", setTrendingListings, trendingQuery);
 
     return () => {
@@ -197,7 +198,7 @@ export const ListingsProvider = ({ children }) => {
       if (unsubscribeFunctions["recentListings"]) unsubscribeFunctions["recentListings"]();
       return;
     }
-    const recentQuery = query(listingsRef, orderBy("timestamp", "desc"), limit(10));
+    const recentQuery = query(listingsRef, orderBy("timestamp", "desc"), where("isAvailable", "==", true), limit(10));
     fetchData("recentListings", setRecentListings, recentQuery);
 
     return () => {

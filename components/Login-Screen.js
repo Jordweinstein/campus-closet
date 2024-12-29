@@ -39,7 +39,7 @@ const Login = () => {
                 setEmail('');
                 setPassword('');
             } else if (user && !user.emailVerified) {
-                Alert.alert("Email Verification Required", "Please verify your email before logging in.");
+                Alert.alert("Email Verification Required", "Please verify your email before logging in.\n\nIf you do not receive an email within a few minutes, try again.");
             }
         });
         return () => unsubscribe();
@@ -56,9 +56,19 @@ const Login = () => {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 await sendEmailVerification(user);
+
+                // Create user document in Firestore Database
                 const userRef = doc(db, "users", user.uid);
                 await setDoc(userRef, {
                     email: email,
+                    address: {
+                        line1: "",
+                        line2: "",
+                        city: "",
+                        state: "",
+                        postal_code: "",
+                        country: ""
+                    },
                     displayName: "",
                     bio: "",
                     graduationYear: "",
@@ -67,9 +77,10 @@ const Login = () => {
                     offeredListings: [],
                     profilePicUrl: "",
                     insta: "",
-                    isProfileComplete: false
+                    isProfileComplete: false,
+                    customerId: "",
+                    accountId: "",
                 });
-                
 
                 setEmail('');
                 setPassword('');

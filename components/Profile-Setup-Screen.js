@@ -2,13 +2,13 @@ import React, { useState, useContext } from 'react';
 import { View, StyleSheet, Keyboard, Text, TouchableOpacity, Modal, TextInput, SafeAreaView, KeyboardAvoidingView, Image, Alert, ActivityIndicator } from 'react-native';
 import { updateDoc, doc } from "firebase/firestore"; 
 import db from '../firebase/db';
-import auth from '../firebase/auth';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
-import { uploadImageAsync, pickImage } from '../util/imageHandling';
+import { uploadImageAsync, pickImage } from '../util/imageService';
 import { AuthContext } from '../contexts/authContext';
 import { getAuth } from 'firebase/auth';
 import { Image as ExpoImage } from 'expo-image';
+import stripeService from '../util/stripeService';
 
 export default function ProfileSetup() {
     const [displayName, setDisplayName] = useState('');
@@ -53,8 +53,17 @@ export default function ProfileSetup() {
         } else {
             console.log("No profile picture to upload");
         }
-    
+
         try {
+            // Connect user to connected Stripe customer and account
+            const res = await stripeService.createStripeData(displayName, auth.currentUser.email, insta, phoneNumber, "");
+
+            console.log("RES in setup: " + JSON.stringify(res));
+            console.log(res.accId);
+            // Direct user to Stripe account onboarding
+            await stripeService.createAccountLink(res.accId, "account_onboarding", "https://redirecttoapp-iv3cs34agq-uc.a.run.app", "https://redirecttoapp-iv3cs34agq-uc.a.run.app");
+
+            // Update user document in firestore database
             const userRef = doc(db, "users", auth.currentUser.uid);
     
             await updateDoc(userRef, {
@@ -64,24 +73,27 @@ export default function ProfileSetup() {
                 profilePic: profilePicUrl,
                 phoneNumber: phoneNumber,
                 isProfileComplete: true,
-                insta: insta
+                insta: insta,
+                customerId: res.custId,
+                accountId: res.accId,
             });
     
             Alert.alert("Success", "Profile updated successfully.");
             setIsProfileComplete(true);
             navigation.navigate('Home');
         } catch (error) {
-            console.log("Error updating profile in Firestore:", error);
+            console.error("Error creating Stripe customer/account: " + error.message);
         } finally {
             setLoading(false); 
         }
+
     };
 
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#50668a" />
-                <Text>Updating Profile...</Text>
+                <Text style={{ fontSize: 21, paddingVertical: 10, fontFamily: 'optima' }}>Updating Profile...</Text>
             </View>
         );
     }
@@ -93,7 +105,7 @@ export default function ProfileSetup() {
                 behavior="padding"
                 keyboardVerticalOffset={0}
             >
-                <Text style={styles.title}>Welcome to Campus Closet</Text>
+                <Text style={styles.title}>Welcome to Campus Closets</Text>
                 <Text style={{ fontSize: 21, paddingVertical: 10, fontFamily: 'optima' }}>Enter your information below:</Text>
                 <View style={styles.inputContainer}>
                     <View style={styles.singleInputContainer}>
