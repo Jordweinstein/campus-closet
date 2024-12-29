@@ -277,21 +277,12 @@ const Listing = ({ route }) => {
           </View>
         </View>
         {ownerProfile && (
-          <TouchableOpacity
-            style={styles.profileContainer}
-            onPress={() => {
-              console.log("Navigating to profile:", {
-              ownerId: listing.owner,
-              profilePic: ownerProfile.profilePic,
-              displayName: ownerProfile.displayName,
-              });
-            navigation.navigate("Profile", { ownerId: listing.owner });
-            }}
-          >
-          <Image source={{ uri: ownerProfile.profilePic }} style={styles.profileImage} />
-          <Text style={styles.profileName}>{ownerProfile.displayName}</Text>
-          </TouchableOpacity>
+          <View style={styles.profileContainer}>
+            <Image source={{ uri: ownerProfile.profilePic }} style={styles.profileImage} />
+            <Text style={styles.profileName}>{ownerProfile.displayName}</Text>
+          </View>
         )}
+
 
         <View style={styles.hContainer}>
           <Text style={{ paddingRight: 15, fontSize: 20, fontWeight: "bold", fontFamily: 'optima' }}>
