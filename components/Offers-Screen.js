@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Text, FlatList, Dimensions, StyleSheet, View, Image, TouchableOpacity, Alert, SafeAreaView } from "react-native";
+import { Text, FlatList, Dimensions, StyleSheet, View, TouchableOpacity, Alert, SafeAreaView } from "react-native";
 import { OffersProvider, OffersContext } from "../contexts/offersContext";
 import { Entypo } from '@expo/vector-icons';
 import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
@@ -9,7 +9,6 @@ import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { Image as ExpoImage } from 'expo-image';
-import * as Sentry from '@sentry/react-native';
 import stripeService from "../util/stripeService";
 import { AuthContext } from "../contexts/authContext";
 

@@ -4,7 +4,6 @@ import {
   ScrollView,
   Text,
   View,
-  Button,
   StyleSheet,
   TouchableOpacity
 } from "react-native";
@@ -15,7 +14,6 @@ import GameDay from "../assets/images/gameday.jpeg";
 import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
 import { AuthContext } from "../contexts/authContext";
 import { Image as ExpoImage } from 'expo-image';
-import * as Sentry from '@sentry/react-native';
 
 const Stack = createStackNavigator();
 

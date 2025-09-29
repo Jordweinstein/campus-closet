@@ -3,7 +3,6 @@ import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, getDocs, onSnaps
 import { AuthContext } from "./authContext";
 import { ListingsContext } from "./listingContext"; 
 import db from "../firebase/db";
-import * as Sentry from '@sentry/react-native';
 
 export const OffersContext = createContext();
 
@@ -47,7 +46,6 @@ export const OffersProvider = ({ children }) => {
           await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
         } catch (error) {
           console.error("Error sending rental offer:", error);
-          Sentry.captureException(error);
         }
       };
 
@@ -72,7 +70,6 @@ export const OffersProvider = ({ children }) => {
         await updateDoc(userDocRef, { offeredListings: arrayUnion(docRef.id) });
     } catch (error) {
         console.error("Error sending buy offer:", error);
-        Sentry.captureException(error);
     }
     };
     
@@ -91,7 +88,6 @@ export const OffersProvider = ({ children }) => {
         await updateDoc(offerDocRef, updateObject);
     } catch (error) {
         console.error("Error responding to offer:", error);
-        Sentry.captureException(error);
     }
     };
     
@@ -120,7 +116,6 @@ export const OffersProvider = ({ children }) => {
           await updateDoc(offerDocRef, { isFinalized: true });
       } catch (error) {
           console.error("Error finalizing offer:", error);
-          Sentry.captureException(error);
       }
     };
 
@@ -149,7 +144,6 @@ export const OffersProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error fetching offer by listing ID:', error);
-        Sentry.captureException(error);
         setLoading(false);
         return null;
       }
@@ -169,7 +163,6 @@ export const OffersProvider = ({ children }) => {
             setLoading(false);
         }, error => {
             console.error('Error fetching active offers:', error);
-            Sentry.captureException(error);
         });
   
         const unsubscribeInactive = onSnapshot(userInactiveOffersQuery, querySnapshot => {
@@ -177,7 +170,6 @@ export const OffersProvider = ({ children }) => {
         setInactiveOffers(offers);
         }, error => {
         console.error('Error fetching inactive offers:', error);
-        Sentry.captureException(error);
         });
   
         return () => {
@@ -199,7 +191,6 @@ export const OffersProvider = ({ children }) => {
       setAcceptedOffers(offers.filter(offer => offer.isAccepted));
     }, error => {
       console.error('Error fetching sent offers:', error);
-      Sentry.captureException(error);
     });
   
     const unsubscribeFinalizedSentOffers = onSnapshot(userFinalizedSentOffersQuery, querySnapshot => {
@@ -207,7 +198,6 @@ export const OffersProvider = ({ children }) => {
       setInactiveSentOffers(offers);
     }, error => {
       console.error('Error fetching finalized sent offers:', error);
-      Sentry.captureException(error);
     });
   
     return () => {

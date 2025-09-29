@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   FlatList,
   SafeAreaView,
-  Image,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -25,7 +24,6 @@ import { Image as ExpoImage } from 'expo-image';
 import { useNavigation } from "@react-navigation/native";
 import { uploadImageAsync, pickImage } from "../util/imageService";
 import { AuthContext } from "../contexts/authContext";
-import * as Sentry from '@sentry/react-native';
 
 export default function CreateListing() {
   const [brand, setBrand] = useState("");
@@ -50,13 +48,6 @@ export default function CreateListing() {
   const {user, addListingReferenceToUser, removeListingReferenceFromUser} = useContext(AuthContext);
 
   const navigator = useNavigation();
-
-  if (user) {
-    Sentry.setUser({
-      id: user.uid,
-      email: user.email,
-    });
-  }
 
   const renderSizeItem = ({ item }) =>
     <TouchableOpacity
@@ -134,36 +125,21 @@ export default function CreateListing() {
   const handleUpload = async () => {
     setLoading(true);
 
-    Sentry.addBreadcrumb({
-      category: 'upload',
-      message: 'Started listing upload process',
-      level: "info",
-    });
+    console.log('Started listing upload process');
 
     if (verifyPresentInput()) {
       const uploadedImageUrls = [];
 
       for (const image of images) {
         try {
-          Sentry.addBreadcrumb({
-            category: 'upload',
-            message: `Uploading image at index ${images.indexOf(image)}`,
-            level: "info",
-            data: { imageUri: image },
-          });
-          
+          console.log(`Uploading image at index ${images.indexOf(image)}`);
+
           const img = await uploadImageAsync(image, "listingImages");
           uploadedImageUrls.push(img);
 
-          Sentry.addBreadcrumb({
-            category: 'upload',
-            message: `Image uploaded successfully`,
-            level: "info",
-            data: { imageUrl: img },
-          });
+          console.log('Image uploaded successfully');
         } catch (error) {
           console.error("Error uploading image:", error);
-          Sentry.captureException(error); // Capture image upload error
         }
       }
 
@@ -179,18 +155,6 @@ export default function CreateListing() {
         purchaseMethods.push("Buy");
         prices.push(buyPrice);
       }
-
-      // Set context for the listing details
-      Sentry.setContext("listingDetails", {
-        brand,
-        category: selectedCategory,
-        description,
-        itemName,
-        size,
-        rentPrice,
-        buyPrice,
-        images: uploadedImageUrls,
-      });
 
       let listingRef;
       try {
@@ -208,22 +172,15 @@ export default function CreateListing() {
           timestamp: new Date(),
         });
 
-        Sentry.addBreadcrumb({
-          category: 'database',
-          message: 'Created listing document in Firestore',
-          level: "info",
-          data: { listingId: listingRef.id },
-        });
+        console.log('Created listing document in Firestore');
       } catch (error) {
         console.error("Error creating listing:", error);
-        Sentry.captureException(error); // Capture listing creation error
       }
 
       try {
         await addListingReferenceToUser(listingRef.id);
       } catch (error) {
         console.log("Error adding listing reference:", error);
-        Sentry.captureException(error); // Capture error adding listing reference
       }
 
       navigator.navigate("ProfileMain");

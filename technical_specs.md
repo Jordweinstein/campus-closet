@@ -2,16 +2,15 @@
 
 **1. App.js**
     **Overview**
-    The application uses a NavigationContainer to manage navigation between different screens. It also integrates a StripeProvider for handling Stripe payments, and utilizes Firebase Authentication to manage user sessions. Additionally, Sentry is configured for error tracking.
+    The application uses a NavigationContainer to manage navigation between different screens. It also integrates a StripeProvider for handling Stripe payments and utilizes Firebase Authentication to manage user sessions.
 
     **Key Components and Libraries**
     1. React Navigation: Manages the navigation of the app through a stack navigator that includes screens for login, profile setup, and the main app interface.
     2. Firebase Authentication: Monitors and manages the user's authentication state.
     3. Stripe Provider: Configures Stripe with necessary credentials to handle payments and merchant interactions.
-    4. Sentry: Initialized for error tracking and monitoring, helping catch runtime errors and improve app stability.
-    5. Firebase Firestore: Used to fetch and store user data, such as profile completion status.
-    6. React Native Paper Dates: Manages date inputs and translations, enhancing form functionalities.
-    7. AuthContext and ListingsProvider: Custom context providers that manage user data and listing data across the app.
+    4. Firebase Firestore: Used to fetch and store user data, such as profile completion status.
+    5. React Native Paper Dates: Manages date inputs and translations, enhancing form functionalities.
+    6. AuthContext and ListingsProvider: Custom context providers that manage user data and listing data across the app.
 
     **Functionalities and Flow**
     - AppContainer
@@ -26,10 +25,8 @@
     - Configures deep linking with the linking configuration, allowing the app to handle open URLs that match predefined patterns.
     - Registers translations for date handling, providing localized strings for date operations in forms.
 
-    **Sentry Integration**
-    *This is essentially just console.log but in production, so when there are errors we can track them*
-
-    Configures Sentry at the start, which helps in monitoring the app for any runtime errors or issues, crucial for maintaining stability in production.
+    **Error Logging**
+    Console logging is used throughout to capture key lifecycle events (e.g., uploads, Firestore writes) and surface any caught exceptions for easier debugging during development.
 
     **Error Handling and Performance Considerations**
     - The setup includes comprehensive error handling, especially around authentication and data fetching using Firebase.

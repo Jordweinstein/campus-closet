@@ -30,16 +30,6 @@
       "eas": {
         "projectId": "54d161f4-834a-4e14-a7f4-abf236ff9843"
       }
-    },
-    "plugins": [
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "react-native",
-          "organization": "campus-closets"
-        }
-      ]
-    ]
+    }
   }
 }
