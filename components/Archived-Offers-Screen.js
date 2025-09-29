@@ -1,20 +1,12 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Text, View, Image, FlatList, Dimensions, StyleSheet, SafeAreaView } from "react-native";
-import { OffersContext, OffersProvider } from "../contexts/offersContext";
+import { OffersContext } from "../contexts/offersContext";
 import { AuthContext } from "../contexts/authContext";
 import { doc, getDoc } from "@firebase/firestore";
 import db from "../firebase/db";
 import { Image as ExpoImage } from 'expo-image';
 
 const screenWidth = Dimensions.get('window').width;
-
-export default function Archived() {
-    return (
-        <OffersProvider>
-            <ArchivedOffers />
-        </OffersProvider>
-    );
-}
 
 const ArchivedOffers = () => {
     const { inactiveOffers, inactiveSentOffers } = useContext(OffersContext);
@@ -119,6 +111,8 @@ const ArchivedOffers = () => {
         </SafeAreaView>
     );
 };
+
+export default ArchivedOffers;
 
 const styles = StyleSheet.create({
     offerContainer: {
