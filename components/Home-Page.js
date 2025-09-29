@@ -4,38 +4,16 @@ import {
   ScrollView,
   Text,
   View,
-  Button,
   StyleSheet,
   TouchableOpacity
 } from "react-native";
 import "react-native-gesture-handler";
-import { createStackNavigator } from "@react-navigation/stack";
-import ListingScreen from "./Listing-Screen";
 import GameDay from "../assets/images/gameday.jpeg";
-import { ListingsContext, ListingsProvider } from "../contexts/listingContext";
+import { ListingsContext } from "../contexts/listingContext";
 import { AuthContext } from "../contexts/authContext";
 import { Image as ExpoImage } from 'expo-image';
-import * as Sentry from '@sentry/react-native';
 
-const Stack = createStackNavigator();
-
-export default function Home() {
-  return (
-      <Stack.Navigator>
-        <Stack.Screen
-          name="HomeMain"
-          component={HomeMain}
-          options={{ headerShown: false, headerTitle: "Back" }}
-        />
-        <Stack.Screen
-          name="ListingScreen"
-          component={ListingScreen}
-          options={{ headerTitle: "", headerTintColor: "black" }}
-        />
-      </Stack.Navigator>
-  );
-}
-const HomeMain = ({ navigation }) => {
+export const HomeMain = ({ navigation }) => {
   const { trendingListings, recentListings } = useContext(ListingsContext);
   const { user } = useContext(AuthContext);
 
@@ -151,3 +129,5 @@ const styles = StyleSheet.create({
     marginVertical: 15
   }
 });
+
+export default HomeMain;

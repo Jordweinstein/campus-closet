@@ -10,73 +10,18 @@ import {
     Modal,
 } from 'react-native';
 import { useContext, useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import "react-native-gesture-handler";
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from "firebase/auth";
-import auth from '../firebase/auth'; 
-import { createStackNavigator } from '@react-navigation/stack';
+import auth from '../firebase/auth';
 import '../firebase/firebase-config';
-import CreateListing from './Create-Listing-Screen';
-import EditProfile from './Edit-Profile-Screen';
-import Offers from './Offers-Screen';
-import Archived from './Archived-Offers-Screen';
 import { AuthContext } from '../contexts/authContext';
-import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
+import { ListingsContext } from '../contexts/listingContext';
 import SwiperFlatList from 'react-native-swiper-flatlist';
-import Login from './Login-Screen';
-import ListingContainer from './Listing-Screen';
-import Checkout from './Checkout-Screen'
 import { Image as ExpoImage } from 'expo-image';
 import stripeService from '../util/stripeService';
 
-export default function Profile() {
-    const Stack = createStackNavigator();
-  
-    return (
-        <Stack.Navigator>
-          <Stack.Screen
-            name="ProfileMain"
-            component={ProfileMain}
-            options={{ headerShown: false, headerTitle: "Back" }}
-          />
-          <Stack.Screen
-              name="ListingScreen"
-              component={ListingContainer}
-              options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
-          />
-          <Stack.Screen
-            name="CreateListing"
-            component={CreateListing}
-            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
-          />
-          <Stack.Screen
-            name="EditProfile"
-            component={EditProfile}
-            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
-          />
-          <Stack.Screen
-            name="Offers"
-            component={Offers}
-            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
-          />
-          <Stack.Screen
-            name="CheckoutScreen"
-            component={Checkout}
-            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
-          />
-          <Stack.Screen
-            name="Archived"
-            component={Archived}
-            options={{ headerShown: true, headerTitle: "", headerTintColor: '#0e165c' }}
-          />
-         
-        </Stack.Navigator>
-    );
-  }
-  
-  const ProfileMain = () => {
-    const navigation = useNavigation();
+export const ProfileMain = ({ navigation }) => {
     const { userData, likedListingsData } = useContext(AuthContext);
     const { userListings } = useContext(ListingsContext);
     const [helpModalVisible, setHelpModalVisible] = useState(false);
@@ -89,7 +34,7 @@ export default function Profile() {
 
     const handleSignOut = () => {
       signOut(auth).then(() => {
-        navigation.navigate(Login);
+        navigation.navigate('Login');
         Alert.alert("Sign out successful.");
       }).catch((error) => {
         Alert.alert("Error", "Sign out unsuccessful.");
@@ -112,7 +57,7 @@ export default function Profile() {
           ]
         )
         navigation.navigate('ProfileMain');
-      } 
+      }
     }
   
     return (
@@ -207,7 +152,7 @@ export default function Profile() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate(EditProfile)}
+            onPress={() => navigation.navigate('EditProfile')}
           >
             <Text style={{fontFamily: 'optima'}}>Edit Profile</Text>
           </TouchableOpacity>
@@ -460,3 +405,5 @@ const faqs =[
              "If you would like to submit a report, email to unccampuscloset@gmail.com"
   }
 ];
+
+export default ProfileMain;
