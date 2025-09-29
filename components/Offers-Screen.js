@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Text, FlatList, Dimensions, StyleSheet, View, Image, TouchableOpacity, Alert, SafeAreaView } from "react-native";
-import { OffersProvider, OffersContext } from "../contexts/offersContext";
+import { OffersContext } from "../contexts/offersContext";
 import { Entypo } from '@expo/vector-icons';
-import { ListingsContext, ListingsProvider } from '../contexts/listingContext';
+import { ListingsContext } from '../contexts/listingContext';
 import { ScrollView } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
@@ -12,16 +12,6 @@ import { Image as ExpoImage } from 'expo-image';
 import * as Sentry from '@sentry/react-native';
 import stripeService from "../util/stripeService";
 import { AuthContext } from "../contexts/authContext";
-
-export default function OffersContainer() {
-    return (
-        <ListingsProvider>
-            <OffersProvider>
-                <Offers />
-            </OffersProvider>
-        </ListingsProvider>
-    );
-}
 
 const { width } = Dimensions.get('window');
 
@@ -230,8 +220,10 @@ const Offers = () => {
                 <Text style={styles.navigationButtonText}>View Past Transactions</Text>
             </TouchableOpacity>
         </SafeAreaView>
-    )
+    );
 };
+
+export default Offers;
 
 const styles = StyleSheet.create({
     loadingContainer: {

@@ -11,6 +11,7 @@ import auth from "./firebase/auth";
 import db from './firebase/db'; // Firestore database
 import { doc, getDoc } from "firebase/firestore"; // Firestore methods
 import { ListingsProvider } from "./contexts/listingContext";
+import { OffersProvider } from "./contexts/offersContext";
 import { View, ActivityIndicator, Linking } from "react-native";
 import * as Sentry from '@sentry/react-native';
 import { StripeProvider } from '@stripe/stripe-react-native';
@@ -31,9 +32,11 @@ function AppContainer() {
         urlScheme="campus-closets"
       >
         <AuthProvider>
-          <ListingsProvider>
-            <MainNavigator />
-          </ListingsProvider>
+          <OffersProvider>
+            <ListingsProvider>
+              <MainNavigator />
+            </ListingsProvider>
+          </OffersProvider>
         </AuthProvider>
       </StripeProvider>
     </NavigationContainer>
