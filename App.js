@@ -23,9 +23,11 @@ function AppContainer() {
         urlScheme="campus-closets"
       >
         <AuthProvider>
-          <ListingsProvider>
-            <MainNavigator />
-          </ListingsProvider>
+          <OffersProvider>
+            <ListingsProvider>
+              <MainNavigator />
+            </ListingsProvider>
+          </OffersProvider>
         </AuthProvider>
       </StripeProvider>
     </NavigationContainer>

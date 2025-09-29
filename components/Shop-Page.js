@@ -16,33 +16,11 @@ import {
 import "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FontAwesome } from "@expo/vector-icons";
-import { createStackNavigator } from "@react-navigation/stack";
-import ListingScreen from "./Listing-Screen";
 import { ListingsContext } from "../contexts/listingContext";
 import sizes from "../util/sizes";
 import { Image as ExpoImage } from 'expo-image';
 
-
-export default function ShopContent() {
-  const Stack = createStackNavigator();
-
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="ShopMain"
-        component={ShopMain}
-        options={{ headerShown: false, headerTitle: "Back" }}
-      />
-      <Stack.Screen
-        name="ListingScreen"
-        component={ListingScreen}
-        options={{ headerTitle: "", headerTintColor: "black" }}
-      />
-    </Stack.Navigator>
-  );
-}
-
-const ShopMain = ({ navigation }) => {
+export const ShopMain = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [sizeModalVisible, setSizeModalVisible] = useState(false);
@@ -56,10 +34,9 @@ const ShopMain = ({ navigation }) => {
   const [minPrice, setMinPrice] = useState(null);
   const [maxPrice, setMaxPrice] = useState(null);
 
+  const { listings, fetchMoreListings, loadingMore } = useContext(ListingsContext);
   const [filteredListings, setFilteredListings] = useState(listings);
   const [filtersActive, setFiltersActive] = useState(false);
-
-  const { listings, fetchMoreListings, loadingMore } = useContext(ListingsContext);
 
   // get filtered listings based on user selection
   useEffect(() => {
@@ -546,3 +523,5 @@ const styles = StyleSheet.create({
     fontFamily: 'optima',
   }
 });
+
+export default ShopMain;

@@ -1,13 +1,12 @@
 import React from "react";
 import { StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
-import Home from "./Home-Page.js";
-import Shop from "./Shop-Page.js";
-import Profile from "./Profile-Page.js";
+import HomeStack from "../navigation/HomeStack";
+import ShopStack from "../navigation/ShopStack";
+import ProfileStack from "../navigation/ProfileStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -17,7 +16,7 @@ export default function Tabs() {
             headerShown: false, 
             tabBarShowLabel: false
         }}>
-            <Tab.Screen name="HomeTab" component={Home} 
+            <Tab.Screen name="HomeTab" component={HomeStack}
                 options={{
                 tabBarIcon: ({ focused }) => (
                     <AntDesign 
@@ -28,7 +27,7 @@ export default function Tabs() {
                 )
                 }}
             />
-            <Tab.Screen name="Shop" component={Shop} 
+            <Tab.Screen name="Shop" component={ShopStack}
                 options={{
                 tabBarIcon: ({ focused }) => (
                     <Feather 
@@ -50,7 +49,7 @@ export default function Tabs() {
                 )
                 }}
             /> */}
-            <Tab.Screen name="Profile" component={Profile} 
+            <Tab.Screen name="Profile" component={ProfileStack}
                 options={{
                 tabBarIcon: ({ focused }) => (
                     <MaterialIcons 

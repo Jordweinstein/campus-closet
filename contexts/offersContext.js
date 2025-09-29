@@ -1,14 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { addDoc, getDoc, doc, updateDoc, collection, deleteDoc, getDocs, onSnapshot, query, where, arrayUnion, arrayRemove } from "firebase/firestore";
 import { AuthContext } from "./authContext";
-import { ListingsContext } from "./listingContext"; 
 import db from "../firebase/db";
 
 export const OffersContext = createContext();
 
 export const OffersProvider = ({ children }) => {
     const { user } = useContext(AuthContext);
-    const { removeListing } = useContext(ListingsContext); 
     const [sentOffers, setSentOffers] = useState([]);
     const [activeOffers, setActiveOffers] = useState([]);
     const [inactiveOffers, setInactiveOffers] = useState([]);

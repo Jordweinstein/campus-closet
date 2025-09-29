@@ -14,16 +14,9 @@ import { SwiperFlatList } from "react-native-swiper-flatlist";
 import { AuthContext } from "../contexts/authContext";
 import { Image as ExpoImage } from 'expo-image';
 import { ListingsContext } from "../contexts/listingContext";
-import { OffersProvider, OffersContext } from "../contexts/offersContext";
+import { OffersContext } from "../contexts/offersContext";
 
-export default function ListingContainer({ route }){
-  return (
-    <OffersProvider>
-      <Listing route = {route}/>
-    </OffersProvider>
-  )
-}
-const Listing = ({ route }) => {
+export default function Listing({ route }) {
   const { listing } = route.params;
   const { sendRentalOffer, sendBuyOffer, sentOffers } = useContext(OffersContext);
   const { addLikedListing, removeLikedListing, likedListings, user } = useContext(

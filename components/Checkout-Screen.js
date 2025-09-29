@@ -5,18 +5,10 @@ import { AuthContext } from '../contexts/authContext';
 import stripeService from '../util/stripeService';
 import { Image as ExpoImage } from 'expo-image';
 import { SwiperFlatList } from "react-native-swiper-flatlist";
-import { OffersContext, OffersProvider } from '../contexts/offersContext';
+import { OffersContext } from '../contexts/offersContext';
 import { useNavigation } from '@react-navigation/native';
 
-export default function Checkout({ route }) {
-    return (
-        <OffersProvider>
-            <CheckoutScreen route={route} />
-        </OffersProvider>
-    );
-}
-
-const CheckoutScreen = ({ route }) => {
+const Checkout = ({ route }) => {
     const { listing } = route.params;
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const { userData, getAccountId } = useContext(AuthContext);
@@ -145,6 +137,8 @@ const CheckoutScreen = ({ route }) => {
         </SafeAreaView>
     );
 };
+
+export default Checkout;
 
 const styles = StyleSheet.create({
     image: {
